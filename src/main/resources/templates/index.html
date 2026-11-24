@@ -10,140 +10,178 @@
 <body>
 <h1 layout:fragment="titre-page" class="h5 mb-0">Accueil</h1>
 
-<main layout:fragment="content">
+<main layout:fragment="content" th:with="t=${tableau}">
 
     <!-- ===== Bienvenue ===== -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body d-flex flex-wrap align-items-center gap-3">
-            <span class="avatar" style="width:56px;height:56px;font-size:1.4rem"
-                  th:text="${#strings.substring(#authentication.name, 0, 1)}">A</span>
-            <div class="flex-grow-1">
-                <h2 class="h4 mb-1">
-                    Bienvenue,
-                    <span th:text="${utilisateur != null ? utilisateur.nomComplet : #authentication.name}">Nom</span>
-                </h2>
-                <div class="text-muted small">
-                    <i class="bi bi-person"></i> <span sec:authentication="name">login</span>
-                    <th:block th:if="${utilisateur != null and utilisateur.email != null}">
-                        &nbsp;·&nbsp;<i class="bi bi-envelope"></i> <span th:text="${utilisateur.email}">email</span>
-                    </th:block>
-                </div>
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 en-tete-page">
+        <div>
+            <h2 class="h3 mb-1">Bonjour, <span th:text="${utilisateur != null ? utilisateur.nomComplet : #authentication.name}">Nom</span></h2>
+            <div class="sous-titre">
+                Voici l'activité de Tantana
+                <th:block th:if="${t.financier}">ce mois-ci.</th:block>
+                <th:block th:unless="${t.financier}">et ce qui vous attend.</th:block>
             </div>
-            <div>
-                <!-- seules les autorites ROLE_* sont des roles (Spring Security 7 ajoute aussi FACTOR_*) -->
-                <span th:each="a : ${#authentication.authorities}"
-                      th:if="${#strings.startsWith(a.authority, 'ROLE_')}"
-                      class="badge rounded-pill text-bg-primary me-1"
-                      th:text="${#strings.replace(a.authority, 'ROLE_', '')}">ROLE</span>
-            </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a sec:authorize="hasAnyRole('ADMIN','VENDEUR')" th:href="@{/ventes/nouvelle}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> Nouvelle vente</a>
+            <a sec:authorize="hasAnyRole('ADMIN','ACHETEUR')" th:href="@{/achats/commandes/nouvelle}" class="btn btn-outline-secondary">
+                <i class="bi bi-truck"></i> Nouvelle commande</a>
         </div>
     </div>
 
-    <!-- ===== Modules accessibles ===== -->
-    <h2 class="h6 text-uppercase text-muted mb-3">Vos modules</h2>
+    <!-- ===== Indicateurs financiers du mois (ADMIN / CHECKER) ===== -->
+    <div class="row g-3 mb-3" th:if="${t.financier}" th:with="s=${t.moisEnCours}">
+        <div class="col-6 col-xl-3">
+            <div class="card border-0 shadow-sm tuile">
+                <div class="libelle"><span class="icone icone-bleu"><i class="bi bi-receipt"></i></span> Chiffre d'affaires HT</div>
+                <div class="valeur"><span th:text="${#numbers.formatDecimal(s.caNetHt, 1, 'WHITESPACE', 0, 'COMMA')}">0</span> <small>MGA</small></div>
+                <div class="detail"><span th:text="${s.nbFactures}">0</span> facture(s) ce mois, avoirs déduits</div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="card border-0 shadow-sm tuile">
+                <div class="libelle"><span class="icone icone-vert"><i class="bi bi-graph-up-arrow"></i></span> Marge nette</div>
+                <div class="valeur" th:classappend="${s.margeNette.signum() < 0} ? 'text-danger'">
+                    <span th:text="${#numbers.formatDecimal(s.margeNette, 1, 'WHITESPACE', 0, 'COMMA')}">0</span> <small>MGA</small></div>
+                <div class="detail" th:text="${s.tauxMarque != null} ? ${s.tauxMarque} + ' % du chiffre d’affaires' : 'Aucune vente ce mois'">0 %</div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="card border-0 shadow-sm tuile">
+                <div class="libelle"><span class="icone icone-bleu"><i class="bi bi-cash-coin"></i></span> Encaissé ce mois</div>
+                <div class="valeur"><span th:text="${#numbers.formatDecimal(t.encaisseMois, 1, 'WHITESPACE', 0, 'COMMA')}">0</span> <small>MGA</small></div>
+                <div class="detail">tous modes de paiement</div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <a th:href="@{/ventes(impayees=true)}" class="card border-0 shadow-sm tuile tuile-lien">
+                <div class="libelle"><span class="icone" th:classappend="${t.creances.signum() > 0} ? 'icone-rouge' : 'icone-gris'">
+                    <i class="bi bi-wallet2"></i></span> Créances clients</div>
+                <div class="valeur"><span th:text="${#numbers.formatDecimal(t.creances, 1, 'WHITESPACE', 0, 'COMMA')}">0</span> <small>MGA</small></div>
+                <div class="detail">à encaisser à ce jour <i class="bi bi-arrow-right-short"></i></div>
+            </a>
+        </div>
+    </div>
+
+    <!-- ===== A traiter (tous) ===== -->
+    <h2 class="h6 text-uppercase mb-2 mt-1">À traiter</h2>
     <div class="row g-3 mb-4">
-        <div class="col-12 col-sm-6 col-xl-3" sec:authorize="hasAnyRole('ADMIN','VENDEUR')">
-            <a th:href="@{/ventes}" class="card carte-module border-0 shadow-sm h-100 text-decoration-none">
-                <div class="card-body">
-                    <i class="bi bi-cart3 icone text-primary"></i>
-                    <h3 class="h6 mt-2 mb-1 text-body">Ventes</h3>
-                    <p class="small text-muted mb-0">Devis, factures, clients</p>
-                </div>
+        <div class="col-6 col-xl-3" sec:authorize="hasAnyRole('ADMIN','CHECKER','ACHETEUR')">
+            <a th:href="@{/achats/receptions(statut='SAISIE')}" class="card border-0 shadow-sm tuile tuile-lien">
+                <div class="libelle"><span class="icone" th:classappend="${t.receptionsAValider > 0} ? 'icone-orange' : 'icone-gris'">
+                    <i class="bi bi-box-arrow-in-down"></i></span> Réceptions à valider</div>
+                <div class="valeur" th:text="${t.receptionsAValider}">0</div>
+                <div class="detail">contrôle des 4 yeux avant entrée en stock</div>
             </a>
         </div>
-        <div class="col-12 col-sm-6 col-xl-3" sec:authorize="hasAnyRole('ADMIN','ACHETEUR')">
-            <a th:href="@{/achats}" class="card carte-module border-0 shadow-sm h-100 text-decoration-none">
-                <div class="card-body">
-                    <i class="bi bi-truck icone text-success"></i>
-                    <h3 class="h6 mt-2 mb-1 text-body">Achats</h3>
-                    <p class="small text-muted mb-0">Commandes, fournisseurs, réceptions</p>
-                </div>
+        <div class="col-6 col-xl-3" sec:authorize="hasAnyRole('ADMIN','CHECKER','VENDEUR')">
+            <a th:href="@{/ventes(statut='A_VALIDER')}" class="card border-0 shadow-sm tuile tuile-lien">
+                <div class="libelle"><span class="icone" th:classappend="${t.ventesAControler > 0} ? 'icone-orange' : 'icone-gris'">
+                    <i class="bi bi-shield-check"></i></span> Ventes à contrôler</div>
+                <div class="valeur" th:text="${t.ventesAControler}">0</div>
+                <div class="detail">remise hors plafond, perte ou crédit</div>
             </a>
         </div>
-        <div class="col-12 col-sm-6 col-xl-3" sec:authorize="hasAnyRole('ADMIN','GESTIONNAIRE_STOCK','ACHETEUR')">
-            <a th:href="@{/stock}" class="card carte-module border-0 shadow-sm h-100 text-decoration-none">
-                <div class="card-body">
-                    <i class="bi bi-boxes icone text-warning"></i>
-                    <h3 class="h6 mt-2 mb-1 text-body">Stock</h3>
-                    <p class="small text-muted mb-0">Articles, mouvements, inventaires</p>
-                </div>
+        <div class="col-6 col-xl-3" sec:authorize="hasAnyRole('ADMIN','ACHETEUR')">
+            <a th:href="@{/achats/commandes(retard=true)}" class="card border-0 shadow-sm tuile tuile-lien">
+                <div class="libelle"><span class="icone" th:classappend="${t.commandesEnRetard > 0} ? 'icone-rouge' : 'icone-gris'">
+                    <i class="bi bi-clock-history"></i></span> Commandes en retard</div>
+                <div class="valeur" th:text="${t.commandesEnRetard}">0</div>
+                <div class="detail">arrivée prévue dépassée</div>
             </a>
         </div>
-        <div class="col-12 col-sm-6 col-xl-3" sec:authorize="hasRole('ADMIN')">
-            <a th:href="@{/admin}" class="card carte-module border-0 shadow-sm h-100 text-decoration-none">
-                <div class="card-body">
-                    <i class="bi bi-gear icone text-danger"></i>
-                    <h3 class="h6 mt-2 mb-1 text-body">Administration</h3>
-                    <p class="small text-muted mb-0">Utilisateurs, rôles, paramètres</p>
-                </div>
+        <div class="col-6 col-xl-3" sec:authorize="hasAnyRole('ADMIN','GESTIONNAIRE_STOCK','ACHETEUR')">
+            <a th:href="@{/stock}" class="card border-0 shadow-sm tuile tuile-lien">
+                <div class="libelle"><span class="icone" th:classappend="${t.articlesSansStock > 0} ? 'icone-orange' : 'icone-gris'">
+                    <i class="bi bi-boxes"></i></span> Articles en rupture</div>
+                <div class="valeur" th:text="${t.articlesSansStock}">0</div>
+                <div class="detail" th:if="${t.financier}">stock au revient :
+                    <span th:text="${#numbers.formatDecimal(t.valeurStockRevient, 1, 'WHITESPACE', 0, 'COMMA')}">0</span> MGA</div>
+                <div class="detail" th:unless="${t.financier}">articles à prix fixé sans stock</div>
             </a>
         </div>
     </div>
 
-    <!-- ===== Test des acces ===== -->
-    <h2 class="h6 text-uppercase text-muted mb-3">Test des droits d'accès</h2>
-    <div class="card border-0 shadow-sm">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                <tr>
-                    <th>Module</th>
-                    <th>URL</th>
-                    <th>Rôles autorisés</th>
-                    <th>Votre accès</th>
-                    <th class="text-end">Tester</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                    <td><i class="bi bi-cart3 me-1"></i> Ventes</td>
-                    <td><code>/ventes</code></td>
-                    <td class="small">ADMIN, VENDEUR</td>
-                    <td>
-                        <span sec:authorize="hasAnyRole('ADMIN','VENDEUR')" class="badge text-bg-success"><i class="bi bi-check-lg"></i> Autorisé</span>
-                        <span sec:authorize="!hasAnyRole('ADMIN','VENDEUR')" class="badge text-bg-danger"><i class="bi bi-x-lg"></i> Refusé</span>
-                    </td>
-                    <td class="text-end"><a th:href="@{/ventes}" class="btn btn-sm btn-outline-secondary">Ouvrir</a></td>
-                </tr>
-                <tr>
-                    <td><i class="bi bi-truck me-1"></i> Achats</td>
-                    <td><code>/achats</code></td>
-                    <td class="small">ADMIN, ACHETEUR</td>
-                    <td>
-                        <span sec:authorize="hasAnyRole('ADMIN','ACHETEUR')" class="badge text-bg-success"><i class="bi bi-check-lg"></i> Autorisé</span>
-                        <span sec:authorize="!hasAnyRole('ADMIN','ACHETEUR')" class="badge text-bg-danger"><i class="bi bi-x-lg"></i> Refusé</span>
-                    </td>
-                    <td class="text-end"><a th:href="@{/achats}" class="btn btn-sm btn-outline-secondary">Ouvrir</a></td>
-                </tr>
-                <tr>
-                    <td><i class="bi bi-boxes me-1"></i> Stock</td>
-                    <td><code>/stock</code></td>
-                    <td class="small">ADMIN, GESTIONNAIRE_STOCK, ACHETEUR</td>
-                    <td>
-                        <span sec:authorize="hasAnyRole('ADMIN','GESTIONNAIRE_STOCK','ACHETEUR')" class="badge text-bg-success"><i class="bi bi-check-lg"></i> Autorisé</span>
-                        <span sec:authorize="!hasAnyRole('ADMIN','GESTIONNAIRE_STOCK','ACHETEUR')" class="badge text-bg-danger"><i class="bi bi-x-lg"></i> Refusé</span>
-                    </td>
-                    <td class="text-end"><a th:href="@{/stock}" class="btn btn-sm btn-outline-secondary">Ouvrir</a></td>
-                </tr>
-                <tr>
-                    <td><i class="bi bi-gear me-1"></i> Administration</td>
-                    <td><code>/admin</code></td>
-                    <td class="small">ADMIN</td>
-                    <td>
-                        <span sec:authorize="hasRole('ADMIN')" class="badge text-bg-success"><i class="bi bi-check-lg"></i> Autorisé</span>
-                        <span sec:authorize="!hasRole('ADMIN')" class="badge text-bg-danger"><i class="bi bi-x-lg"></i> Refusé</span>
-                    </td>
-                    <td class="text-end"><a th:href="@{/admin}" class="btn btn-sm btn-outline-secondary">Ouvrir</a></td>
-                </tr>
-                </tbody>
-            </table>
+    <!-- ===== Graphiques (ADMIN / CHECKER) ===== -->
+    <th:block th:if="${t.financier}">
+        <div class="row g-3">
+            <!-- CA et marge par mois : barres groupees, une seule echelle (MGA) -->
+            <div class="col-xl-8">
+                <div class="card border-0 shadow-sm carte-graphique h-100">
+                    <div class="entete">
+                        <h2>Chiffre d'affaires et marge</h2>
+                        <span class="note">12 derniers mois · HT, avoirs déduits</span>
+                    </div>
+                    <div class="legende mt-2">
+                        <span><span class="pastille" style="background:#2a78d6"></span>Chiffre d'affaires HT</span>
+                        <span><span class="pastille" style="background:#eb6834"></span>Marge nette</span>
+                    </div>
+                    <div class="zone-graphique"><canvas id="graphique-mensuel" aria-label="Chiffre d'affaires et marge par mois" role="img"></canvas></div>
+                    <details class="donnees-graphique">
+                        <summary>Voir les données</summary>
+                        <table class="table table-sm">
+                            <thead><tr><th>Mois</th><th class="text-end">CA HT</th><th class="text-end">Marge</th></tr></thead>
+                            <tbody>
+                            <tr th:each="m, it : ${t.moisLibelles}">
+                                <td th:text="${m}">jan</td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(t.caParMois[it.index], 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(t.margeParMois[it.index], 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </details>
+                </div>
+            </div>
+
+            <!-- Encaissements par mode : barres horizontales classees, une teinte -->
+            <div class="col-xl-4">
+                <div class="card border-0 shadow-sm carte-graphique h-100">
+                    <div class="entete">
+                        <h2>Encaissements par mode</h2>
+                        <span class="note">ce mois</span>
+                    </div>
+                    <div th:if="${t.encaissements.empty}" class="etat-vide">
+                        <i class="bi bi-cash-stack"></i> Aucun encaissement ce mois-ci.
+                    </div>
+                    <div th:unless="${t.encaissements.empty}" class="zone-graphique basse">
+                        <canvas id="graphique-encaissements" aria-label="Encaissements par mode de paiement" role="img"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top 5 articles par marge -->
+            <div class="col-12">
+                <div class="card border-0 shadow-sm carte-graphique">
+                    <div class="entete">
+                        <h2>Articles les plus rentables</h2>
+                        <span class="note">marge nette sur 12 mois · top 5</span>
+                    </div>
+                    <div th:if="${t.topArticles.empty}" class="etat-vide">
+                        <i class="bi bi-bar-chart"></i> Pas encore de vente facturée.
+                    </div>
+                    <div th:unless="${t.topArticles.empty}" class="zone-graphique basse">
+                        <canvas id="graphique-articles" aria-label="Marge par article" role="img"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-footer bg-white small text-muted">
-            <i class="bi bi-info-circle"></i>
-            Les boutons « Ouvrir » sont volontairement affichés pour tous les modules :
-            un module refusé doit mener à la page « Accès refusé ».
-        </div>
-    </div>
+
+        <!-- Donnees des graphiques, lues par accueil.js -->
+        <script th:inline="javascript">
+            window.donneesAccueil = {
+                mois: /*[[${t.moisLibelles}]]*/ [],
+                ca: /*[[${t.caParMois}]]*/ [],
+                marge: /*[[${t.margeParMois}]]*/ [],
+                encaissementsLibelles: /*[[${t.encaissementsLibelles}]]*/ [],
+                encaissementsMontants: /*[[${t.encaissementsMontants}]]*/ [],
+                articlesLibelles: /*[[${t.articlesLibelles}]]*/ [],
+                articlesMarges: /*[[${t.articlesMarges}]]*/ []
+            };
+        </script>
+        <script th:src="@{/webjars/chart.js/4.4.1/dist/chart.umd.js}"></script>
+        <script th:src="@{/js/accueil.js}"></script>
+    </th:block>
 </main>
 </body>
 </html>

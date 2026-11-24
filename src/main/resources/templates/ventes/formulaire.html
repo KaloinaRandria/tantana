@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="${vente == null} ? 'Nouvelle vente' : 'Modifier ' + ${vente.libelle}">Vente</title>
+</head>
+<body>
+<h1 layout:fragment="titre-page" class="h5 mb-0"
+    th:text="${vente == null} ? 'Nouvelle vente' : 'Modifier le ' + ${#strings.toLowerCase(vente.libelle)}">Vente</h1>
+
+<main layout:fragment="content">
+<form th:action="@{/ventes/enregistrer}" th:object="${form}" method="post" novalidate id="form-vente"
+      th:attr="data-tva=${parametre.tauxTva}, data-remise-max=${parametre.remiseMaxVendeur}">
+    <input type="hidden" th:field="*{id}">
+    <input type="hidden" th:field="*{version}">
+
+    <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+        <p th:each="e : ${#fields.globalErrors()}" th:text="${e}" class="mb-0">Erreur</p>
+    </div>
+    <div th:if="${vente != null and vente.commentaireControle != null}" class="alert alert-danger">
+        <strong><i class="bi bi-x-octagon"></i> Refusée par <span th:text="${vente.controleur?.nomComplet}">X</span> :</strong>
+        <span th:text="${vente.commentaireControle}">motif</span>
+    </div>
+
+    <!-- ===== Client ===== -->
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="clientId" class="form-label">Client <span class="text-danger">*</span></label>
+                    <select th:field="*{clientId}" class="form-select"
+                            th:classappend="${#fields.hasErrors('clientId')} ? 'is-invalid'">
+                        <option th:each="c : ${clients}" th:value="${c.id}"
+                                th:text="${c.nom} + (${c.comptoir} ? ' (vente anonyme)' : '') + (${c.actif} ? '' : ' — désactivé')">Client</option>
+                    </select>
+                    <div class="invalid-feedback" th:errors="*{clientId}">Erreur</div>
+                </div>
+                <div class="col-md-6">
+                    <label for="observations" class="form-label">Observations</label>
+                    <input type="text" th:field="*{observations}" class="form-control"
+                           placeholder="Bon de commande client, conditions de livraison…">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Lignes ===== -->
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <h2 class="h6 text-uppercase text-muted mb-0">Articles</h2>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="ajouter-ligne">
+                    <i class="bi bi-plus-lg"></i> Ajouter un article</button>
+            </div>
+            <p class="small text-muted mb-3">
+                Prix catalogue HT. Remise autorisée sans contrôle : jusqu'à
+                <strong th:text="${parametre.remiseMaxVendeur.stripTrailingZeros().toPlainString()} + ' %'">10 %</strong>.
+                Au-delà, la vente sera contrôlée par un CHECKER avant facturation.
+            </p>
+
+            <div th:if="${#fields.hasErrors('lignes')}" class="alert alert-danger py-2" th:errors="*{lignes}">Erreur</div>
+
+            <div class="table-responsive">
+                <table class="table align-middle mb-0" id="table-lignes">
+                    <thead class="table-light">
+                    <tr>
+                        <th style="min-width:260px">Article</th>
+                        <th class="text-end" style="width:110px">Stock</th>
+                        <th class="text-end" style="width:130px">Prix HT</th>
+                        <th class="text-end" style="width:120px">Quantité</th>
+                        <th class="text-end" style="width:110px">Remise %</th>
+                        <th class="text-end" style="width:140px">Montant HT</th>
+                        <th style="width:50px"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="l, it : *{lignes}" class="ligne">
+                        <td>
+                            <select th:field="*{lignes[__${it.index}__].articleId}" class="form-select form-select-sm champ-article"
+                                    th:classappend="${#fields.hasErrors('lignes[__${it.index}__].articleId')} ? 'is-invalid'">
+                                <option value="">— Choisir —</option>
+                                <option th:each="a : ${articles}" th:value="${a.id}"
+                                        th:attr="data-prix=${a.prixVenteHt}, data-stock=${stocks[a.id]}, data-unite=${a.unite.libelle}"
+                                        th:text="${a.reference} + ' — ' + ${a.designation}">Article</option>
+                            </select>
+                            <div class="invalid-feedback" th:errors="*{lignes[__${it.index}__].articleId}">Erreur</div>
+                        </td>
+                        <td class="text-end small stock">—</td>
+                        <td class="text-end prix">—</td>
+                        <td>
+                            <input type="number" step="0.001" min="0" th:field="*{lignes[__${it.index}__].quantite}"
+                                   class="form-control form-control-sm text-end champ-quantite"
+                                   th:classappend="${#fields.hasErrors('lignes[__${it.index}__].quantite')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:errors="*{lignes[__${it.index}__].quantite}">Erreur</div>
+                        </td>
+                        <td>
+                            <input type="number" step="0.01" min="0" max="100" th:field="*{lignes[__${it.index}__].remisePct}"
+                                   class="form-control form-control-sm text-end champ-remise"
+                                   th:classappend="${#fields.hasErrors('lignes[__${it.index}__].remisePct')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:errors="*{lignes[__${it.index}__].remisePct}">Erreur</div>
+                        </td>
+                        <td class="text-end montant">0</td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-outline-danger supprimer-ligne" title="Retirer">
+                                <i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                    </tbody>
+                    <tfoot>
+                    <tr><td colspan="5" class="text-end">Total HT</td>
+                        <td class="text-end text-nowrap"><span id="total-ht">0</span> MGA</td><td></td></tr>
+                    <tr class="text-muted"><td colspan="5" class="text-end">TVA <span th:text="${parametre.tauxTva.stripTrailingZeros().toPlainString()}">20</span> %</td>
+                        <td class="text-end text-nowrap"><span id="total-tva">0</span> MGA</td><td></td></tr>
+                    <tr class="fw-semibold fs-6"><td colspan="5" class="text-end">Total TTC</td>
+                        <td class="text-end text-nowrap"><span id="total-ttc">0</span> MGA</td><td></td></tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="alert alert-warning py-2 small mt-3 d-none" id="alerte-controle">
+                <i class="bi bi-shield-exclamation"></i>
+                Une remise dépasse le plafond : la vente devra être approuvée par un CHECKER.
+            </div>
+            <div class="alert alert-danger py-2 small mt-2 d-none" id="alerte-stock">
+                <i class="bi bi-box-seam"></i>
+                Une quantité dépasse le stock disponible : la vente ne pourra pas être validée.
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Enregistrer le brouillon</button>
+        <a th:href="${vente == null} ? @{/ventes} : @{/ventes/{id}(id=${vente.id})}" class="btn btn-outline-secondary">Annuler</a>
+        <span class="small text-muted ms-2"><i class="bi bi-info-circle"></i>
+            Le stock et la facture ne changent qu'au clic sur « Valider la vente ».</span>
+    </div>
+</form>
+
+<template id="modele-ligne">
+    <tr class="ligne">
+        <td>
+            <select data-champ="articleId" class="form-select form-select-sm champ-article">
+                <option value="">— Choisir —</option>
+                <option th:each="a : ${articles}" th:value="${a.id}"
+                        th:attr="data-prix=${a.prixVenteHt}, data-stock=${stocks[a.id]}, data-unite=${a.unite.libelle}"
+                        th:text="${a.reference} + ' — ' + ${a.designation}">Article</option>
+            </select>
+        </td>
+        <td class="text-end small stock">—</td>
+        <td class="text-end prix">—</td>
+        <td><input type="number" step="0.001" min="0" data-champ="quantite" class="form-control form-control-sm text-end champ-quantite"></td>
+        <td><input type="number" step="0.01" min="0" max="100" value="0" data-champ="remisePct" class="form-control form-control-sm text-end champ-remise"></td>
+        <td class="text-end montant">0</td>
+        <td class="text-end">
+            <button type="button" class="btn btn-sm btn-outline-danger supprimer-ligne" title="Retirer"><i class="bi bi-trash"></i></button>
+        </td>
+    </tr>
+</template>
+
+<script th:src="@{/js/vente.js}"></script>
+</main>
+</body>
+</html>

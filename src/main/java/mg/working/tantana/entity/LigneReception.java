@@ -46,8 +46,22 @@ public class LigneReception {
     @Column(length = 255)
     private String commentaire;
 
-    /** Cout d'entree en stock : prix fournisseur converti au taux du jour de reception. */
+    /** Part des frais du transitaire par unite recue, figee a la validation. */
+    @Column(name = "frais_unitaire", nullable = false, precision = 18, scale = 4)
+    private BigDecimal fraisUnitaire = BigDecimal.ZERO;
+
+    /** Prix d'achat unitaire : prix fournisseur converti au taux du jour de reception. */
     public BigDecimal getCoutUnitaireMga() {
         return ligneCommande.getPrixUnitaire().multiply(reception.getTauxChange()).setScale(4, RoundingMode.HALF_UP);
+    }
+
+    /** Valeur d'achat de la quantite recue (base de la repartition des frais). */
+    public BigDecimal getValeurAchatMga() {
+        return getCoutUnitaireMga().multiply(quantiteRecue);
+    }
+
+    /** Prix de revient unitaire : prix d'achat + part des frais. */
+    public BigDecimal getCoutRevientUnitaireMga() {
+        return getCoutUnitaireMga().add(fraisUnitaire);
     }
 }

@@ -8,6 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MouvementStockRepository extends JpaRepository<MouvementStock, Long> {
 
-    @EntityGraph(attributePaths = {"utilisateur", "reception"})
+    @EntityGraph(attributePaths = {"utilisateur", "reception", "vente", "avoir"})
     Page<MouvementStock> findByArticleId(Long articleId, Pageable pageable);
 }

@@ -252,11 +252,15 @@ public class ReceptionService {
                     + commande.getStatut().getLibelle().toLowerCase() + " : la réception ne peut plus être validée.");
         }
 
+        // Frais du transitaire repartis au prorata de la valeur recue, figes sur chaque ligne
+        Map<LigneReception, BigDecimal> frais = RepartitionFrais.fraisUnitaires(reception);
+
         for (LigneReception ligne : reception.getLignes()) {
             BigDecimal quantite = ligne.getQuantiteRecue();
             if (quantite.signum() == 0) {
                 continue;
             }
+            ligne.setFraisUnitaire(frais.getOrDefault(ligne, BigDecimal.ZERO));
             LigneCommandeAchat lc = ligne.getLigneCommande();
             if (quantite.compareTo(lc.getQuantiteRestante()) > 0) {
                 throw new RegleMetierException("Article " + lc.getArticle().getReference() + " : " + quantite.stripTrailingZeros().toPlainString()
@@ -264,7 +268,8 @@ public class ReceptionService {
                         + " à recevoir. Rejetez la réception pour correction.");
             }
             lc.setQuantiteRecue(lc.getQuantiteRecue().add(quantite));
-            stockService.entrerAchat(lc.getArticle(), quantite, ligne.getCoutUnitaireMga(), reception, validateur);
+            stockService.entrerAchat(lc.getArticle(), quantite, ligne.getCoutUnitaireMga(),
+                    ligne.getCoutRevientUnitaireMga(), reception, validateur);
         }
 
         boolean toutRecu = commande.getLignes().stream().allMatch(l -> l.getQuantiteRestante().signum() == 0);

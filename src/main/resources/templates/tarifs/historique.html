@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="'Historique des prix ' + ${article.reference}">Historique</title>
+</head>
+<body>
+<h1 layout:fragment="titre-page" class="h5 mb-0">
+    <a th:href="@{/tarifs}" class="text-decoration-none text-muted">Prix de vente</a>
+    <i class="bi bi-chevron-right small text-muted"></i>
+    <span th:text="${article.reference}">ART</span>
+</h1>
+
+<main layout:fragment="content">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+        <h2 class="h5 mb-0" th:text="${article.designation}">Désignation</h2>
+        <div>Prix actuel :
+            <strong th:text="${article.prixVenteHt != null} ? ${#numbers.formatDecimal(article.prixVenteHt, 1, 'WHITESPACE', 0, 'COMMA')} + ' MGA HT' : 'non fixé'">0</strong>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Date</th>
+                    <th class="text-end">Ancien prix</th>
+                    <th class="text-end">Nouveau prix</th>
+                    <th class="text-end">Revient à cette date</th>
+                    <th>Motif</th>
+                    <th>Par</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${historique.empty}">
+                    <td colspan="6" class="text-center text-muted py-4">Aucun changement de prix enregistré.</td>
+                </tr>
+                <tr th:each="h : ${historique}">
+                    <td class="text-nowrap" th:text="${#temporals.format(h.dateModification, 'dd/MM/yyyy HH:mm')}">date</td>
+                    <td class="text-end text-muted"
+                        th:text="${h.ancienPrix != null} ? ${#numbers.formatDecimal(h.ancienPrix, 1, 'WHITESPACE', 0, 'COMMA')} : '—'">0</td>
+                    <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(h.nouveauPrix, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                    <td class="text-end"
+                        th:text="${h.cmupRevient != null} ? ${#numbers.formatDecimal(h.cmupRevient, 1, 'WHITESPACE', 0, 'COMMA')} : '—'">0</td>
+                    <td class="small" th:text="${h.motif}">motif</td>
+                    <td class="small" th:text="${h.modifiePar.nomComplet}">Nom</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+</body>
+</html>

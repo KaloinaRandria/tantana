@@ -132,3 +132,22 @@ FROM (VALUES
      ) AS f (type, montant, ref)
 JOIN reception r ON r.numero = 'BR-2025-9001'
 WHERE NOT EXISTS (SELECT 1 FROM frais_reception x WHERE x.reception_id = r.id);
+
+-- ===== Prix de vente de test (HT, Ariary) =====
+-- Seulement si le prix n'a pas encore ete fixe (ne pas ecraser un prix saisi dans l'application).
+-- ART-0003 volontairement sans prix ("A fixer"), ART-0002 volontairement sous le revient.
+UPDATE article a SET prix_vente_ht = p.prix
+FROM (VALUES ('ART-0001', 750000), ('ART-0002', 20000), ('ART-0004', 95000), ('ART-0005', 120000))
+     AS p (reference, prix)
+WHERE a.reference = p.reference AND a.prix_vente_ht IS NULL;
+
+-- ===== Clients de test =====
+INSERT INTO client (nom, type, telephone, email, adresse, nif, stat, plafond_credit, actif)
+SELECT v.nom, v.type, v.tel, v.email, v.adresse, v.nif, v.stat, v.plafond, v.actif
+FROM (VALUES
+        ('Rasoa Hanta',            'PARTICULIER',   '+261 34 11 111 11', NULL,                    'Analakely, Antananarivo', NULL,         NULL,                0,       TRUE),
+        ('Boutique Fanilo',        'PROFESSIONNEL', '+261 33 22 222 22', 'fanilo@boutique.test',  'Behoririka, Antananarivo', '1000111222', '47111112024000001', 5000000, TRUE),
+        ('Societe Mahery SARL',    'PROFESSIONNEL', '+261 32 33 333 33', 'achat@mahery.test',     'Ankorondrano',             '2000333444', '46521112023000777', 20000000, TRUE),
+        ('Ancien client inactif',  'PARTICULIER',   NULL,                NULL,                    NULL,                       NULL,         NULL,                0,       FALSE)
+     ) AS v (nom, type, tel, email, adresse, nif, stat, plafond, actif)
+WHERE NOT EXISTS (SELECT 1 FROM client c WHERE c.nom = v.nom);

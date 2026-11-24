@@ -57,9 +57,13 @@
 </span>
 
 <!-- Bouton activer / desactiver (POST + CSRF) -->
-<form th:fragment="boutonStatut(url, actif)" th:action="@{${url}}" method="post" class="d-inline">
-    <button th:if="${actif}" type="submit" class="btn btn-sm btn-outline-warning" title="Désactiver"
-            onclick="return confirm('Désactiver cet élément ? Il ne sera plus proposé dans les nouvelles saisies.')">
+<!-- La desactivation passe par la fenetre de confirmation commune ; la reactivation est directe -->
+<form th:fragment="boutonStatut(url, actif)" th:action="@{${url}}" method="post" class="d-inline"
+      th:attr="data-confirmation=${actif} ? 'Cet élément ne sera plus proposé dans les nouvelles saisies. Vous pourrez le réactiver à tout moment.' : null,
+               data-confirmation-titre=${actif} ? 'Désactiver' : null,
+               data-confirmation-bouton=${actif} ? 'Désactiver' : null,
+               data-confirmation-style=${actif} ? 'warning' : null">
+    <button th:if="${actif}" type="submit" class="btn btn-sm btn-outline-warning" title="Désactiver">
         <i class="bi bi-pause-circle"></i>
     </button>
     <button th:unless="${actif}" type="submit" class="btn btn-sm btn-outline-success" title="Réactiver">

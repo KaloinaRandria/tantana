@@ -3,6 +3,8 @@ package mg.working.tantana.controller;
 import lombok.RequiredArgsConstructor;
 import mg.working.tantana.dto.ReceptionForm;
 import mg.working.tantana.entity.CommandeAchat;
+import mg.working.tantana.entity.LigneReception;
+import mg.working.tantana.service.RepartitionFrais;
 import mg.working.tantana.entity.Reception;
 import mg.working.tantana.entity.StatutReception;
 import mg.working.tantana.entity.Transitaire;
@@ -65,7 +67,13 @@ public class ReceptionController {
 
     @GetMapping("/{id}")
     public String detail(@PathVariable Long id, Model model) {
-        model.addAttribute("reception", receptionService.trouverAvecDetails(id));
+        Reception reception = receptionService.trouverAvecDetails(id);
+        if (reception.getStatut() != StatutReception.VALIDEE) {
+            // Apercu des frais par unite. L'entite est detachee (transaction terminee) :
+            // ces valeurs servent uniquement a l'affichage et ne sont pas enregistrees.
+            RepartitionFrais.fraisUnitaires(reception).forEach(LigneReception::setFraisUnitaire);
+        }
+        model.addAttribute("reception", reception);
         return "receptions/detail";
     }
 

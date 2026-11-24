@@ -28,16 +28,23 @@
                 </div>
             </div>
             <div class="text-end">
-                <div class="small text-muted">CMUP</div>
-                <div class="fs-5 fw-semibold">
-                    <span th:text="${stock != null} ? ${#numbers.formatDecimal(stock.cmup, 1, 'WHITESPACE', 2, 'COMMA')} : '—'">0</span>
+                <div class="small text-muted">Prix d'achat (CMUP)</div>
+                <div class="fs-5">
+                    <span th:text="${stock != null} ? ${#numbers.formatDecimal(stock.cmup, 1, 'WHITESPACE', 0, 'COMMA')} : '—'">0</span>
                     <small class="text-muted fs-6">MGA</small>
                 </div>
             </div>
             <div class="text-end">
-                <div class="small text-muted">Valeur</div>
+                <div class="small text-muted">Prix de revient</div>
                 <div class="fs-5 fw-semibold">
-                    <span th:text="${stock != null} ? ${#numbers.formatDecimal(stock.valeur, 1, 'WHITESPACE', 0, 'COMMA')} : '0'">0</span>
+                    <span th:text="${stock != null} ? ${#numbers.formatDecimal(stock.cmupRevient, 1, 'WHITESPACE', 0, 'COMMA')} : '—'">0</span>
+                    <small class="text-muted fs-6">MGA</small>
+                </div>
+            </div>
+            <div class="text-end">
+                <div class="small text-muted">Valeur au revient</div>
+                <div class="fs-5 fw-semibold">
+                    <span th:text="${stock != null} ? ${#numbers.formatDecimal(stock.valeurRevient, 1, 'WHITESPACE', 0, 'COMMA')} : '0'">0</span>
                     <small class="text-muted fs-6">MGA</small>
                 </div>
             </div>
@@ -53,28 +60,34 @@
                     <th>Type</th>
                     <th>Document</th>
                     <th class="text-end">Quantité</th>
-                    <th class="text-end">Coût unitaire</th>
+                    <th class="text-end">Achat unitaire</th>
+                    <th class="text-end">Revient unitaire</th>
                     <th class="text-end">Stock après</th>
-                    <th class="text-end">CMUP après</th>
+                    <th class="text-end">CMUP achat après</th>
+                    <th class="text-end">CMUP revient après</th>
                     <th>Par</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:if="${page.empty}">
-                    <td colspan="8" class="text-center text-muted py-4">Aucun mouvement pour cet article.</td>
+                    <td colspan="10" class="text-center text-muted py-4">Aucun mouvement pour cet article.</td>
                 </tr>
                 <tr th:each="m : ${page.content}">
                     <td class="text-nowrap" th:text="${#temporals.format(m.dateMouvement, 'dd/MM/yyyy HH:mm')}">date</td>
                     <td th:text="${m.type.libelle}">Type</td>
                     <td>
                         <a th:if="${m.reception}" th:href="@{/achats/receptions/{id}(id=${m.reception.id})}" th:text="${m.reference}">BR</a>
-                        <span th:unless="${m.reception}" th:text="${m.reference}">ref</span>
+                        <a th:if="${m.vente}" th:href="@{/ventes/{id}(id=${m.vente.id})}" th:text="${m.reference}">FV</a>
+                        <a th:if="${m.avoir}" th:href="@{/ventes/{id}(id=${m.avoir.vente.id})}" th:text="${m.reference}">AV</a>
+                        <span th:if="${m.reception == null and m.vente == null and m.avoir == null}" th:text="${m.reference}">ref</span>
                     </td>
                     <td class="text-end fw-semibold" th:classappend="${m.type.sens > 0} ? 'text-success' : 'text-danger'"
                         th:text="(${m.type.sens > 0} ? '+' : '−') + ${m.quantite.stripTrailingZeros().toPlainString()}">+10</td>
-                    <td class="text-end" th:text="${#numbers.formatDecimal(m.coutUnitaire, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
+                    <td class="text-end text-muted" th:text="${#numbers.formatDecimal(m.coutUnitaire, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(m.coutRevientUnitaire, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
                     <td class="text-end" th:text="${m.quantiteApres.stripTrailingZeros().toPlainString()}">0</td>
-                    <td class="text-end" th:text="${#numbers.formatDecimal(m.cmupApres, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
+                    <td class="text-end text-muted" th:text="${#numbers.formatDecimal(m.cmupApres, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                    <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(m.cmupRevientApres, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
                     <td class="small" th:text="${m.utilisateur.nomComplet}">Nom</td>
                 </tr>
                 </tbody>

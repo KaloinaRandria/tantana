@@ -28,6 +28,7 @@ public class StockController {
         var pageable = PageRequest.of(Math.max(page, 0), 30, Sort.by("article.reference"));
         model.addAttribute("page", stockService.rechercher(q, pageable));
         model.addAttribute("valeurTotale", stockService.valeurTotale());
+        model.addAttribute("valeurTotaleRevient", stockService.valeurTotaleRevient());
         model.addAttribute("q", q);
         return "stock/liste";
     }

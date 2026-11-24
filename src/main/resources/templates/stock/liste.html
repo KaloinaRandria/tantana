@@ -22,9 +22,20 @@
         <div class="col-sm-6 col-lg-4">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <div class="small text-muted">Valeur totale (au CMUP)</div>
+                    <div class="small text-muted">Valeur au prix d'achat</div>
                     <div class="fs-4 fw-semibold">
                         <span th:text="${#numbers.formatDecimal(valeurTotale, 1, 'WHITESPACE', 0, 'COMMA')}">0</span>
+                        <small class="fs-6 text-muted">MGA</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="small text-muted">Valeur au prix de revient (frais compris)</div>
+                    <div class="fs-4 fw-semibold">
+                        <span th:text="${#numbers.formatDecimal(valeurTotaleRevient, 1, 'WHITESPACE', 0, 'COMMA')}">0</span>
                         <small class="fs-6 text-muted">MGA</small>
                     </div>
                 </div>
@@ -50,15 +61,16 @@
                     <th>Référence</th>
                     <th>Désignation</th>
                     <th class="text-end">Quantité</th>
-                    <th class="text-end">CMUP (MGA)</th>
-                    <th class="text-end">Valeur (MGA)</th>
+                    <th class="text-end">Prix d'achat (CMUP)</th>
+                    <th class="text-end">Prix de revient</th>
+                    <th class="text-end">Valeur au revient</th>
                     <th>Dernier mouvement</th>
                     <th></th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:if="${page.empty}">
-                    <td colspan="7" class="text-center text-muted py-4">
+                    <td colspan="8" class="text-center text-muted py-4">
                         Aucun article en stock. Le stock se remplit à la validation des réceptions.</td>
                 </tr>
                 <tr th:each="s : ${page.content}">
@@ -68,8 +80,9 @@
                         <span th:text="${s.quantite.stripTrailingZeros().toPlainString()}">0</span>
                         <small class="text-muted fw-normal" th:text="${s.article.unite.libelle}">Pièce</small>
                     </td>
-                    <td class="text-end" th:text="${#numbers.formatDecimal(s.cmup, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
-                    <td class="text-end" th:text="${#numbers.formatDecimal(s.valeur, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                    <td class="text-end text-muted" th:text="${#numbers.formatDecimal(s.cmup, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                    <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(s.cmupRevient, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(s.valeurRevient, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
                     <td class="small text-muted" th:text="${#temporals.format(s.dateMaj, 'dd/MM/yyyy HH:mm')}">date</td>
                     <td class="text-end">
                         <a th:href="@{/stock/articles/{id}(id=${s.article.id})}" class="btn btn-sm btn-outline-secondary">

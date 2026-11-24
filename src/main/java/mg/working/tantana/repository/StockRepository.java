@@ -11,6 +11,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface StockRepository extends JpaRepository<Stock, Long> {
@@ -34,6 +36,11 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
     @EntityGraph(attributePaths = "article")
     Optional<Stock> findByArticleId(Long articleId);
 
+    List<Stock> findByArticleIdIn(Collection<Long> articleIds);
+
     @Query("select coalesce(sum(s.quantite * s.cmup), 0) from Stock s")
     BigDecimal valeurTotale();
+
+    @Query("select coalesce(sum(s.quantite * s.cmupRevient), 0) from Stock s")
+    BigDecimal valeurTotaleRevient();
 }

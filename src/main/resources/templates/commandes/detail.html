@@ -41,20 +41,23 @@
                 <i class="bi bi-box-arrow-in-down"></i> Saisir une réception</a>
             <a th:if="${modifiable}" th:href="@{/achats/commandes/{id}/modifier(id=${c.id})}" class="btn btn-outline-primary">
                 <i class="bi bi-pencil"></i> Modifier</a>
-            <form th:if="${c.statut.name() == 'BROUILLON'}" th:action="@{/achats/commandes/{id}/passer(id=${c.id})}" method="post">
-                <button type="submit" class="btn btn-primary"
-                        onclick="return confirm('Passer cette commande au fournisseur ? Elle restera modifiable tant que rien n\'est reçu.')">
-                    <i class="bi bi-send"></i> Passer la commande</button>
+            <form th:if="${c.statut.name() == 'BROUILLON'}" th:action="@{/achats/commandes/{id}/passer(id=${c.id})}" method="post"
+                  data-confirmation-titre="Passer la commande"
+                  data-confirmation="La commande sera marquée comme envoyée au fournisseur. Elle restera modifiable tant que rien n'est reçu."
+                  data-confirmation-bouton="Passer la commande">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Passer la commande</button>
             </form>
-            <form th:if="${modifiable}" th:action="@{/achats/commandes/{id}/annuler(id=${c.id})}" method="post">
-                <button type="submit" class="btn btn-outline-danger"
-                        onclick="return confirm('Annuler définitivement cette commande ?')">
-                    <i class="bi bi-x-circle"></i> Annuler</button>
+            <form th:if="${modifiable}" th:action="@{/achats/commandes/{id}/annuler(id=${c.id})}" method="post"
+                  data-confirmation-titre="Annuler la commande"
+                  data-confirmation="Cette commande sera annulée définitivement. Cette opération ne peut pas être défaite."
+                  data-confirmation-bouton="Annuler la commande" data-confirmation-style="danger">
+                <button type="submit" class="btn btn-outline-danger"><i class="bi bi-x-circle"></i> Annuler</button>
             </form>
-            <form th:if="${c.statut.name() == 'PARTIELLEMENT_RECUE'}" th:action="@{/achats/commandes/{id}/cloturer(id=${c.id})}" method="post">
-                <button type="submit" class="btn btn-outline-dark"
-                        onclick="return confirm('Clôturer la commande ? Le reste à recevoir sera abandonné (le stock ne change pas).')">
-                    <i class="bi bi-lock"></i> Clôturer</button>
+            <form th:if="${c.statut.name() == 'PARTIELLEMENT_RECUE'}" th:action="@{/achats/commandes/{id}/cloturer(id=${c.id})}" method="post"
+                  data-confirmation-titre="Clôturer la commande"
+                  data-confirmation="Le reste à recevoir sera abandonné. Les quantités déjà reçues et le stock ne changent pas."
+                  data-confirmation-bouton="Clôturer" data-confirmation-style="dark">
+                <button type="submit" class="btn btn-outline-dark"><i class="bi bi-lock"></i> Clôturer</button>
             </form>
         </div>
     </div>

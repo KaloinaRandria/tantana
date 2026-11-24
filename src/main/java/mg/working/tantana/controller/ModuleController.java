@@ -12,20 +12,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class ModuleController {
 
-    @GetMapping("/ventes")
-    public String ventes(Model model) {
-        return module(model, "Ventes", "ADMIN, VENDEUR");
-    }
-
     /** Le module Achats s'ouvre sur la liste des commandes. */
     @GetMapping("/achats")
     public String achats() {
         return "redirect:/achats/commandes";
     }
 
+    /** L'administration s'ouvre sur les parametres. */
     @GetMapping("/admin")
-    public String admin(Model model) {
-        return module(model, "Administration", "ADMIN");
+    public String admin() {
+        return "redirect:/admin/parametres";
     }
 
     private String module(Model model, String titre, String rolesAutorises) {

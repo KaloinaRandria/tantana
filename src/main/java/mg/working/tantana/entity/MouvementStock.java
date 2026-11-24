@@ -51,6 +51,13 @@ public class MouvementStock {
     @Column(name = "cmup_apres", nullable = false, precision = 18, scale = 4, updatable = false)
     private BigDecimal cmupApres;
 
+    /** Cout de revient unitaire (achat + frais) du mouvement. */
+    @Column(name = "cout_revient_unitaire", nullable = false, precision = 18, scale = 4, updatable = false)
+    private BigDecimal coutRevientUnitaire;
+
+    @Column(name = "cmup_revient_apres", nullable = false, precision = 18, scale = 4, updatable = false)
+    private BigDecimal cmupRevientApres;
+
     /** Numero du document a l'origine du mouvement (BR-2026-0001...). */
     @Column(nullable = false, length = 50, updatable = false)
     private String reference;
@@ -58,6 +65,14 @@ public class MouvementStock {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reception_id", updatable = false)
     private Reception reception;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vente_id", updatable = false)
+    private Vente vente;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "avoir_id", updatable = false)
+    private Avoir avoir;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "utilisateur_id", updatable = false)

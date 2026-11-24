@@ -15,6 +15,9 @@ public class NumerotationService {
 
     public static final String COMMANDE_ACHAT = "CA";
     public static final String RECEPTION = "BR";
+    /** Factures de vente : suite continue, attribuee a la validation seulement. */
+    public static final String FACTURE = "FV";
+    public static final String AVOIR = "AV";
 
     private final NumerotationRepository numerotationRepository;
 

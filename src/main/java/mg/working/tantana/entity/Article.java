@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /** Produit du catalogue, partage par les modules Achats, Stock et Ventes. */
@@ -55,4 +56,11 @@ public class Article {
 
     @Column(name = "date_creation", nullable = false, insertable = false, updatable = false)
     private LocalDateTime dateCreation;
+
+    /**
+     * Prix de vente catalogue hors taxe, en Ariary. null = pas encore fixe (article non vendable).
+     * Modifie uniquement par l'ADMIN via TarifService (jamais par le formulaire article).
+     */
+    @Column(name = "prix_vente_ht", precision = 18, scale = 2)
+    private BigDecimal prixVenteHt;
 }

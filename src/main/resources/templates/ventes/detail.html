@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="${vente.libelle}">Vente</title>
+</head>
+<body>
+<h1 layout:fragment="titre-page" class="h5 mb-0">
+    <a th:href="@{/ventes}" class="text-decoration-none text-muted">Ventes</a>
+    <i class="bi bi-chevron-right small text-muted"></i>
+    <span th:text="${vente.libelle}">FV</span>
+</h1>
+
+<main layout:fragment="content"
+      th:with="v=${vente}, auteur=${#strings.equalsIgnoreCase(#authentication.name, vente.vendeur.username)}">
+    <div th:replace="~{fragments/commun :: alertes}"></div>
+
+    <!-- ===== En-tete + actions ===== -->
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+        <div>
+            <h2 class="h4 mb-1">
+                <span th:text="${v.libelle}">FV</span>
+                <span class="badge fs-6 align-middle" th:classappend="'text-bg-' + ${v.statut.couleur}" th:text="${v.statut.libelle}">Statut</span>
+            </h2>
+            <div class="text-muted small">
+                Client <strong th:text="${v.client.nom}">Client</strong>
+                · vendeur <span th:text="${v.vendeur.nomComplet}">Nom</span>
+                · <span th:text="${#temporals.format(v.dateVente, 'dd/MM/yyyy')}">date</span>
+            </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <!-- Brouillon : le vendeur modifie, supprime ou valide -->
+            <th:block th:if="${v.statut.name() == 'BROUILLON' and auteur}">
+                <a th:href="@{/ventes/{id}/modifier(id=${v.id})}" class="btn btn-outline-primary"><i class="bi bi-pencil"></i> Modifier</a>
+                <form th:action="@{/ventes/{id}/supprimer(id=${v.id})}" method="post"
+                      data-confirmation-titre="Supprimer le brouillon"
+                      data-confirmation="Ce brouillon de vente sera supprimé. Aucune facture n'a été émise et le stock n'a pas bougé."
+                      data-confirmation-bouton="Supprimer" data-confirmation-style="danger">
+                    <button type="submit" class="btn btn-outline-danger"><i class="bi bi-trash"></i> Supprimer</button>
+                </form>
+                <form th:action="@{/ventes/{id}/valider(id=${v.id})}" method="post"
+                      data-confirmation-titre="Valider la vente"
+                      th:attr="data-confirmation=${motifsControle.empty}
+                        ? 'La facture va être émise avec un numéro définitif et les articles vont sortir du stock. Une facture ne peut plus être modifiée.'
+                        : 'Cette vente dépasse les règles (remise ou prix) : elle sera envoyée en contrôle à un CHECKER avant facturation.'"
+                      data-confirmation-bouton="Valider la vente" data-confirmation-style="success">
+                    <button type="submit" class="btn btn-success"><i class="bi bi-check2-circle"></i> Valider la vente</button>
+                </form>
+            </th:block>
+            <!-- A valider : un CHECKER (autre que le vendeur) approuve ou refuse -->
+            <th:block th:if="${v.statut.name() == 'A_VALIDER' and !auteur}" sec:authorize="hasAnyRole('ADMIN','CHECKER')">
+                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modal-refus">
+                    <i class="bi bi-x-circle"></i> Refuser</button>
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modal-approbation">
+                    <i class="bi bi-check2-circle"></i> Approuver et facturer</button>
+            </th:block>
+            <a th:if="${v.numero != null}" th:href="@{/ventes/{id}/facture.pdf(id=${v.id})}" target="_blank" class="btn btn-primary">
+                <i class="bi bi-file-earmark-pdf"></i> Facture PDF</a>
+        </div>
+    </div>
+
+    <!-- ===== Messages d'etat ===== -->
+    <div th:if="${v.statut.name() == 'BROUILLON' and !motifsControle.empty}" class="alert alert-warning small">
+        <i class="bi bi-shield-exclamation"></i> <strong>À la validation, cette vente sera envoyée en contrôle :</strong>
+        <ul class="mb-0 mt-1"><li th:each="m : ${motifsControle}" th:text="${m}">motif</li></ul>
+    </div>
+    <div th:if="${v.statut.name() == 'BROUILLON' and v.commentaireControle != null}" class="alert alert-danger small">
+        <strong><i class="bi bi-x-octagon"></i> Refusée par <span th:text="${v.controleur?.nomComplet}">X</span> :</strong>
+        <span th:text="${v.commentaireControle}">commentaire</span>
+    </div>
+    <div th:if="${v.statut.name() == 'A_VALIDER'}" class="alert alert-warning small">
+        <strong><i class="bi bi-hourglass-split"></i> En attente de contrôle</strong>
+        <th:block th:if="${auteur}"> par une autre personne (rôle CHECKER)</th:block> :
+        <ul class="mb-0 mt-1"><li th:each="m : ${#strings.listSplit(v.motifControle, '&#10;')}" th:text="${m}">motif</li></ul>
+    </div>
+    <div th:if="${v.statut.name() == 'VALIDEE' and v.controleur != null}" class="alert alert-success small">
+        <i class="bi bi-check2-circle"></i> Approuvée par <strong th:text="${v.controleur.nomComplet}">X</strong>
+        <th:block th:if="${v.commentaireControle}"> : <span th:text="${v.commentaireControle}">commentaire</span></th:block>
+    </div>
+
+    <!-- ===== Lignes ===== -->
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Article</th>
+                    <th class="text-end">Quantité</th>
+                    <th class="text-end">Prix catalogue HT</th>
+                    <th class="text-end">Remise</th>
+                    <th class="text-end">Prix net HT</th>
+                    <th class="text-end">Montant HT</th>
+                    <th class="text-end" sec:authorize="hasAnyRole('ADMIN','CHECKER')" th:if="${v.numero != null}">Revient</th>
+                    <th class="text-end" sec:authorize="hasAnyRole('ADMIN','CHECKER')" th:if="${v.numero != null}">Marge</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="l : ${v.lignes}">
+                    <td><code th:text="${l.article.reference}">ART</code> <span th:text="${l.article.designation}">Désignation</span></td>
+                    <td class="text-end text-nowrap">
+                        <span th:text="${l.quantite.stripTrailingZeros().toPlainString()}">1</span>
+                        <small class="text-muted" th:text="${l.article.unite.libelle}">Pièce</small>
+                        <div th:if="${l.quantiteAvoir.signum() > 0}" class="small text-danger">
+                            dont <span th:text="${l.quantiteAvoir.stripTrailingZeros().toPlainString()}">1</span> en avoir</div></td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(l.prixCatalogueHt, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                    <td class="text-end" th:text="${l.remisePct.signum() == 0} ? '—' : ${l.remisePct.stripTrailingZeros().toPlainString()} + ' %'">—</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(l.prixUnitaireHt, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                    <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(l.montantHt, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                    <td class="text-end text-muted" sec:authorize="hasAnyRole('ADMIN','CHECKER')" th:if="${v.numero != null}"
+                        th:text="${#numbers.formatDecimal(l.coutRevientUnitaire, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                    <td class="text-end" sec:authorize="hasAnyRole('ADMIN','CHECKER')" th:if="${v.numero != null}"
+                        th:classappend="${l.marge.signum() < 0} ? 'text-danger' : 'text-success'"
+                        th:text="${#numbers.formatDecimal(l.marge, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100" sec:authorize="hasAnyRole('ADMIN','CHECKER')" th:if="${v.numero != null}">
+                <div class="card-body small">
+                    <h3 class="h6 text-uppercase text-muted">Marge (figée à la facturation)</h3>
+                    <p th:if="${v.montantAvoirs.signum() > 0}" class="text-muted mb-2">
+                        <i class="bi bi-info-circle"></i> Avant avoirs : la marge nette (avoirs déduits) figure au tableau de bord.</p>
+                    <dl class="row mb-0">
+                        <dt class="col-7 fw-normal text-muted">Chiffre d'affaires HT</dt>
+                        <dd class="col-5 text-end mb-1" th:text="${#numbers.formatDecimal(v.totalHt, 1, 'WHITESPACE', 0, 'COMMA')}">0</dd>
+                        <dt class="col-7 fw-normal text-muted">Coût de revient</dt>
+                        <dd class="col-5 text-end mb-1" th:text="${#numbers.formatDecimal(v.coutRevientTotal, 1, 'WHITESPACE', 0, 'COMMA')}">0</dd>
+                        <dt class="col-7">Marge</dt>
+                        <dd class="col-5 text-end mb-0 fw-semibold" th:classappend="${v.margeTotale.signum() < 0} ? 'text-danger' : 'text-success'">
+                            <span th:text="${#numbers.formatDecimal(v.margeTotale, 1, 'WHITESPACE', 0, 'COMMA')}">0</span>
+                            (<span th:text="${v.tauxMarque}">0</span> %)</dd>
+                    </dl>
+                </div>
+            </div>
+            <p class="small text-muted" th:if="${v.observations}"><i class="bi bi-chat-left-text"></i> <span th:text="${v.observations}">obs</span></p>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <th:block th:if="${v.totalRemise.signum() > 0}">
+                            <dt class="col-7 fw-normal text-muted">Total brut HT</dt>
+                            <dd class="col-5 text-end mb-1" th:text="${#numbers.formatDecimal(v.totalBrutHt, 1, 'WHITESPACE', 0, 'COMMA')}">0</dd>
+                            <dt class="col-7 fw-normal text-muted">Remises</dt>
+                            <dd class="col-5 text-end mb-1" th:text="'− ' + ${#numbers.formatDecimal(v.totalRemise, 1, 'WHITESPACE', 0, 'COMMA')}">0</dd>
+                        </th:block>
+                        <dt class="col-7 fw-normal">Total HT</dt>
+                        <dd class="col-5 text-end mb-1" th:text="${#numbers.formatDecimal(v.totalHt, 1, 'WHITESPACE', 0, 'COMMA')}">0</dd>
+                        <dt class="col-7 fw-normal text-muted">TVA <span th:text="${v.tauxTva.stripTrailingZeros().toPlainString()}">20</span> %</dt>
+                        <dd class="col-5 text-end mb-1" th:text="${#numbers.formatDecimal(v.totalTva, 1, 'WHITESPACE', 0, 'COMMA')}">0</dd>
+                        <dt class="col-7 fs-5">Total TTC</dt>
+                        <dd class="col-5 text-end mb-0 fs-5 fw-semibold"
+                            th:text="${#numbers.formatDecimal(v.totalTtc, 1, 'WHITESPACE', 0, 'COMMA')} + ' MGA'">0</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Encaissement et avoirs (facture validee) ===== -->
+    <th:block th:if="${v.statut.name() == 'VALIDEE'}">
+        <div class="card border-0 shadow-sm mt-3">
+            <div class="card-body">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <h3 class="h6 text-uppercase text-muted mb-0">
+                        Encaissement
+                        <span class="badge ms-1" th:classappend="'text-bg-' + ${v.statutPaiement.couleur}"
+                              th:text="${v.statutPaiement.libelle}">Statut</span>
+                    </h3>
+                    <div class="d-flex gap-2">
+                        <a th:if="${creditable}" sec:authorize="hasAnyRole('ADMIN','CHECKER')"
+                           th:href="@{/ventes/{id}/avoirs/nouveau(id=${v.id})}" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-arrow-counterclockwise"></i> Créer un avoir</a>
+                        <button th:if="${v.resteAPayer.signum() > 0}" type="button" class="btn btn-sm btn-success"
+                                data-bs-toggle="modal" data-bs-target="#modal-paiement">
+                            <i class="bi bi-cash-coin"></i> Enregistrer un paiement</button>
+                    </div>
+                </div>
+
+                <div class="row g-3 text-center mb-3">
+                    <div class="col-6 col-md-3">
+                        <div class="small text-muted">Total TTC</div>
+                        <div class="fw-semibold" th:text="${#numbers.formatDecimal(v.totalTtc, 1, 'WHITESPACE', 0, 'COMMA')}">0</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="small text-muted">Avoirs</div>
+                        <div class="fw-semibold text-danger"
+                             th:text="${v.montantAvoirs.signum() > 0} ? '− ' + ${#numbers.formatDecimal(v.montantAvoirs, 1, 'WHITESPACE', 0, 'COMMA')} : '0'">0</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="small text-muted">Encaissé</div>
+                        <div class="fw-semibold text-success" th:text="${#numbers.formatDecimal(v.montantPaye, 1, 'WHITESPACE', 0, 'COMMA')}">0</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="small text-muted">Reste à payer</div>
+                        <div class="fs-5 fw-bold" th:classappend="${v.resteAPayer.signum() > 0} ? 'text-danger'"
+                             th:text="${#numbers.formatDecimal(v.resteAPayer, 1, 'WHITESPACE', 0, 'COMMA')} + ' MGA'">0</div>
+                    </div>
+                </div>
+                <div th:if="${v.tropPercu.signum() > 0}" class="alert alert-warning small py-2">
+                    <i class="bi bi-exclamation-triangle"></i> Trop-perçu de
+                    <strong th:text="${#numbers.formatDecimal(v.tropPercu, 1, 'WHITESPACE', 0, 'COMMA')} + ' MGA'">0</strong>
+                    après avoir : à rembourser au client.
+                </div>
+
+                <div class="table-responsive" th:unless="${paiements.empty}">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light">
+                        <tr><th>Date</th><th>Mode</th><th>Référence</th><th>Saisi par</th><th class="text-end">Montant</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="p : ${paiements}" th:classappend="${p.annule} ? 'text-muted text-decoration-line-through'">
+                            <td th:text="${#temporals.format(p.datePaiement, 'dd/MM/yyyy')}">date</td>
+                            <td><i class="bi" th:classappend="${p.mode.icone}"></i> <span th:text="${p.mode.libelle}">Mode</span></td>
+                            <td class="small" th:text="${p.reference}">ref</td>
+                            <td class="small" th:text="${p.saisiPar.nomComplet}">Nom</td>
+                            <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(p.montant, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                            <td class="text-end">
+                                <span th:if="${p.annule}" class="badge text-bg-secondary" th:title="${p.motifAnnulation}">Annulé</span>
+                                <button th:unless="${p.annule}" sec:authorize="hasRole('ADMIN')" type="button"
+                                        class="btn btn-sm btn-outline-danger" title="Annuler ce paiement"
+                                        data-bs-toggle="modal" data-bs-target="#modal-annulation-paiement"
+                                        th:attr="data-action=@{/ventes/paiements/{pid}/annuler(pid=${p.id})}">
+                                    <i class="bi bi-x-lg"></i></button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p th:if="${paiements.empty}" class="text-muted small mb-0">Aucun paiement enregistré.</p>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mt-3" th:unless="${avoirs.empty}">
+            <div class="card-body">
+                <h3 class="h6 text-uppercase text-muted">Avoirs</h3>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light">
+                        <tr><th>N°</th><th>Date</th><th>Motif</th><th>Articles</th><th>Par</th><th class="text-end">Montant TTC</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="a : ${avoirs}">
+                            <td class="fw-semibold" th:text="${a.numero}">AV</td>
+                            <td th:text="${#temporals.format(a.dateAvoir, 'dd/MM/yyyy')}">date</td>
+                            <td class="small" th:text="${a.motif}">motif</td>
+                            <td class="small">
+                                <div th:each="la : ${a.lignes}">
+                                    <span th:text="${la.quantite.stripTrailingZeros().toPlainString()}">1</span> ×
+                                    <code th:text="${la.ligneVente.article.reference}">ART</code>
+                                    <span th:if="${la.retourStock}" class="badge text-bg-light border">retour en stock</span>
+                                </div>
+                            </td>
+                            <td class="small" th:text="${a.saisiPar.nomComplet}">Nom</td>
+                            <td class="text-end text-danger fw-semibold"
+                                th:text="'− ' + ${#numbers.formatDecimal(a.totalTtc, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fenetre : enregistrer un paiement -->
+        <div class="modal fade" id="modal-paiement" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <form class="modal-content border-0 shadow" th:action="@{/ventes/{id}/paiements(id=${v.id})}" method="post">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title"><i class="bi bi-cash-coin text-success"></i> Enregistrer un paiement</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="small text-muted">Reste à payer :
+                            <strong th:text="${#numbers.formatDecimal(v.resteAPayer, 1, 'WHITESPACE', 0, 'COMMA')} + ' MGA'">0</strong></p>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <label for="montant" class="form-label">Montant (MGA) <span class="text-danger">*</span></label>
+                                <input type="number" id="montant" name="montant" class="form-control text-end" min="1" step="1"
+                                       th:max="${v.resteAPayer}" th:value="${v.resteAPayer.setScale(0)}" required>
+                            </div>
+                            <div class="col-6">
+                                <label for="date" class="form-label">Date <span class="text-danger">*</span></label>
+                                <input type="date" id="date" name="date" class="form-control" th:value="${aujourdhui}"
+                                       th:max="${aujourdhui}" required>
+                            </div>
+                            <div class="col-6">
+                                <label for="mode" class="form-label">Mode <span class="text-danger">*</span></label>
+                                <select id="mode" name="mode" class="form-select" required>
+                                    <option th:each="m : ${modes}" th:value="${m}" th:text="${m.libelle}">Mode</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label for="reference" class="form-label">Référence</label>
+                                <input type="text" id="reference" name="reference" class="form-control" maxlength="100"
+                                       placeholder="N° de transaction">
+                            </div>
+                        </div>
+                        <div class="form-text">Référence obligatoire sauf en espèces (rapprochement mobile money, chèque, virement).</div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-success">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Fenetre : annuler un paiement (ADMIN) -->
+        <div class="modal fade" id="modal-annulation-paiement" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <form class="modal-content border-0 shadow" method="post" th:action="@{/ventes}">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title"><i class="bi bi-x-octagon text-danger"></i> Annuler le paiement</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-body-secondary small">Le paiement restera visible (barré) et le reste à payer sera recalculé.</p>
+                        <label for="motif-annulation" class="form-label">Motif <span class="text-danger">*</span></label>
+                        <input type="text" id="motif-annulation" name="motif" class="form-control" maxlength="255" required
+                               placeholder="ex. Chèque rejeté, erreur de montant">
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fermer</button>
+                        <button type="submit" class="btn btn-danger">Annuler le paiement</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script>
+            // la fenetre d'annulation recoit l'adresse du paiement clique
+            document.getElementById('modal-annulation-paiement')?.addEventListener('show.bs.modal', (e) => {
+                e.target.querySelector('form').action = e.relatedTarget.dataset.action;
+            });
+        </script>
+    </th:block>
+
+    <!-- ===== Fenetres de controle (CHECKER) ===== -->
+    <div class="modal fade" id="modal-approbation" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content border-0 shadow" th:action="@{/ventes/{id}/approuver(id=${v.id})}" method="post">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title"><i class="bi bi-check2-circle text-success"></i> Approuver et facturer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-body-secondary">La facture sera émise et les articles sortiront du stock. Cette opération est définitive.</p>
+                    <label for="commentaire-approbation" class="form-label">Commentaire (facultatif)</label>
+                    <textarea id="commentaire-approbation" name="commentaire" class="form-control" rows="2"
+                              placeholder="ex. Remise accordée : client fidèle, grosse commande"></textarea>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-success">Approuver et facturer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="modal fade" id="modal-refus" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content border-0 shadow" th:action="@{/ventes/{id}/refuser(id=${v.id})}" method="post">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title"><i class="bi bi-x-octagon text-danger"></i> Refuser la vente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-body-secondary">La vente retourne en brouillon chez le vendeur, avec votre commentaire.</p>
+                    <label for="commentaire-refus" class="form-label">Motif du refus <span class="text-danger">*</span></label>
+                    <textarea id="commentaire-refus" name="commentaire" class="form-control" rows="3" required
+                              placeholder="ex. Remise trop élevée, maximum 15 % pour ce client"></textarea>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-danger">Refuser</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+</body>
+</html>

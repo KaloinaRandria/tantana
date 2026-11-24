@@ -20,9 +20,12 @@ public class SecurityConfig {
                 .requestMatchers("/login", "/webjars/**", "/css/**", "/js/**", "/images/**", "/favicon.ico", "/error").permitAll()
                 // Acces par module
                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                // Prix de vente et marges : reserves a l'ADMIN
+                .requestMatchers("/tarifs/**").hasRole("ADMIN")
                 // Consultation du stock : l'acheteur voit l'effet de ses receptions
                 .requestMatchers("/stock/**").hasAnyRole("ADMIN", "GESTIONNAIRE_STOCK", "ACHETEUR")
                 .requestMatchers("/ventes/**").hasAnyRole("ADMIN", "VENDEUR")
+                .requestMatchers("/clients/**").hasAnyRole("ADMIN", "VENDEUR")
                 .requestMatchers("/achats/**").hasAnyRole("ADMIN", "ACHETEUR")
                 // Catalogue partage : consulte par les achats et le stock
                 .requestMatchers("/articles/**").hasAnyRole("ADMIN", "ACHETEUR", "GESTIONNAIRE_STOCK")

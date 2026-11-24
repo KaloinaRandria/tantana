@@ -36,20 +36,22 @@
             <th:block th:if="${r.modifiable and auteur}" sec:authorize="hasAnyRole('ADMIN','MAKER')">
                 <a th:href="@{/achats/receptions/{id}/modifier(id=${r.id})}" class="btn btn-outline-primary">
                     <i class="bi bi-pencil"></i> Modifier</a>
-                <form th:action="@{/achats/receptions/{id}/supprimer(id=${r.id})}" method="post">
-                    <button type="submit" class="btn btn-outline-danger"
-                            onclick="return confirm('Supprimer cette réception ? (le stock n\'a pas encore été touché)')">
-                        <i class="bi bi-trash"></i> Supprimer</button>
+                <form th:action="@{/achats/receptions/{id}/supprimer(id=${r.id})}" method="post"
+                      data-confirmation-titre="Supprimer la réception"
+                      data-confirmation="Cette réception sera supprimée. Le stock n'a pas encore été touché."
+                      data-confirmation-bouton="Supprimer" data-confirmation-style="danger">
+                    <button type="submit" class="btn btn-outline-danger"><i class="bi bi-trash"></i> Supprimer</button>
                 </form>
             </th:block>
             <!-- Controleur (autre personne) : valider / rejeter -->
             <th:block th:if="${r.statut.name() == 'SAISIE' and !auteur}" sec:authorize="hasAnyRole('ADMIN','CHECKER')">
                 <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modal-rejet">
                     <i class="bi bi-x-circle"></i> Rejeter</button>
-                <form th:action="@{/achats/receptions/{id}/valider(id=${r.id})}" method="post">
-                    <button type="submit" class="btn btn-success"
-                            onclick="return confirm('Valider la réception ? Les quantités reçues vont entrer en stock (opération définitive).')">
-                        <i class="bi bi-check2-circle"></i> Valider et mettre à jour le stock</button>
+                <form th:action="@{/achats/receptions/{id}/valider(id=${r.id})}" method="post"
+                      data-confirmation-titre="Valider la réception"
+                      data-confirmation="Les quantités reçues vont entrer en stock et la commande sera mise à jour. Cette opération est définitive."
+                      data-confirmation-bouton="Valider et mettre à jour le stock" data-confirmation-style="success">
+                    <button type="submit" class="btn btn-success"><i class="bi bi-check2-circle"></i> Valider et mettre à jour le stock</button>
                 </form>
             </th:block>
         </div>
@@ -110,7 +112,8 @@
                         <dd class="col-5 mb-1 text-end fw-semibold"
                             th:text="${#numbers.formatDecimal(r.valeurMarchandisesMga + r.totalFrais, 1, 'WHITESPACE', 0, 'COMMA')}">0</dd>
                     </dl>
-                    <p class="text-muted mt-2 mb-0">Les frais ne sont pas répartis sur le coût des articles.</p>
+                    <p class="text-muted mt-2 mb-0">Les frais sont répartis sur les articles reçus au prorata de leur valeur
+                        pour calculer le prix de revient.</p>
                 </div>
             </div>
         </div>
@@ -126,9 +129,16 @@
                     <th class="text-end">Reçue</th>
                     <th class="text-end">Refusée</th>
                     <th class="text-end">Prix (<span th:text="${r.commande.devise}">USD</span>)</th>
-                    <th class="text-end">Coût unitaire (MGA)</th>
-                    <th class="text-end">Valeur entrée (MGA)</th>
+                    <th class="text-end">Achat unitaire (MGA)</th>
+                    <th class="text-end">Frais / unité</th>
+                    <th class="text-end">Revient unitaire</th>
+                    <th class="text-end">Valeur au revient</th>
                     <th>Commentaire</th>
+                </tr>
+                <tr th:if="${r.statut.name() != 'VALIDEE' and !r.frais.empty}">
+                    <td colspan="9" class="small text-muted fw-normal bg-light">
+                        <i class="bi bi-calculator"></i> Frais par unité calculés à titre indicatif : ils seront figés à la validation.
+                    </td>
                 </tr>
                 </thead>
                 <tbody>
@@ -142,8 +152,10 @@
                     <td class="text-end" th:classappend="${l.quantiteRefusee.signum() > 0} ? 'text-danger fw-semibold'"
                         th:text="${l.quantiteRefusee.stripTrailingZeros().toPlainString()}">0</td>
                     <td class="text-end" th:text="${#numbers.formatDecimal(l.ligneCommande.prixUnitaire, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
-                    <td class="text-end" th:text="${#numbers.formatDecimal(l.coutUnitaireMga, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
-                    <td class="text-end" th:text="${#numbers.formatDecimal(l.coutUnitaireMga * l.quantiteRecue, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                    <td class="text-end text-muted" th:text="${#numbers.formatDecimal(l.coutUnitaireMga, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                    <td class="text-end text-muted" th:text="${#numbers.formatDecimal(l.fraisUnitaire, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                    <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(l.coutRevientUnitaireMga, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(l.coutRevientUnitaireMga * l.quantiteRecue, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
                     <td class="small" th:text="${l.commentaire}">commentaire</td>
                 </tr>
                 </tbody>

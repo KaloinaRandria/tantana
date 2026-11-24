@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 public enum TypeMouvement {
     ENTREE_ACHAT("Entrée (réception achat)", 1),
     SORTIE_VENTE("Sortie (vente)", -1),
+    RETOUR_VENTE("Retour client (avoir)", 1),
     AJUSTEMENT_POSITIF("Ajustement +", 1),
     AJUSTEMENT_NEGATIF("Ajustement −", -1);
 
