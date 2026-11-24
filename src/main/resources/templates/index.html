@@ -60,7 +60,7 @@
                 </div>
             </a>
         </div>
-        <div class="col-12 col-sm-6 col-xl-3" sec:authorize="hasAnyRole('ADMIN','GESTIONNAIRE_STOCK')">
+        <div class="col-12 col-sm-6 col-xl-3" sec:authorize="hasAnyRole('ADMIN','GESTIONNAIRE_STOCK','ACHETEUR')">
             <a th:href="@{/stock}" class="card carte-module border-0 shadow-sm h-100 text-decoration-none">
                 <div class="card-body">
                     <i class="bi bi-boxes icone text-warning"></i>
@@ -118,10 +118,10 @@
                 <tr>
                     <td><i class="bi bi-boxes me-1"></i> Stock</td>
                     <td><code>/stock</code></td>
-                    <td class="small">ADMIN, GESTIONNAIRE_STOCK</td>
+                    <td class="small">ADMIN, GESTIONNAIRE_STOCK, ACHETEUR</td>
                     <td>
-                        <span sec:authorize="hasAnyRole('ADMIN','GESTIONNAIRE_STOCK')" class="badge text-bg-success"><i class="bi bi-check-lg"></i> Autorisé</span>
-                        <span sec:authorize="!hasAnyRole('ADMIN','GESTIONNAIRE_STOCK')" class="badge text-bg-danger"><i class="bi bi-x-lg"></i> Refusé</span>
+                        <span sec:authorize="hasAnyRole('ADMIN','GESTIONNAIRE_STOCK','ACHETEUR')" class="badge text-bg-success"><i class="bi bi-check-lg"></i> Autorisé</span>
+                        <span sec:authorize="!hasAnyRole('ADMIN','GESTIONNAIRE_STOCK','ACHETEUR')" class="badge text-bg-danger"><i class="bi bi-x-lg"></i> Refusé</span>
                     </td>
                     <td class="text-end"><a th:href="@{/stock}" class="btn btn-sm btn-outline-secondary">Ouvrir</a></td>
                 </tr>

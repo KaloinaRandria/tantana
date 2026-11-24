@@ -20,9 +20,12 @@ public class SecurityConfig {
                 .requestMatchers("/login", "/webjars/**", "/css/**", "/js/**", "/images/**", "/favicon.ico", "/error").permitAll()
                 // Acces par module
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/stock/**").hasAnyRole("ADMIN", "GESTIONNAIRE_STOCK")
+                // Consultation du stock : l'acheteur voit l'effet de ses receptions
+                .requestMatchers("/stock/**").hasAnyRole("ADMIN", "GESTIONNAIRE_STOCK", "ACHETEUR")
                 .requestMatchers("/ventes/**").hasAnyRole("ADMIN", "VENDEUR")
                 .requestMatchers("/achats/**").hasAnyRole("ADMIN", "ACHETEUR")
+                // Catalogue partage : consulte par les achats et le stock
+                .requestMatchers("/articles/**").hasAnyRole("ADMIN", "ACHETEUR", "GESTIONNAIRE_STOCK")
                 // Tout le reste : il suffit d'etre connecte
                 .anyRequest().authenticated())
             .formLogin(form -> form

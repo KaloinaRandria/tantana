@@ -5,6 +5,7 @@ import mg.working.tantana.service.UtilisateurService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.security.Principal;
 
@@ -26,7 +27,11 @@ public class AccueilController {
         return "index";
     }
 
-    @GetMapping("/acces-refuse")
+    /**
+     * Toutes methodes : Spring Security fait un « forward » vers cette page en conservant
+     * la methode de la requete refusee (un POST refuse arrive donc ici en POST).
+     */
+    @RequestMapping("/acces-refuse")
     public String accesRefuse() {
         return "acces-refuse";
     }

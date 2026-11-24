@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="${reception == null} ? 'Nouvelle réception' : 'Modifier ' + ${reception.numero}">Réception</title>
+</head>
+<body>
+<h1 layout:fragment="titre-page" class="h5 mb-0"
+    th:text="${reception == null} ? 'Réception de la commande ' + ${form.numeroCommande} : 'Modifier la réception ' + ${reception.numero}">Réception</h1>
+
+<main layout:fragment="content">
+<form th:action="@{/achats/receptions/enregistrer}" th:object="${form}" method="post" novalidate id="form-reception">
+    <input type="hidden" th:field="*{id}">
+    <input type="hidden" th:field="*{version}">
+    <input type="hidden" th:field="*{commandeId}">
+
+    <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+        <p th:each="e : ${#fields.globalErrors()}" th:text="${e}" class="mb-0">Erreur</p>
+    </div>
+    <div th:if="${reception != null and reception.motifRejet != null}" class="alert alert-danger">
+        <strong><i class="bi bi-x-octagon"></i> Rejetée par
+            <span th:text="${reception.validePar?.nomComplet}">contrôleur</span> :</strong>
+        <span th:text="${reception.motifRejet}">motif</span>
+        <div class="small">Corrigez puis enregistrez : la réception repartira en validation.</div>
+    </div>
+
+    <!-- ===== Arrivage ===== -->
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between mb-3">
+                <h2 class="h6 text-uppercase text-muted mb-0">Arrivage</h2>
+                <span class="small text-muted">
+                    Commande <strong th:text="*{numeroCommande}">CA</strong> — <span th:text="*{fournisseur}">Fournisseur</span>
+                </span>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <label for="transitaireId" class="form-label">Transitaire <span class="text-danger">*</span></label>
+                    <select th:field="*{transitaireId}" class="form-select"
+                            th:classappend="${#fields.hasErrors('transitaireId')} ? 'is-invalid'">
+                        <option value="">— Choisir —</option>
+                        <option th:each="t : ${transitaires}" th:value="${t.id}"
+                                th:text="${t.nom} + (${t.actif} ? '' : ' — désactivé')">Transitaire</option>
+                    </select>
+                    <div class="invalid-feedback" th:errors="*{transitaireId}">Erreur</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label for="dateReception" class="form-label">Date de réception <span class="text-danger">*</span></label>
+                    <input type="date" th:field="*{dateReception}" class="form-control"
+                           th:classappend="${#fields.hasErrors('dateReception')} ? 'is-invalid'">
+                    <div class="invalid-feedback" th:errors="*{dateReception}">Erreur</div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <label for="tauxChange" class="form-label">Taux du jour <span class="text-danger">*</span></label>
+                    <div class="input-group has-validation">
+                        <span class="input-group-text">1 <span class="ms-1" th:text="*{devise}">USD</span>&nbsp;=</span>
+                        <input type="number" step="0.000001" min="0" th:field="*{tauxChange}" class="form-control text-end"
+                               th:classappend="${#fields.hasErrors('tauxChange')} ? 'is-invalid'">
+                        <span class="input-group-text">MGA</span>
+                        <div class="invalid-feedback" th:errors="*{tauxChange}">Erreur</div>
+                    </div>
+                    <div class="form-text">Sert à calculer le coût d'entrée en stock.</div>
+                </div>
+                <div class="col-12">
+                    <label for="observations" class="form-label">Observations</label>
+                    <input type="text" th:field="*{observations}" class="form-control"
+                           placeholder="N° de connaissement, état des colis, remarques…">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Quantites ===== -->
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <h2 class="h6 text-uppercase text-muted mb-1">Quantités réellement arrivées</h2>
+            <p class="small text-muted mb-3">
+                Pré-rempli avec le reste attendu : corrigez avec ce qui est vraiment arrivé.
+                « Reçue » = en bon état (entre en stock) ; « Refusée » = abîmée ou manquante (tracée, n'entre pas en stock).
+            </p>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Article</th>
+                        <th class="text-end">Commandé</th>
+                        <th class="text-end">Reste attendu</th>
+                        <th style="width:140px" class="text-end">Reçue</th>
+                        <th style="width:140px" class="text-end">Refusée</th>
+                        <th style="min-width:180px">Commentaire</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="l, it : *{lignes}">
+                        <td>
+                            <input type="hidden" th:field="*{lignes[__${it.index}__].ligneCommandeId}">
+                            <code th:text="${l.reference}">ART</code> <span th:text="${l.designation}">Désignation</span>
+                            <div class="small text-muted" th:text="${l.unite}">Pièce</div>
+                        </td>
+                        <td class="text-end" th:text="${l.quantiteCommandee?.stripTrailingZeros()?.toPlainString()}">10</td>
+                        <td class="text-end fw-semibold" th:text="${l.quantiteRestante?.stripTrailingZeros()?.toPlainString()}">10</td>
+                        <td>
+                            <input type="number" step="0.001" min="0" th:max="${l.quantiteRestante}"
+                                   th:field="*{lignes[__${it.index}__].quantiteRecue}" class="form-control form-control-sm text-end"
+                                   th:classappend="${#fields.hasErrors('lignes[__${it.index}__].quantiteRecue')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:errors="*{lignes[__${it.index}__].quantiteRecue}">Erreur</div>
+                        </td>
+                        <td>
+                            <input type="number" step="0.001" min="0"
+                                   th:field="*{lignes[__${it.index}__].quantiteRefusee}" class="form-control form-control-sm text-end"
+                                   th:classappend="${#fields.hasErrors('lignes[__${it.index}__].quantiteRefusee')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:errors="*{lignes[__${it.index}__].quantiteRefusee}">Erreur</div>
+                        </td>
+                        <td>
+                            <input type="text" th:field="*{lignes[__${it.index}__].commentaire}" class="form-control form-control-sm"
+                                   placeholder="ex. 2 cartons écrasés" maxlength="255">
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Frais ===== -->
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <h2 class="h6 text-uppercase text-muted mb-0">Frais du transitaire (Ariary)</h2>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="ajouter-frais">
+                    <i class="bi bi-plus-lg"></i> Ajouter un frais
+                </button>
+            </div>
+            <p class="small text-muted mb-3">Enregistrés à part : ils ne modifient pas le coût des articles en stock.</p>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0" id="table-frais">
+                    <thead class="table-light">
+                    <tr>
+                        <th style="min-width:200px">Type</th>
+                        <th style="width:180px" class="text-end">Montant (MGA)</th>
+                        <th>N° de facture</th>
+                        <th>Commentaire</th>
+                        <th style="width:50px"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="f, it : *{frais}" class="frais">
+                        <td>
+                            <select th:field="*{frais[__${it.index}__].type}" class="form-select form-select-sm"
+                                    th:classappend="${#fields.hasErrors('frais[__${it.index}__].type')} ? 'is-invalid'">
+                                <option value="">— Choisir —</option>
+                                <option th:each="t : ${typesFrais}" th:value="${t}" th:text="${t.libelle}">Type</option>
+                            </select>
+                            <div class="invalid-feedback" th:errors="*{frais[__${it.index}__].type}">Erreur</div>
+                        </td>
+                        <td>
+                            <input type="number" step="0.01" min="0" th:field="*{frais[__${it.index}__].montant}"
+                                   class="form-control form-control-sm text-end champ-montant"
+                                   th:classappend="${#fields.hasErrors('frais[__${it.index}__].montant')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:errors="*{frais[__${it.index}__].montant}">Erreur</div>
+                        </td>
+                        <td><input type="text" th:field="*{frais[__${it.index}__].referenceFacture}" class="form-control form-control-sm" maxlength="100"></td>
+                        <td><input type="text" th:field="*{frais[__${it.index}__].commentaire}" class="form-control form-control-sm" maxlength="255"></td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-outline-danger supprimer-frais" title="Retirer"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                    </tbody>
+                    <tfoot>
+                    <tr class="fw-semibold">
+                        <td class="text-end">Total des frais</td>
+                        <td class="text-end text-nowrap"><span id="total-frais">0</span> MGA</td>
+                        <td colspan="3"></td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Enregistrer la réception</button>
+        <a th:href="${reception == null} ? @{/achats/commandes/{id}(id=*{commandeId})} : @{/achats/receptions/{id}(id=${reception.id})}"
+           class="btn btn-outline-secondary">Annuler</a>
+        <span class="small text-muted ms-2"><i class="bi bi-shield-check"></i>
+            Le stock ne bougera qu'après validation par une autre personne.</span>
+    </div>
+</form>
+
+<template id="modele-frais">
+    <tr class="frais">
+        <td>
+            <select data-champ="type" class="form-select form-select-sm">
+                <option value="">— Choisir —</option>
+                <option th:each="t : ${typesFrais}" th:value="${t}" th:text="${t.libelle}">Type</option>
+            </select>
+        </td>
+        <td><input type="number" step="0.01" min="0" data-champ="montant" class="form-control form-control-sm text-end champ-montant"></td>
+        <td><input type="text" data-champ="referenceFacture" class="form-control form-control-sm" maxlength="100"></td>
+        <td><input type="text" data-champ="commentaire" class="form-control form-control-sm" maxlength="255"></td>
+        <td class="text-end">
+            <button type="button" class="btn btn-sm btn-outline-danger supprimer-frais" title="Retirer"><i class="bi bi-trash"></i></button>
+        </td>
+    </tr>
+</template>
+
+<script th:src="@{/js/reception.js}"></script>
+</main>
+</body>
+</html>

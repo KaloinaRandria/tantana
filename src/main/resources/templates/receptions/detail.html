@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="${reception.numero}">Réception</title>
+</head>
+<body>
+<h1 layout:fragment="titre-page" class="h5 mb-0">
+    <a th:href="@{/achats/receptions}" class="text-decoration-none text-muted">Réceptions</a>
+    <i class="bi bi-chevron-right small text-muted"></i>
+    <span th:text="${reception.numero}">BR</span>
+</h1>
+
+<main layout:fragment="content"
+      th:with="r=${reception}, auteur=${#strings.equalsIgnoreCase(#authentication.name, reception.saisiPar.username)}">
+    <div th:replace="~{fragments/commun :: alertes}"></div>
+
+    <!-- ===== En-tete ===== -->
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+        <div>
+            <h2 class="h4 mb-1">
+                <span th:text="${r.numero}">BR</span>
+                <span class="badge fs-6 align-middle" th:classappend="'text-bg-' + ${r.statut.couleur}"
+                      th:text="${r.statut.libelle}">Statut</span>
+            </h2>
+            <div class="text-muted small">
+                Commande <a th:href="@{/achats/commandes/{id}(id=${r.commande.id})}" th:text="${r.commande.numero}">CA</a>
+                — <span th:text="${r.commande.fournisseur.nom}">Fournisseur</span>
+            </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <!-- Auteur de la saisie : corriger / supprimer tant que non validee -->
+            <th:block th:if="${r.modifiable and auteur}" sec:authorize="hasAnyRole('ADMIN','MAKER')">
+                <a th:href="@{/achats/receptions/{id}/modifier(id=${r.id})}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil"></i> Modifier</a>
+                <form th:action="@{/achats/receptions/{id}/supprimer(id=${r.id})}" method="post">
+                    <button type="submit" class="btn btn-outline-danger"
+                            onclick="return confirm('Supprimer cette réception ? (le stock n\'a pas encore été touché)')">
+                        <i class="bi bi-trash"></i> Supprimer</button>
+                </form>
+            </th:block>
+            <!-- Controleur (autre personne) : valider / rejeter -->
+            <th:block th:if="${r.statut.name() == 'SAISIE' and !auteur}" sec:authorize="hasAnyRole('ADMIN','CHECKER')">
+                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modal-rejet">
+                    <i class="bi bi-x-circle"></i> Rejeter</button>
+                <form th:action="@{/achats/receptions/{id}/valider(id=${r.id})}" method="post">
+                    <button type="submit" class="btn btn-success"
+                            onclick="return confirm('Valider la réception ? Les quantités reçues vont entrer en stock (opération définitive).')">
+                        <i class="bi bi-check2-circle"></i> Valider et mettre à jour le stock</button>
+                </form>
+            </th:block>
+        </div>
+    </div>
+
+    <!-- ===== Messages d'etat ===== -->
+    <div th:if="${r.statut.name() == 'SAISIE' and auteur}" class="alert alert-warning">
+        <i class="bi bi-hourglass-split"></i>
+        Vous avez saisi cette réception : elle doit être validée par <strong>une autre personne</strong> (rôle CHECKER).
+    </div>
+    <div th:if="${r.statut.name() == 'REJETEE'}" class="alert alert-danger">
+        <strong><i class="bi bi-x-octagon"></i> Rejetée par <span th:text="${r.validePar?.nomComplet}">X</span>
+            le <span th:text="${#temporals.format(r.dateValidation, 'dd/MM/yyyy à HH:mm')}">date</span> :</strong>
+        <span th:text="${r.motifRejet}">motif</span>
+        <div class="small" th:if="${auteur}">Corrigez la saisie (bouton « Modifier ») : elle repartira en validation.</div>
+    </div>
+    <div th:if="${r.statut.name() == 'VALIDEE'}" class="alert alert-success">
+        <i class="bi bi-check2-circle"></i>
+        Validée par <strong th:text="${r.validePar.nomComplet}">X</strong>
+        le <span th:text="${#temporals.format(r.dateValidation, 'dd/MM/yyyy à HH:mm')}">date</span> :
+        les quantités reçues sont entrées en stock.
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body small">
+                    <h3 class="h6 text-uppercase text-muted">Arrivage</h3>
+                    <dl class="row mb-0">
+                        <dt class="col-5 fw-normal text-muted">Date de réception</dt>
+                        <dd class="col-7 mb-1" th:text="${#temporals.format(r.dateReception, 'dd/MM/yyyy')}">date</dd>
+                        <dt class="col-5 fw-normal text-muted">Transitaire</dt>
+                        <dd class="col-7 mb-1" th:text="${r.transitaire.nom}">Transitaire</dd>
+                        <dt class="col-5 fw-normal text-muted">Taux du jour</dt>
+                        <dd class="col-7 mb-1">1 <span th:text="${r.commande.devise}">USD</span> =
+                            <span th:text="${#numbers.formatDecimal(r.tauxChange, 1, 'WHITESPACE', 2, 'COMMA')}">4500</span> MGA</dd>
+                        <dt class="col-5 fw-normal text-muted">Saisie par</dt>
+                        <dd class="col-7 mb-1"><span th:text="${r.saisiPar.nomComplet}">X</span>,
+                            <span th:text="${#temporals.format(r.dateSaisie, 'dd/MM/yyyy HH:mm')}">date</span></dd>
+                    </dl>
+                    <p class="mt-2 mb-0" th:if="${r.observations}">
+                        <i class="bi bi-chat-left-text text-muted"></i> <span th:text="${r.observations}">obs</span></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body small">
+                    <h3 class="h6 text-uppercase text-muted">Montants (Ariary)</h3>
+                    <dl class="row mb-0">
+                        <dt class="col-7 fw-normal text-muted">Marchandises reçues (prix × taux du jour)</dt>
+                        <dd class="col-5 mb-1 text-end"
+                            th:text="${#numbers.formatDecimal(r.valeurMarchandisesMga, 1, 'WHITESPACE', 0, 'COMMA')}">0</dd>
+                        <dt class="col-7 fw-normal text-muted">Frais du transitaire</dt>
+                        <dd class="col-5 mb-1 text-end"
+                            th:text="${#numbers.formatDecimal(r.totalFrais, 1, 'WHITESPACE', 0, 'COMMA')}">0</dd>
+                        <dt class="col-7">Total décaissé</dt>
+                        <dd class="col-5 mb-1 text-end fw-semibold"
+                            th:text="${#numbers.formatDecimal(r.valeurMarchandisesMga + r.totalFrais, 1, 'WHITESPACE', 0, 'COMMA')}">0</dd>
+                    </dl>
+                    <p class="text-muted mt-2 mb-0">Les frais ne sont pas répartis sur le coût des articles.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Lignes ===== -->
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Article</th>
+                    <th class="text-end">Reçue</th>
+                    <th class="text-end">Refusée</th>
+                    <th class="text-end">Prix (<span th:text="${r.commande.devise}">USD</span>)</th>
+                    <th class="text-end">Coût unitaire (MGA)</th>
+                    <th class="text-end">Valeur entrée (MGA)</th>
+                    <th>Commentaire</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="l : ${r.lignes}">
+                    <td><code th:text="${l.ligneCommande.article.reference}">ART</code>
+                        <span th:text="${l.ligneCommande.article.designation}">Désignation</span></td>
+                    <td class="text-end fw-semibold text-nowrap">
+                        <span th:text="${l.quantiteRecue.stripTrailingZeros().toPlainString()}">10</span>
+                        <small class="text-muted fw-normal" th:text="${l.ligneCommande.article.unite.libelle}">Pièce</small>
+                    </td>
+                    <td class="text-end" th:classappend="${l.quantiteRefusee.signum() > 0} ? 'text-danger fw-semibold'"
+                        th:text="${l.quantiteRefusee.stripTrailingZeros().toPlainString()}">0</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(l.ligneCommande.prixUnitaire, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(l.coutUnitaireMga, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(l.coutUnitaireMga * l.quantiteRecue, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                    <td class="small" th:text="${l.commentaire}">commentaire</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===== Frais ===== -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body pb-0"><h3 class="h6 text-uppercase text-muted">Frais du transitaire</h3></div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-light">
+                <tr><th>Type</th><th>N° de facture</th><th>Commentaire</th><th class="text-end">Montant (MGA)</th></tr>
+                </thead>
+                <tbody>
+                <tr th:if="${r.frais.empty}"><td colspan="4" class="text-center text-muted py-3">Aucun frais saisi.</td></tr>
+                <tr th:each="f : ${r.frais}">
+                    <td th:text="${f.type.libelle}">Type</td>
+                    <td th:text="${f.referenceFacture}">ref</td>
+                    <td class="small" th:text="${f.commentaire}">commentaire</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(f.montant, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                </tr>
+                </tbody>
+                <tfoot th:unless="${r.frais.empty}">
+                <tr class="fw-semibold">
+                    <td colspan="3" class="text-end">Total</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(r.totalFrais, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===== Fenetre de rejet ===== -->
+    <div class="modal fade" id="modal-rejet" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form class="modal-content" th:action="@{/achats/receptions/{id}/rejeter(id=${r.id})}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">Rejeter la réception</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="motif" class="form-label">Motif (sera affiché à l'auteur) <span class="text-danger">*</span></label>
+                    <textarea id="motif" name="motif" class="form-control" rows="3" required
+                              placeholder="ex. Quantité de chargeurs incorrecte, il en manque 20 selon le bon du transitaire"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-danger">Rejeter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+</body>
+</html>

@@ -36,17 +36,52 @@
                    th:classappend="${#strings.startsWith(urlCourante, '/ventes')} ? 'active'">
                     <i class="bi bi-cart3"></i> Ventes</a>
             </li>
-            <li sec:authorize="hasAnyRole('ADMIN','ACHETEUR')">
-                <a class="nav-link" th:href="@{/achats}"
-                   th:classappend="${#strings.startsWith(urlCourante, '/achats')} ? 'active'">
-                    <i class="bi bi-truck"></i> Achats</a>
-            </li>
-            <li sec:authorize="hasAnyRole('ADMIN','GESTIONNAIRE_STOCK')">
+            <li sec:authorize="hasAnyRole('ADMIN','GESTIONNAIRE_STOCK','ACHETEUR')">
                 <a class="nav-link" th:href="@{/stock}"
                    th:classappend="${#strings.startsWith(urlCourante, '/stock')} ? 'active'">
                     <i class="bi bi-boxes"></i> Stock</a>
             </li>
         </ul>
+
+        <th:block sec:authorize="hasAnyRole('ADMIN','ACHETEUR')">
+            <div class="titre-section">Achats</div>
+            <ul class="nav flex-column">
+                <li>
+                    <a class="nav-link" th:href="@{/achats/commandes}"
+                       th:classappend="${#strings.startsWith(urlCourante, '/achats/commandes')} ? 'active'">
+                        <i class="bi bi-truck"></i> Commandes</a>
+                </li>
+                <li>
+                    <a class="nav-link" th:href="@{/achats/receptions}"
+                       th:classappend="${#strings.startsWith(urlCourante, '/achats/receptions')} ? 'active'">
+                        <i class="bi bi-box-arrow-in-down"></i> Réceptions
+                        <span th:if="${receptionsAValider > 0}" class="badge rounded-pill text-bg-warning ms-auto"
+                              th:text="${receptionsAValider}" title="Réceptions à valider">1</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" th:href="@{/achats/fournisseurs}"
+                       th:classappend="${#strings.startsWith(urlCourante, '/achats/fournisseurs')} ? 'active'">
+                        <i class="bi bi-globe2"></i> Fournisseurs</a>
+                </li>
+                <li>
+                    <a class="nav-link" th:href="@{/achats/transitaires}"
+                       th:classappend="${#strings.startsWith(urlCourante, '/achats/transitaires')} ? 'active'">
+                        <i class="bi bi-building"></i> Transitaires</a>
+                </li>
+            </ul>
+        </th:block>
+
+        <th:block sec:authorize="hasAnyRole('ADMIN','ACHETEUR','GESTIONNAIRE_STOCK')">
+            <div class="titre-section">Catalogue</div>
+            <ul class="nav flex-column">
+                <li>
+                    <a class="nav-link" th:href="@{/articles}"
+                       th:classappend="${#strings.startsWith(urlCourante, '/articles')} ? 'active'">
+                        <i class="bi bi-tags"></i> Articles</a>
+                </li>
+            </ul>
+        </th:block>
 
         <th:block sec:authorize="hasRole('ADMIN')">
             <div class="titre-section">Système</div>

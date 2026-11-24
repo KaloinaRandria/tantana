@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Réceptions</title>
+</head>
+<body>
+<h1 layout:fragment="titre-page" class="h5 mb-0">Réceptions</h1>
+
+<main layout:fragment="content">
+    <div th:replace="~{fragments/commun :: alertes}"></div>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <p class="text-muted mb-0"><span th:text="${page.totalElements}">0</span> réception(s)</p>
+        <a th:href="@{/achats/receptions(statut='SAISIE')}" class="btn btn-warning">
+            <i class="bi bi-hourglass-split"></i> À valider
+            <span class="badge text-bg-light ms-1" th:text="${receptionsAValider}">0</span>
+        </a>
+    </div>
+
+    <div class="alert alert-light border small">
+        <i class="bi bi-info-circle"></i>
+        Une réception se saisit depuis sa commande (bouton « Saisir une réception »).
+        Le stock n'est mis à jour qu'après validation par une <strong>autre personne</strong> que celle qui a saisi.
+    </div>
+
+    <form th:action="@{/achats/receptions}" method="get" class="row g-2 mb-3">
+        <div class="col-12 col-md-6">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="search" name="q" th:value="${q}" class="form-control" placeholder="N° de réception ou de commande">
+            </div>
+        </div>
+        <div class="col-8 col-md-4">
+            <select name="statut" class="form-select" onchange="this.form.submit()">
+                <option value="">Tous les statuts</option>
+                <option th:each="s : ${statuts}" th:value="${s}" th:text="${s.libelle}" th:selected="${s == statut}">Statut</option>
+            </select>
+        </div>
+        <div class="col-4 col-md-2 d-grid">
+            <button class="btn btn-outline-secondary" type="submit">Rechercher</button>
+        </div>
+    </form>
+
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>N°</th>
+                    <th>Commande</th>
+                    <th>Fournisseur</th>
+                    <th>Date</th>
+                    <th>Transitaire</th>
+                    <th>Saisie par</th>
+                    <th>Statut</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${page.empty}">
+                    <td colspan="7" class="text-center text-muted py-4">Aucune réception trouvée.</td>
+                </tr>
+                <tr th:each="r : ${page.content}">
+                    <td><a th:href="@{/achats/receptions/{id}(id=${r.id})}" class="fw-semibold text-decoration-none"
+                           th:text="${r.numero}">BR</a></td>
+                    <td><a th:href="@{/achats/commandes/{id}(id=${r.commande.id})}" class="text-decoration-none"
+                           th:text="${r.commande.numero}">CA</a></td>
+                    <td th:text="${r.commande.fournisseur.nom}">Fournisseur</td>
+                    <td th:text="${#temporals.format(r.dateReception, 'dd/MM/yyyy')}">date</td>
+                    <td th:text="${r.transitaire.nom}">Transitaire</td>
+                    <td th:text="${r.saisiPar.nomComplet}">Nom</td>
+                    <td><span class="badge" th:classappend="'text-bg-' + ${r.statut.couleur}" th:text="${r.statut.libelle}">Statut</span></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <nav th:if="${page.totalPages > 1}" class="mt-3">
+        <ul class="pagination pagination-sm justify-content-center mb-0">
+            <li th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}" class="page-item"
+                th:classappend="${i == page.number} ? 'active'">
+                <a class="page-link" th:text="${i + 1}" th:href="@{/achats/receptions(page=${i}, q=${q}, statut=${statut})}">1</a>
+            </li>
+        </ul>
+    </nav>
+</main>
+</body>
+</html>

@@ -17,14 +17,10 @@ public class ModuleController {
         return module(model, "Ventes", "ADMIN, VENDEUR");
     }
 
+    /** Le module Achats s'ouvre sur la liste des commandes. */
     @GetMapping("/achats")
-    public String achats(Model model) {
-        return module(model, "Achats", "ADMIN, ACHETEUR");
-    }
-
-    @GetMapping("/stock")
-    public String stock(Model model) {
-        return module(model, "Stock", "ADMIN, GESTIONNAIRE_STOCK");
+    public String achats() {
+        return "redirect:/achats/commandes";
     }
 
     @GetMapping("/admin")
