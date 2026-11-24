@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}">
+<head>
+    <title>Accueil</title>
+</head>
+<body>
+<h1 layout:fragment="titre-page" class="h5 mb-0">Accueil</h1>
+
+<main layout:fragment="content">
+
+    <!-- ===== Bienvenue ===== -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body d-flex flex-wrap align-items-center gap-3">
+            <span class="avatar" style="width:56px;height:56px;font-size:1.4rem"
+                  th:text="${#strings.substring(#authentication.name, 0, 1)}">A</span>
+            <div class="flex-grow-1">
+                <h2 class="h4 mb-1">
+                    Bienvenue,
+                    <span th:text="${utilisateur != null ? utilisateur.nomComplet : #authentication.name}">Nom</span>
+                </h2>
+                <div class="text-muted small">
+                    <i class="bi bi-person"></i> <span sec:authentication="name">login</span>
+                    <th:block th:if="${utilisateur != null and utilisateur.email != null}">
+                        &nbsp;·&nbsp;<i class="bi bi-envelope"></i> <span th:text="${utilisateur.email}">email</span>
+                    </th:block>
+                </div>
+            </div>
+            <div>
+                <!-- seules les autorites ROLE_* sont des roles (Spring Security 7 ajoute aussi FACTOR_*) -->
+                <span th:each="a : ${#authentication.authorities}"
+                      th:if="${#strings.startsWith(a.authority, 'ROLE_')}"
+                      class="badge rounded-pill text-bg-primary me-1"
+                      th:text="${#strings.replace(a.authority, 'ROLE_', '')}">ROLE</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Modules accessibles ===== -->
+    <h2 class="h6 text-uppercase text-muted mb-3">Vos modules</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-xl-3" sec:authorize="hasAnyRole('ADMIN','VENDEUR')">
+            <a th:href="@{/ventes}" class="card carte-module border-0 shadow-sm h-100 text-decoration-none">
+                <div class="card-body">
+                    <i class="bi bi-cart3 icone text-primary"></i>
+                    <h3 class="h6 mt-2 mb-1 text-body">Ventes</h3>
+                    <p class="small text-muted mb-0">Devis, factures, clients</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3" sec:authorize="hasAnyRole('ADMIN','ACHETEUR')">
+            <a th:href="@{/achats}" class="card carte-module border-0 shadow-sm h-100 text-decoration-none">
+                <div class="card-body">
+                    <i class="bi bi-truck icone text-success"></i>
+                    <h3 class="h6 mt-2 mb-1 text-body">Achats</h3>
+                    <p class="small text-muted mb-0">Commandes, fournisseurs, réceptions</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3" sec:authorize="hasAnyRole('ADMIN','GESTIONNAIRE_STOCK')">
+            <a th:href="@{/stock}" class="card carte-module border-0 shadow-sm h-100 text-decoration-none">
+                <div class="card-body">
+                    <i class="bi bi-boxes icone text-warning"></i>
+                    <h3 class="h6 mt-2 mb-1 text-body">Stock</h3>
+                    <p class="small text-muted mb-0">Articles, mouvements, inventaires</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3" sec:authorize="hasRole('ADMIN')">
+            <a th:href="@{/admin}" class="card carte-module border-0 shadow-sm h-100 text-decoration-none">
+                <div class="card-body">
+                    <i class="bi bi-gear icone text-danger"></i>
+                    <h3 class="h6 mt-2 mb-1 text-body">Administration</h3>
+                    <p class="small text-muted mb-0">Utilisateurs, rôles, paramètres</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- ===== Test des acces ===== -->
+    <h2 class="h6 text-uppercase text-muted mb-3">Test des droits d'accès</h2>
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Module</th>
+                    <th>URL</th>
+                    <th>Rôles autorisés</th>
+                    <th>Votre accès</th>
+                    <th class="text-end">Tester</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td><i class="bi bi-cart3 me-1"></i> Ventes</td>
+                    <td><code>/ventes</code></td>
+                    <td class="small">ADMIN, VENDEUR</td>
+                    <td>
+                        <span sec:authorize="hasAnyRole('ADMIN','VENDEUR')" class="badge text-bg-success"><i class="bi bi-check-lg"></i> Autorisé</span>
+                        <span sec:authorize="!hasAnyRole('ADMIN','VENDEUR')" class="badge text-bg-danger"><i class="bi bi-x-lg"></i> Refusé</span>
+                    </td>
+                    <td class="text-end"><a th:href="@{/ventes}" class="btn btn-sm btn-outline-secondary">Ouvrir</a></td>
+                </tr>
+                <tr>
+                    <td><i class="bi bi-truck me-1"></i> Achats</td>
+                    <td><code>/achats</code></td>
+                    <td class="small">ADMIN, ACHETEUR</td>
+                    <td>
+                        <span sec:authorize="hasAnyRole('ADMIN','ACHETEUR')" class="badge text-bg-success"><i class="bi bi-check-lg"></i> Autorisé</span>
+                        <span sec:authorize="!hasAnyRole('ADMIN','ACHETEUR')" class="badge text-bg-danger"><i class="bi bi-x-lg"></i> Refusé</span>
+                    </td>
+                    <td class="text-end"><a th:href="@{/achats}" class="btn btn-sm btn-outline-secondary">Ouvrir</a></td>
+                </tr>
+                <tr>
+                    <td><i class="bi bi-boxes me-1"></i> Stock</td>
+                    <td><code>/stock</code></td>
+                    <td class="small">ADMIN, GESTIONNAIRE_STOCK</td>
+                    <td>
+                        <span sec:authorize="hasAnyRole('ADMIN','GESTIONNAIRE_STOCK')" class="badge text-bg-success"><i class="bi bi-check-lg"></i> Autorisé</span>
+                        <span sec:authorize="!hasAnyRole('ADMIN','GESTIONNAIRE_STOCK')" class="badge text-bg-danger"><i class="bi bi-x-lg"></i> Refusé</span>
+                    </td>
+                    <td class="text-end"><a th:href="@{/stock}" class="btn btn-sm btn-outline-secondary">Ouvrir</a></td>
+                </tr>
+                <tr>
+                    <td><i class="bi bi-gear me-1"></i> Administration</td>
+                    <td><code>/admin</code></td>
+                    <td class="small">ADMIN</td>
+                    <td>
+                        <span sec:authorize="hasRole('ADMIN')" class="badge text-bg-success"><i class="bi bi-check-lg"></i> Autorisé</span>
+                        <span sec:authorize="!hasRole('ADMIN')" class="badge text-bg-danger"><i class="bi bi-x-lg"></i> Refusé</span>
+                    </td>
+                    <td class="text-end"><a th:href="@{/admin}" class="btn btn-sm btn-outline-secondary">Ouvrir</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white small text-muted">
+            <i class="bi bi-info-circle"></i>
+            Les boutons « Ouvrir » sont volontairement affichés pour tous les modules :
+            un module refusé doit mener à la page « Accès refusé ».
+        </div>
+    </div>
+</main>
+</body>
+</html>
