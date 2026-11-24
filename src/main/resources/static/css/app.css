@@ -1,0 +1,96 @@
+:root {
+    --sidebar-largeur: 250px;
+    --sidebar-fond: #1e293b;
+    --sidebar-texte: #cbd5e1;
+    --sidebar-actif: #3b82f6;
+}
+
+body {
+    background: #f1f5f9;
+}
+
+/* ===== Sidebar ===== */
+.sidebar {
+    width: var(--sidebar-largeur);
+    /* !important : offcanvas-lg de Bootstrap force un fond transparent sur grand ecran */
+    background-color: var(--sidebar-fond) !important;
+    color: var(--sidebar-texte);
+}
+
+@media (min-width: 992px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+    }
+    .contenu {
+        margin-left: var(--sidebar-largeur);
+    }
+}
+
+.sidebar .marque {
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: .5px;
+    text-decoration: none;
+}
+
+.sidebar .titre-section {
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #64748b;
+    padding: 1rem 1rem .4rem;
+}
+
+.sidebar .nav-link {
+    color: var(--sidebar-texte);
+    border-radius: .4rem;
+    padding: .55rem 1rem;
+    margin: 2px .5rem;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+}
+
+.sidebar .nav-link:hover {
+    background: rgba(255, 255, 255, .07);
+    color: #fff;
+}
+
+.sidebar .nav-link.active {
+    background: var(--sidebar-actif);
+    color: #fff;
+}
+
+.sidebar .utilisateur {
+    border-top: 1px solid rgba(255, 255, 255, .1);
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--sidebar-actif);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+/* ===== Barre du haut ===== */
+.barre-haut {
+    background: #fff;
+    border-bottom: 1px solid #e2e8f0;
+    min-height: 60px;
+}
+
+/* ===== Cartes ===== */
+.carte-module .icone {
+    font-size: 1.6rem;
+}
