@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="${client.id == null} ? 'Nouveau client' : 'Modifier le client'">Client</title>
+</head>
+<body>
+<h1 layout:fragment="titre-page" class="h5 mb-0"
+    th:text="${client.id == null} ? 'Nouveau client' : 'Modifier ' + ${client.nom}">Client</h1>
+
+<main layout:fragment="content">
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <form th:action="@{/clients/enregistrer}" th:object="${client}" method="post" novalidate id="form-client">
+                <input type="hidden" th:field="*{id}">
+
+                <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                    <p th:each="e : ${#fields.globalErrors()}" th:text="${e}" class="mb-0">Erreur</p>
+                </div>
+                <div th:if="*{comptoir}" class="alert alert-info small">
+                    <i class="bi bi-info-circle"></i> Client générique des ventes au comptoir : il reste un particulier et ne peut pas être désactivé.
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label for="nom" class="form-label">Nom ou raison sociale <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{nom}" class="form-control" maxlength="150" autofocus
+                               th:classappend="${#fields.hasErrors('nom')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{nom}">Erreur</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label d-block">Type <span class="text-danger">*</span></label>
+                        <div class="btn-group w-100" role="group">
+                            <th:block th:each="t : ${types}">
+                                <input type="radio" class="btn-check" th:field="*{type}" th:value="${t}"
+                                       th:disabled="*{comptoir} and ${t.name() != 'PARTICULIER'}">
+                                <label class="btn btn-outline-primary" th:for="${#ids.prev('type')}" th:text="${t.libelle}">Type</label>
+                            </th:block>
+                        </div>
+                        <div class="text-danger small mt-1" th:if="${#fields.hasErrors('type')}" th:errors="*{type}">Erreur</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="telephone" class="form-label">Téléphone</label>
+                        <input type="tel" th:field="*{telephone}" class="form-control" maxlength="50"
+                               placeholder="+261 34 00 000 00"
+                               th:classappend="${#fields.hasErrors('telephone')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{telephone}">Erreur</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="email" class="form-label">E-mail</label>
+                        <input type="email" th:field="*{email}" class="form-control" maxlength="150"
+                               th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{email}">Erreur</div>
+                    </div>
+                    <div class="col-12">
+                        <label for="adresse" class="form-label">Adresse</label>
+                        <input type="text" th:field="*{adresse}" class="form-control" maxlength="255"
+                               th:classappend="${#fields.hasErrors('adresse')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{adresse}">Erreur</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="nif" class="form-label">NIF <span class="text-danger obligatoire-pro">*</span></label>
+                        <input type="text" th:field="*{nif}" class="form-control" maxlength="50"
+                               th:classappend="${#fields.hasErrors('nif')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{nif}">Erreur</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="stat" class="form-label">STAT <span class="text-danger obligatoire-pro">*</span></label>
+                        <input type="text" th:field="*{stat}" class="form-control" maxlength="50"
+                               th:classappend="${#fields.hasErrors('stat')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{stat}">Erreur</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="plafondCredit" class="form-label">Plafond de crédit (MGA TTC) <span class="text-danger">*</span></label>
+                        <input type="number" step="1" min="0" th:field="*{plafondCredit}" class="form-control text-end"
+                               th:classappend="${#fields.hasErrors('plafondCredit')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{plafondCredit}">Erreur</div>
+                        <div class="form-text">Montant maximal que le client peut devoir. 0 = paiement comptant uniquement.</div>
+                    </div>
+                    <div class="col-12">
+                        <label for="observations" class="form-label">Observations</label>
+                        <textarea th:field="*{observations}" class="form-control" rows="2"
+                                  th:classappend="${#fields.hasErrors('observations')} ? 'is-invalid'"></textarea>
+                        <div class="invalid-feedback" th:errors="*{observations}">Erreur</div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Enregistrer</button>
+                    <a th:href="@{/clients}" class="btn btn-outline-secondary">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // NIF et STAT obligatoires pour un professionnel : on affiche l'asterisque selon le type choisi
+        (function () {
+            const form = document.getElementById('form-client');
+            const maj = () => {
+                const pro = form.querySelector('input[name="type"]:checked')?.value === 'PROFESSIONNEL';
+                form.querySelectorAll('.obligatoire-pro').forEach(e => e.classList.toggle('d-none', !pro));
+            };
+            form.querySelectorAll('input[name="type"]').forEach(r => r.addEventListener('change', maj));
+            maj();
+        })();
+    </script>
+</main>
+</body>
+</html>

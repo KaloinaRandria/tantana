@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="${titre}">Module</title>
+</head>
+<body>
+<h1 layout:fragment="titre-page" class="h5 mb-0" th:text="${titre}">Module</h1>
+
+<main layout:fragment="content">
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-check-circle text-success" style="font-size:3rem"></i>
+            <h2 class="h4 mt-3" th:text="'Module ' + ${titre}">Module</h2>
+            <p class="text-muted mb-1">Vous avez bien accès à ce module.</p>
+            <p class="small text-muted">Rôles autorisés : <strong th:text="${rolesAutorises}">ADMIN</strong></p>
+            <p class="small text-muted fst-italic mb-4">Page provisoire : le contenu du module reste à développer.</p>
+            <a th:href="@{/}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Accueil</a>
+        </div>
+    </div>
+</main>
+</body>
+</html>

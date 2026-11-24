@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "tantana",
+      "runtimeExecutable": "G:\\WORKING-DIR\\tantana\\mvnw.cmd",
+      "runtimeArgs": ["-B", "spring-boot:run"],
+      "port": 8080
+    }
+  ]
+}

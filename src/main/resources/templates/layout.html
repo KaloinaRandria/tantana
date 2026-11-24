@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title layout:title-pattern="$CONTENT_TITLE - Tantana">Tantana</title>
+    <link rel="stylesheet" th:href="@{/webjars/inter-ui/3.19.3/inter-latin.css}">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+
+<!-- Barre fine de chargement pendant les navigations (voir loader.js) -->
+<div id="barre-chargement" aria-hidden="true"></div>
+
+<!-- ===== Sidebar (fixe sur grand ecran, tiroir sur mobile) ===== -->
+<aside class="sidebar offcanvas-lg offcanvas-start d-flex flex-column" tabindex="-1" id="sidebar">
+    <div class="d-flex align-items-center justify-content-between px-4 pt-4 pb-3">
+        <a class="marque" th:href="@{/}"><span class="logo"><i class="bi bi-box-seam"></i></span>Tantana</a>
+        <button type="button" class="btn-close btn-close-white d-lg-none" data-bs-dismiss="offcanvas"
+                data-bs-target="#sidebar" aria-label="Fermer"></button>
+    </div>
+
+    <nav class="flex-grow-1 overflow-auto pb-3">
+        <ul class="nav flex-column">
+            <li>
+                <a class="nav-link" th:href="@{/}" th:classappend="${urlCourante == '/'} ? 'active'">
+                    <i class="bi bi-grid-1x2"></i> Accueil</a>
+            </li>
+            <li sec:authorize="hasAnyRole('ADMIN','CHECKER')">
+                <a class="nav-link" th:href="@{/ventes/tableau-de-bord}"
+                   th:classappend="${urlCourante == '/ventes/tableau-de-bord'} ? 'active'">
+                    <i class="bi bi-graph-up-arrow"></i> Tableau de bord</a>
+            </li>
+        </ul>
+
+        <th:block sec:authorize="hasAnyRole('ADMIN','VENDEUR','GESTIONNAIRE_STOCK','ACHETEUR')">
+            <div class="titre-section">Ventes &amp; stock</div>
+            <ul class="nav flex-column">
+                <li sec:authorize="hasAnyRole('ADMIN','VENDEUR')">
+                    <a class="nav-link" th:href="@{/ventes}"
+                       th:classappend="${#strings.startsWith(urlCourante, '/ventes') and urlCourante != '/ventes/tableau-de-bord'} ? 'active'">
+                        <i class="bi bi-receipt"></i> Ventes
+                        <span th:if="${ventesAValider > 0}" class="badge rounded-pill text-bg-warning ms-auto"
+                              th:text="${ventesAValider}" title="Ventes à contrôler">1</span></a>
+                </li>
+                <li sec:authorize="hasAnyRole('ADMIN','VENDEUR')">
+                    <a class="nav-link" th:href="@{/clients}"
+                       th:classappend="${#strings.startsWith(urlCourante, '/clients')} ? 'active'">
+                        <i class="bi bi-people"></i> Clients</a>
+                </li>
+                <li sec:authorize="hasAnyRole('ADMIN','GESTIONNAIRE_STOCK','ACHETEUR')">
+                    <a class="nav-link" th:href="@{/stock}"
+                       th:classappend="${#strings.startsWith(urlCourante, '/stock')} ? 'active'">
+                        <i class="bi bi-boxes"></i> Stock</a>
+                </li>
+            </ul>
+        </th:block>
+
+        <th:block sec:authorize="hasAnyRole('ADMIN','ACHETEUR')">
+            <div class="titre-section">Achats</div>
+            <ul class="nav flex-column">
+                <li>
+                    <a class="nav-link" th:href="@{/achats/commandes}"
+                       th:classappend="${#strings.startsWith(urlCourante, '/achats/commandes')} ? 'active'">
+                        <i class="bi bi-truck"></i> Commandes</a>
+                </li>
+                <li>
+                    <a class="nav-link" th:href="@{/achats/receptions}"
+                       th:classappend="${#strings.startsWith(urlCourante, '/achats/receptions')} ? 'active'">
+                        <i class="bi bi-box-arrow-in-down"></i> Réceptions
+                        <span th:if="${receptionsAValider > 0}" class="badge rounded-pill text-bg-warning ms-auto"
+                              th:text="${receptionsAValider}" title="Réceptions à valider">1</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" th:href="@{/achats/fournisseurs}"
+                       th:classappend="${#strings.startsWith(urlCourante, '/achats/fournisseurs')} ? 'active'">
+                        <i class="bi bi-globe2"></i> Fournisseurs</a>
+                </li>
+                <li>
+                    <a class="nav-link" th:href="@{/achats/transitaires}"
+                       th:classappend="${#strings.startsWith(urlCourante, '/achats/transitaires')} ? 'active'">
+                        <i class="bi bi-building"></i> Transitaires</a>
+                </li>
+            </ul>
+        </th:block>
+
+        <th:block sec:authorize="hasAnyRole('ADMIN','ACHETEUR','GESTIONNAIRE_STOCK')">
+            <div class="titre-section">Catalogue</div>
+            <ul class="nav flex-column">
+                <li>
+                    <a class="nav-link" th:href="@{/articles}"
+                       th:classappend="${#strings.startsWith(urlCourante, '/articles')} ? 'active'">
+                        <i class="bi bi-tags"></i> Articles</a>
+                </li>
+            </ul>
+        </th:block>
+
+        <th:block sec:authorize="hasRole('ADMIN')">
+            <div class="titre-section">Administration</div>
+            <ul class="nav flex-column">
+                <li>
+                    <a class="nav-link" th:href="@{/tarifs}"
+                       th:classappend="${#strings.startsWith(urlCourante, '/tarifs')} ? 'active'">
+                        <i class="bi bi-currency-exchange"></i> Prix de vente</a>
+                </li>
+                <li>
+                    <a class="nav-link" th:href="@{/admin/parametres}"
+                       th:classappend="${#strings.startsWith(urlCourante, '/admin')} ? 'active'">
+                        <i class="bi bi-sliders"></i> Paramètres</a>
+                </li>
+            </ul>
+        </th:block>
+    </nav>
+
+    <!-- Utilisateur connecte + deconnexion -->
+    <div class="utilisateur px-3 py-3 d-flex align-items-center gap-2">
+        <span class="avatar" th:text="${initialeUtilisateur}">A</span>
+        <div class="flex-grow-1 text-truncate">
+            <div class="nom text-truncate" th:text="${nomUtilisateur}">Utilisateur</div>
+            <div class="role text-truncate" sec:authentication="name">login</div>
+        </div>
+        <form th:action="@{/logout}" method="post" data-sans-loader>
+            <button class="btn btn-sm btn-deconnexion" type="submit" title="Déconnexion">
+                <i class="bi bi-box-arrow-right"></i>
+            </button>
+        </form>
+    </div>
+</aside>
+
+<!-- ===== Contenu ===== -->
+<div class="contenu d-flex flex-column min-vh-100">
+    <header class="barre-haut d-flex align-items-center px-3 px-lg-4 gap-3">
+        <button class="btn btn-outline-secondary btn-sm d-lg-none" type="button" data-sans-loader
+                data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">
+            <i class="bi bi-list"></i>
+        </button>
+        <h1 class="h5 mb-0 text-truncate" layout:fragment="titre-page">Tantana</h1>
+        <div class="ms-auto d-flex align-items-center gap-3">
+            <span class="date-du-jour d-none d-md-inline" th:text="${dateDuJour}">Lundi 1 janvier 2026</span>
+            <div class="dropdown">
+                <button class="btn p-0 border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-sans-loader
+                        title="Mon compte">
+                    <span class="avatar" th:text="${initialeUtilisateur}">A</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li class="px-2 py-1">
+                        <div class="fw-semibold" th:text="${nomUtilisateur}">Utilisateur</div>
+                        <div class="small text-muted" sec:authentication="name">login</div>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form th:action="@{/logout}" method="post" data-sans-loader>
+                            <button class="dropdown-item text-danger" type="submit">
+                                <i class="bi bi-box-arrow-right me-2"></i>Se déconnecter</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <main class="contenu-principal flex-grow-1 p-3 p-lg-4" layout:fragment="content"></main>
+</div>
+
+<!--
+  ===== Fenetre de confirmation commune =====
+  Utilisation : ajouter sur un <form> les attributs
+    data-confirmation="Message"                  (obligatoire)
+    data-confirmation-titre="Titre"              (defaut : Confirmation)
+    data-confirmation-bouton="Libellé du bouton" (defaut : Confirmer)
+    data-confirmation-style="danger|primary|success|warning|dark" (defaut : primary)
+  La soumission est suspendue jusqu'au clic sur le bouton de confirmation.
+-->
+<div class="modal fade" id="modal-confirmation" tabindex="-1" aria-labelledby="modal-confirmation-titre" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title d-flex align-items-center gap-2" id="modal-confirmation-titre">
+                    <i class="bi bi-question-circle fs-4" data-role="icone"></i>
+                    <span data-role="titre">Confirmation</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body pt-2 text-body-secondary" data-role="message">Confirmer l'opération ?</div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" data-role="confirmer">Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
+<!-- confirmation.js AVANT loader.js : le loader ne demarre qu'une fois l'action confirmee -->
+<script th:src="@{/js/confirmation.js}"></script>
+<script th:src="@{/js/loader.js}"></script>
+</body>
+</html>

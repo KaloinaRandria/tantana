@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}">
+<head>
+    <title>Accueil</title>
+</head>
+<body>
+<h1 layout:fragment="titre-page" class="h5 mb-0">Accueil</h1>
+
+<main layout:fragment="content" th:with="t=${tableau}">
+
+    <!-- ===== Bienvenue ===== -->
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 en-tete-page">
+        <div>
+            <h2 class="h3 mb-1">Bonjour, <span th:text="${utilisateur != null ? utilisateur.nomComplet : #authentication.name}">Nom</span></h2>
+            <div class="sous-titre">
+                Voici l'activité de Tantana
+                <th:block th:if="${t.financier}">ce mois-ci.</th:block>
+                <th:block th:unless="${t.financier}">et ce qui vous attend.</th:block>
+            </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a sec:authorize="hasAnyRole('ADMIN','VENDEUR')" th:href="@{/ventes/nouvelle}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> Nouvelle vente</a>
+            <a sec:authorize="hasAnyRole('ADMIN','ACHETEUR')" th:href="@{/achats/commandes/nouvelle}" class="btn btn-outline-secondary">
+                <i class="bi bi-truck"></i> Nouvelle commande</a>
+        </div>
+    </div>
+
+    <!-- ===== Indicateurs financiers du mois (ADMIN / CHECKER) ===== -->
+    <div class="row g-3 mb-3" th:if="${t.financier}" th:with="s=${t.moisEnCours}">
+        <div class="col-6 col-xl-3">
+            <div class="card border-0 shadow-sm tuile">
+                <div class="libelle"><span class="icone icone-bleu"><i class="bi bi-receipt"></i></span> Chiffre d'affaires HT</div>
+                <div class="valeur"><span th:text="${#numbers.formatDecimal(s.caNetHt, 1, 'WHITESPACE', 0, 'COMMA')}">0</span> <small>MGA</small></div>
+                <div class="detail"><span th:text="${s.nbFactures}">0</span> facture(s) ce mois, avoirs déduits</div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="card border-0 shadow-sm tuile">
+                <div class="libelle"><span class="icone icone-vert"><i class="bi bi-graph-up-arrow"></i></span> Marge nette</div>
+                <div class="valeur" th:classappend="${s.margeNette.signum() < 0} ? 'text-danger'">
+                    <span th:text="${#numbers.formatDecimal(s.margeNette, 1, 'WHITESPACE', 0, 'COMMA')}">0</span> <small>MGA</small></div>
+                <div class="detail" th:text="${s.tauxMarque != null} ? ${s.tauxMarque} + ' % du chiffre d’affaires' : 'Aucune vente ce mois'">0 %</div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="card border-0 shadow-sm tuile">
+                <div class="libelle"><span class="icone icone-bleu"><i class="bi bi-cash-coin"></i></span> Encaissé ce mois</div>
+                <div class="valeur"><span th:text="${#numbers.formatDecimal(t.encaisseMois, 1, 'WHITESPACE', 0, 'COMMA')}">0</span> <small>MGA</small></div>
+                <div class="detail">tous modes de paiement</div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <a th:href="@{/ventes(impayees=true)}" class="card border-0 shadow-sm tuile tuile-lien">
+                <div class="libelle"><span class="icone" th:classappend="${t.creances.signum() > 0} ? 'icone-rouge' : 'icone-gris'">
+                    <i class="bi bi-wallet2"></i></span> Créances clients</div>
+                <div class="valeur"><span th:text="${#numbers.formatDecimal(t.creances, 1, 'WHITESPACE', 0, 'COMMA')}">0</span> <small>MGA</small></div>
+                <div class="detail">à encaisser à ce jour <i class="bi bi-arrow-right-short"></i></div>
+            </a>
+        </div>
+    </div>
+
+    <!-- ===== A traiter (tous) ===== -->
+    <h2 class="h6 text-uppercase mb-2 mt-1">À traiter</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-xl-3" sec:authorize="hasAnyRole('ADMIN','CHECKER','ACHETEUR')">
+            <a th:href="@{/achats/receptions(statut='SAISIE')}" class="card border-0 shadow-sm tuile tuile-lien">
+                <div class="libelle"><span class="icone" th:classappend="${t.receptionsAValider > 0} ? 'icone-orange' : 'icone-gris'">
+                    <i class="bi bi-box-arrow-in-down"></i></span> Réceptions à valider</div>
+                <div class="valeur" th:text="${t.receptionsAValider}">0</div>
+                <div class="detail">contrôle des 4 yeux avant entrée en stock</div>
+            </a>
+        </div>
+        <div class="col-6 col-xl-3" sec:authorize="hasAnyRole('ADMIN','CHECKER','VENDEUR')">
+            <a th:href="@{/ventes(statut='A_VALIDER')}" class="card border-0 shadow-sm tuile tuile-lien">
+                <div class="libelle"><span class="icone" th:classappend="${t.ventesAControler > 0} ? 'icone-orange' : 'icone-gris'">
+                    <i class="bi bi-shield-check"></i></span> Ventes à contrôler</div>
+                <div class="valeur" th:text="${t.ventesAControler}">0</div>
+                <div class="detail">remise hors plafond, perte ou crédit</div>
+            </a>
+        </div>
+        <div class="col-6 col-xl-3" sec:authorize="hasAnyRole('ADMIN','ACHETEUR')">
+            <a th:href="@{/achats/commandes(retard=true)}" class="card border-0 shadow-sm tuile tuile-lien">
+                <div class="libelle"><span class="icone" th:classappend="${t.commandesEnRetard > 0} ? 'icone-rouge' : 'icone-gris'">
+                    <i class="bi bi-clock-history"></i></span> Commandes en retard</div>
+                <div class="valeur" th:text="${t.commandesEnRetard}">0</div>
+                <div class="detail">arrivée prévue dépassée</div>
+            </a>
+        </div>
+        <div class="col-6 col-xl-3" sec:authorize="hasAnyRole('ADMIN','GESTIONNAIRE_STOCK','ACHETEUR')">
+            <a th:href="@{/stock}" class="card border-0 shadow-sm tuile tuile-lien">
+                <div class="libelle"><span class="icone" th:classappend="${t.articlesSansStock > 0} ? 'icone-orange' : 'icone-gris'">
+                    <i class="bi bi-boxes"></i></span> Articles en rupture</div>
+                <div class="valeur" th:text="${t.articlesSansStock}">0</div>
+                <div class="detail" th:if="${t.financier}">stock au revient :
+                    <span th:text="${#numbers.formatDecimal(t.valeurStockRevient, 1, 'WHITESPACE', 0, 'COMMA')}">0</span> MGA</div>
+                <div class="detail" th:unless="${t.financier}">articles à prix fixé sans stock</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- ===== Graphiques (ADMIN / CHECKER) ===== -->
+    <th:block th:if="${t.financier}">
+        <div class="row g-3">
+            <!-- CA et marge par mois : barres groupees, une seule echelle (MGA) -->
+            <div class="col-xl-8">
+                <div class="card border-0 shadow-sm carte-graphique h-100">
+                    <div class="entete">
+                        <h2>Chiffre d'affaires et marge</h2>
+                        <span class="note">12 derniers mois · HT, avoirs déduits</span>
+                    </div>
+                    <div class="legende mt-2">
+                        <span><span class="pastille" style="background:#2a78d6"></span>Chiffre d'affaires HT</span>
+                        <span><span class="pastille" style="background:#eb6834"></span>Marge nette</span>
+                    </div>
+                    <div class="zone-graphique"><canvas id="graphique-mensuel" aria-label="Chiffre d'affaires et marge par mois" role="img"></canvas></div>
+                    <details class="donnees-graphique">
+                        <summary>Voir les données</summary>
+                        <table class="table table-sm">
+                            <thead><tr><th>Mois</th><th class="text-end">CA HT</th><th class="text-end">Marge</th></tr></thead>
+                            <tbody>
+                            <tr th:each="m, it : ${t.moisLibelles}">
+                                <td th:text="${m}">jan</td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(t.caParMois[it.index], 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(t.margeParMois[it.index], 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </details>
+                </div>
+            </div>
+
+            <!-- Encaissements par mode : barres horizontales classees, une teinte -->
+            <div class="col-xl-4">
+                <div class="card border-0 shadow-sm carte-graphique h-100">
+                    <div class="entete">
+                        <h2>Encaissements par mode</h2>
+                        <span class="note">ce mois</span>
+                    </div>
+                    <div th:if="${t.encaissements.empty}" class="etat-vide">
+                        <i class="bi bi-cash-stack"></i> Aucun encaissement ce mois-ci.
+                    </div>
+                    <div th:unless="${t.encaissements.empty}" class="zone-graphique basse">
+                        <canvas id="graphique-encaissements" aria-label="Encaissements par mode de paiement" role="img"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top 5 articles par marge -->
+            <div class="col-12">
+                <div class="card border-0 shadow-sm carte-graphique">
+                    <div class="entete">
+                        <h2>Articles les plus rentables</h2>
+                        <span class="note">marge nette sur 12 mois · top 5</span>
+                    </div>
+                    <div th:if="${t.topArticles.empty}" class="etat-vide">
+                        <i class="bi bi-bar-chart"></i> Pas encore de vente facturée.
+                    </div>
+                    <div th:unless="${t.topArticles.empty}" class="zone-graphique basse">
+                        <canvas id="graphique-articles" aria-label="Marge par article" role="img"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Donnees des graphiques, lues par accueil.js -->
+        <script th:inline="javascript">
+            window.donneesAccueil = {
+                mois: /*[[${t.moisLibelles}]]*/ [],
+                ca: /*[[${t.caParMois}]]*/ [],
+                marge: /*[[${t.margeParMois}]]*/ [],
+                encaissementsLibelles: /*[[${t.encaissementsLibelles}]]*/ [],
+                encaissementsMontants: /*[[${t.encaissementsMontants}]]*/ [],
+                articlesLibelles: /*[[${t.articlesLibelles}]]*/ [],
+                articlesMarges: /*[[${t.articlesMarges}]]*/ []
+            };
+        </script>
+        <script th:src="@{/webjars/chart.js/4.4.1/dist/chart.umd.js}"></script>
+        <script th:src="@{/js/accueil.js}"></script>
+    </th:block>
+</main>
+</body>
+</html>

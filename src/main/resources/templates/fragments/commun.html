@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Messages de succes / erreur transmis apres une redirection (flash attributes) -->
+<div th:fragment="alertes">
+    <div th:if="${succes}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-1"></i> <span th:text="${succes}">OK</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+    </div>
+    <div th:if="${erreur}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-1"></i> <span th:text="${erreur}">Erreur</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+    </div>
+</div>
+
+<!-- Barre de recherche + filtre de statut. Utilise ${q} et ${statut} du modele. -->
+<form th:fragment="filtres(url, indice)" th:action="@{${url}}" method="get" class="row g-2 mb-3">
+    <div class="col-12 col-md-6">
+        <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="search" name="q" th:value="${q}" class="form-control" th:placeholder="${indice}">
+        </div>
+    </div>
+    <div class="col-8 col-md-3">
+        <select name="statut" class="form-select" onchange="this.form.submit()">
+            <option value="actifs" th:selected="${statut == 'actifs'}">Actifs</option>
+            <option value="inactifs" th:selected="${statut == 'inactifs'}">Inactifs</option>
+            <option value="tous" th:selected="${statut == 'tous'}">Tous</option>
+        </select>
+    </div>
+    <div class="col-4 col-md-3 d-grid">
+        <button class="btn btn-outline-secondary" type="submit">Rechercher</button>
+    </div>
+</form>
+
+<!-- Pagination : conserve la recherche et le filtre -->
+<nav th:fragment="pagination(page, url)" th:if="${page.totalPages > 1}" class="mt-3">
+    <ul class="pagination pagination-sm justify-content-center mb-0">
+        <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+            <a class="page-link" th:href="@{${url}(page=${page.number - 1}, q=${q}, statut=${statut})}">&laquo;</a>
+        </li>
+        <li th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}" class="page-item"
+            th:classappend="${i == page.number} ? 'active'">
+            <a class="page-link" th:href="@{${url}(page=${i}, q=${q}, statut=${statut})}" th:text="${i + 1}">1</a>
+        </li>
+        <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+            <a class="page-link" th:href="@{${url}(page=${page.number + 1}, q=${q}, statut=${statut})}">&raquo;</a>
+        </li>
+    </ul>
+</nav>
+
+<!-- Badge Actif / Inactif -->
+<span th:fragment="badgeStatut(actif)">
+    <span th:if="${actif}" class="badge text-bg-success">Actif</span>
+    <span th:unless="${actif}" class="badge text-bg-secondary">Inactif</span>
+</span>
+
+<!-- Bouton activer / desactiver (POST + CSRF) -->
+<!-- La desactivation passe par la fenetre de confirmation commune ; la reactivation est directe -->
+<form th:fragment="boutonStatut(url, actif)" th:action="@{${url}}" method="post" class="d-inline"
+      th:attr="data-confirmation=${actif} ? 'Cet élément ne sera plus proposé dans les nouvelles saisies. Vous pourrez le réactiver à tout moment.' : null,
+               data-confirmation-titre=${actif} ? 'Désactiver' : null,
+               data-confirmation-bouton=${actif} ? 'Désactiver' : null,
+               data-confirmation-style=${actif} ? 'warning' : null">
+    <button th:if="${actif}" type="submit" class="btn btn-sm btn-outline-warning" title="Désactiver">
+        <i class="bi bi-pause-circle"></i>
+    </button>
+    <button th:unless="${actif}" type="submit" class="btn btn-sm btn-outline-success" title="Réactiver">
+        <i class="bi bi-play-circle"></i>
+    </button>
+</form>
+
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="${fournisseur.id == null} ? 'Nouveau fournisseur' : 'Modifier le fournisseur'">Fournisseur</title>
+</head>
+<body>
+<h1 layout:fragment="titre-page" class="h5 mb-0"
+    th:text="${fournisseur.id == null} ? 'Nouveau fournisseur' : 'Modifier ' + ${fournisseur.nom}">Fournisseur</h1>
+
+<main layout:fragment="content">
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <form th:action="@{/achats/fournisseurs/enregistrer}" th:object="${fournisseur}" method="post" novalidate>
+                <input type="hidden" th:field="*{id}">
+
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label for="nom" class="form-label">Nom <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{nom}" class="form-control" maxlength="150" autofocus
+                               th:classappend="${#fields.hasErrors('nom')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{nom}">Erreur</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="devise" class="form-label">Devise d'achat <span class="text-danger">*</span></label>
+                        <select th:field="*{devise}" class="form-select"
+                                th:classappend="${#fields.hasErrors('devise')} ? 'is-invalid'">
+                            <option value="">— Choisir —</option>
+                            <option th:each="d : ${devises}" th:value="${d}" th:text="${d} + ' — ' + ${d.libelle}">USD</option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{devise}">Erreur</div>
+                        <div class="form-text">Proposée par défaut sur ses commandes.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="pays" class="form-label">Pays <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{pays}" class="form-control" maxlength="100"
+                               th:classappend="${#fields.hasErrors('pays')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{pays}">Erreur</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="contact" class="form-label">Personne de contact</label>
+                        <input type="text" th:field="*{contact}" class="form-control" maxlength="150"
+                               th:classappend="${#fields.hasErrors('contact')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{contact}">Erreur</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="telephone" class="form-label">Téléphone</label>
+                        <input type="tel" th:field="*{telephone}" class="form-control" maxlength="50"
+                               th:classappend="${#fields.hasErrors('telephone')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{telephone}">Erreur</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="email" class="form-label">E-mail</label>
+                        <input type="email" th:field="*{email}" class="form-control" maxlength="150"
+                               th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{email}">Erreur</div>
+                    </div>
+                    <div class="col-12">
+                        <label for="adresse" class="form-label">Adresse</label>
+                        <input type="text" th:field="*{adresse}" class="form-control" maxlength="255"
+                               th:classappend="${#fields.hasErrors('adresse')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{adresse}">Erreur</div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Enregistrer</button>
+                    <a th:href="@{/achats/fournisseurs}" class="btn btn-outline-secondary">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+</body>
+</html>
