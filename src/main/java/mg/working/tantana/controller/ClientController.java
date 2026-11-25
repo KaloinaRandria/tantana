@@ -46,19 +46,19 @@ public class ClientController {
         model.addAttribute("page", clientService.rechercher(q, FiltreStatut.versBooleen(statut), pageable));
         model.addAttribute("q", q);
         model.addAttribute("statut", statut);
-        return "clients/liste";
+        return "clients/client-liste";
     }
 
     @GetMapping("/nouveau")
     public String nouveau(Model model) {
         model.addAttribute("client", new Client());
-        return "clients/formulaire";
+        return "clients/client-saisie";
     }
 
     @GetMapping("/{id}/modifier")
     public String modifier(@PathVariable Long id, Model model) {
         model.addAttribute("client", clientService.trouver(id));
-        return "clients/formulaire";
+        return "clients/client-saisie";
     }
 
     @PostMapping("/enregistrer")
@@ -71,7 +71,7 @@ public class ClientController {
             client.setComptoir(clientService.trouver(client.getId()).isComptoir());
         }
         if (erreurs.hasErrors()) {
-            return "clients/formulaire";
+            return "clients/client-saisie";
         }
         try {
             Client enregistre = clientService.enregistrer(client);
@@ -79,14 +79,14 @@ public class ClientController {
             return "redirect:/clients";
         } catch (DoublonException e) {
             erreurs.rejectValue(e.getChamp(), "doublon", e.getMessage());
-            return "clients/formulaire";
+            return "clients/client-saisie";
         } catch (RegleMetierException e) {
             if (e.getChamp() != null) {
                 erreurs.rejectValue(e.getChamp(), "regle", e.getMessage());
             } else {
                 erreurs.reject("regle", e.getMessage());
             }
-            return "clients/formulaire";
+            return "clients/client-saisie";
         }
     }
 

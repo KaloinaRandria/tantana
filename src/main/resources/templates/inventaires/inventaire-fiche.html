@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="${inventaire.numero}">Inventaire</title>
+</head>
+<body>
+<h1 layout:fragment="titre-page" class="h5 mb-0">
+    <a th:href="@{/stock/inventaires}" class="text-decoration-none text-muted">Inventaires</a>
+    <i class="bi bi-chevron-right small text-muted"></i>
+    <span th:text="${inventaire.numero}">INV</span>
+</h1>
+
+<main layout:fragment="content"
+      th:with="inv=${inventaire},
+               st=${inventaire.statut.name()},
+               intervenant=${#strings.equalsIgnoreCase(#authentication.name, inventaire.creePar.username)
+                             or (inventaire.comptePar != null and #strings.equalsIgnoreCase(#authentication.name, inventaire.comptePar.username))},
+               gestion=${#authorization.expression('hasAnyRole(''ADMIN'',''GESTIONNAIRE_STOCK'')')},
+               controle=${#authorization.expression('hasAnyRole(''ADMIN'',''CHECKER'')')}">
+    <div th:replace="~{fragments/commun :: alertes}"></div>
+
+    <!-- ===== En-tete ===== -->
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+        <div>
+            <h2 class="h4 mb-1">
+                <span th:text="${inv.numero}">INV</span>
+                <span class="badge fs-6 align-middle" th:classappend="'text-bg-' + ${inv.statut.couleur}"
+                      th:text="${inv.statut.libelle}">Statut</span>
+            </h2>
+            <div class="text-muted small">
+                Inventaire <strong th:text="${#strings.toLowerCase(inv.type.libelle)}">tournant</strong>
+                du <span th:text="${#temporals.format(inv.dateInventaire, 'dd/MM/yyyy')}">date</span>
+                — <span th:text="${inv.nombreLignes}">0</span> article(s)
+            </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a th:if="${st == 'EN_COMPTAGE'}" th:href="@{/stock/inventaires/{id}/fiche(id=${inv.id})}" target="_blank"
+               class="btn btn-outline-secondary" data-sans-loader>
+                <i class="bi bi-printer"></i> Fiche de comptage</a>
+            <button th:if="${inv.statut.estOuvert() and gestion}" type="button" class="btn btn-outline-danger"
+                    data-bs-toggle="modal" data-bs-target="#modal-annulation">
+                <i class="bi bi-x-circle"></i> Annuler l'inventaire</button>
+            <!-- Controleur (n'a ni ouvert ni compte) -->
+            <th:block th:if="${st == 'A_VALIDER' and controle and !intervenant}">
+                <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modal-rejet">
+                    <i class="bi bi-arrow-counterclockwise"></i> Demander un recomptage</button>
+                <form th:action="@{/stock/inventaires/{id}/valider(id=${inv.id})}" method="post"
+                      data-confirmation-titre="Valider l'inventaire"
+                      th:attr="data-confirmation=${inv.nombreEcarts} + ' écart(s) vont être ajustés dans le stock (écart net '
+                               + ${#numbers.formatDecimal(inv.ecartNet, 1, 'WHITESPACE', 0, 'COMMA')} + ' MGA au prix de revient). Les articles seront dégelés. Cette opération est définitive.'"
+                      data-confirmation-bouton="Valider et ajuster le stock" data-confirmation-style="success">
+                    <button type="submit" class="btn btn-success" th:disabled="${inv.nombreNonJustifies > 0}">
+                        <i class="bi bi-check2-circle"></i> Valider et ajuster le stock</button>
+                </form>
+            </th:block>
+        </div>
+    </div>
+
+    <!-- ===== Messages d'etat ===== -->
+    <div th:if="${st == 'EN_COMPTAGE' and inv.motifRejet != null}" class="alert alert-warning">
+        <strong><i class="bi bi-arrow-counterclockwise"></i> Recomptage demandé par
+            <span th:text="${inv.rejetePar?.nomComplet}">X</span>
+            le <span th:text="${#temporals.format(inv.dateRejet, 'dd/MM/yyyy à HH:mm')}">date</span> :</strong>
+        <span th:text="${inv.motifRejet}">motif</span>
+    </div>
+    <div th:if="${st == 'EN_COMPTAGE'}" class="alert alert-info small">
+        <i class="bi bi-eye-slash"></i>
+        <strong>Comptage à l'aveugle :</strong> la quantité du système n'est pas affichée, pour que le compte reflète
+        uniquement ce qui est réellement en rayon. Comptez tout, y compris les articles abîmés (saisissez 0 si absent).
+        <span class="d-block mt-1"><i class="bi bi-snow"></i> Ces articles sont <strong>gelés</strong> :
+            aucune vente, réception ni retour ne peut les mouvementer pendant l'inventaire.</span>
+    </div>
+    <th:block th:if="${st == 'A_VALIDER'}">
+        <div th:if="${inv.nombreNonJustifies > 0}" class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong th:text="${inv.nombreNonJustifies}">0</strong> écart(s) sans motif : chaque écart doit être justifié
+            avant la validation (motif, et commentaire pour « Autre »).
+        </div>
+        <div th:if="${intervenant}" class="alert alert-light border small">
+            <i class="bi bi-hourglass-split"></i>
+            Vous avez ouvert ou compté cet inventaire : il doit être validé par <strong>une autre personne</strong> (rôle CHECKER).
+        </div>
+    </th:block>
+    <div th:if="${st == 'VALIDE'}" class="alert alert-success">
+        <i class="bi bi-check2-circle"></i>
+        Validé par <strong th:text="${inv.validePar.nomComplet}">X</strong>
+        le <span th:text="${#temporals.format(inv.dateValidation, 'dd/MM/yyyy à HH:mm')}">date</span> :
+        les écarts ont été passés en ajustements de stock (référence <span th:text="${inv.numero}">INV</span>).
+    </div>
+    <div th:if="${st == 'ANNULE'}" class="alert alert-secondary">
+        <i class="bi bi-x-circle"></i>
+        Annulé par <strong th:text="${inv.annulePar?.nomComplet}">X</strong>
+        le <span th:text="${#temporals.format(inv.dateAnnulation, 'dd/MM/yyyy à HH:mm')}">date</span> :
+        <span th:text="${inv.motifAnnulation}">motif</span>. Le stock n'a pas été modifié.
+    </div>
+
+    <!-- ===== Indicateurs ===== -->
+    <div class="row g-3 mb-3">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="small text-muted">Articles comptés</div>
+                    <div class="fs-4 fw-semibold">
+                        <span th:text="${inv.nombreComptees}">0</span>
+                        <small class="fs-6 text-muted">/ <span th:text="${inv.nombreLignes}">0</span></small>
+                    </div>
+                    <div class="progress mt-2" style="height: .4rem;" role="progressbar"
+                         th:attr="aria-valuenow=${inv.avancement}" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar" th:style="'width:' + ${inv.avancement} + '%'"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <th:block th:unless="${st == 'EN_COMPTAGE'}">
+            <div class="col-sm-6 col-xl-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="small text-muted">Articles avec écart</div>
+                        <div class="fs-4 fw-semibold" th:text="${inv.nombreEcarts}">0</div>
+                        <div class="small text-muted" th:if="${inv.tauxFiabilite != null}">
+                            Fiabilité du stock : <strong th:text="${inv.tauxFiabilite} + ' %'">100 %</strong></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="small text-muted">Manquants / surplus (revient)</div>
+                        <div class="fw-semibold text-danger">
+                            <span th:text="${#numbers.formatDecimal(inv.ecartsNegatifs, 1, 'WHITESPACE', 0, 'COMMA')}">0</span> MGA</div>
+                        <div class="fw-semibold text-success">
+                            +<span th:text="${#numbers.formatDecimal(inv.ecartsPositifs, 1, 'WHITESPACE', 0, 'COMMA')}">0</span> MGA</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="small text-muted">Écart net</div>
+                        <div class="fs-4 fw-semibold" th:classappend="${inv.ecartNet.signum() < 0} ? 'text-danger' : (${inv.ecartNet.signum() > 0} ? 'text-success')">
+                            <span th:text="${#numbers.formatDecimal(inv.ecartNet, 1, 'WHITESPACE', 0, 'COMMA')}">0</span>
+                            <small class="fs-6 text-muted">MGA</small>
+                        </div>
+                        <div class="small text-muted">
+                            sur <span th:text="${#numbers.formatDecimal(inv.valeurTheorique, 1, 'WHITESPACE', 0, 'COMMA')}">0</span> MGA inventoriés
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </th:block>
+        <div class="col-sm-6 col-xl-3" th:if="${st == 'EN_COMPTAGE'}">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body small">
+                    <div class="text-muted">Ouvert par</div>
+                    <div class="fw-semibold" th:text="${inv.creePar.nomComplet}">X</div>
+                    <div class="text-muted" th:text="${#temporals.format(inv.dateCreation, 'dd/MM/yyyy à HH:mm')}">date</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-3" th:unless="${st == 'EN_COMPTAGE'}">
+        <div class="card-body small">
+            <div class="row g-2">
+                <div class="col-sm-6 col-lg-3">
+                    <span class="text-muted d-block">Ouvert par</span>
+                    <span th:text="${inv.creePar.nomComplet}">X</span>,
+                    <span th:text="${#temporals.format(inv.dateCreation, 'dd/MM/yyyy HH:mm')}">date</span>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <span class="text-muted d-block">Compté par</span>
+                    <span th:text="${inv.comptePar?.nomComplet} ?: '—'">X</span><span th:if="${inv.dateSoumission}"
+                        th:text="', ' + ${#temporals.format(inv.dateSoumission, 'dd/MM/yyyy HH:mm')}">, date</span>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <span class="text-muted d-block">Validé par</span>
+                    <span th:text="${inv.validePar?.nomComplet} ?: '—'">X</span>
+                </div>
+                <div class="col-sm-6 col-lg-3" th:if="${inv.observations}">
+                    <span class="text-muted d-block">Observations</span>
+                    <span th:text="${inv.observations}">obs</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================
+         EN COMPTAGE : saisie a l'aveugle (gestionnaire de stock)
+         =================================================================== -->
+    <form th:if="${st == 'EN_COMPTAGE' and gestion}" th:action="@{/stock/inventaires/{id}/comptage(id=${inv.id})}"
+          method="post" id="form-comptage" novalidate>
+        <input type="hidden" name="version" th:value="${inv.version}">
+        <input type="hidden" name="soumettre" value="false" id="champ-soumettre">
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body pb-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <h3 class="h6 text-uppercase text-muted mb-0">Saisie du comptage</h3>
+                <div class="input-group input-group-sm" style="max-width: 20rem;">
+                    <span class="input-group-text"><i class="bi bi-funnel"></i></span>
+                    <input type="search" class="form-control" id="filtre-lignes" placeholder="Filtrer les articles">
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0" id="table-lignes">
+                    <thead class="table-light">
+                    <tr>
+                        <th style="width: 3rem;">#</th>
+                        <th>Article</th>
+                        <th style="width: 11rem;" class="text-end">Quantité comptée</th>
+                        <th>Commentaire</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="l, it : ${inv.lignes}"
+                        th:attr="data-texte=${#strings.toLowerCase(l.article.reference + ' ' + l.article.designation)}">
+                        <td class="text-muted small" th:text="${it.count}">1</td>
+                        <td>
+                            <input type="hidden" th:name="'lignes[' + ${it.index} + '].id'" th:value="${l.id}">
+                            <code th:text="${l.article.reference}">ART</code>
+                            <span th:text="${l.article.designation}">Désignation</span>
+                        </td>
+                        <td>
+                            <div class="input-group input-group-sm">
+                                <input type="number" step="any" min="0" class="form-control text-end champ-compte"
+                                       th:name="'lignes[' + ${it.index} + '].quantiteComptee'"
+                                       th:value="${l.quantiteComptee != null} ? ${l.quantiteComptee.stripTrailingZeros().toPlainString()}"
+                                       placeholder="à compter">
+                                <span class="input-group-text" th:text="${l.article.unite.libelle}">Pièce</span>
+                            </div>
+                        </td>
+                        <td>
+                            <input type="text" class="form-control form-control-sm" maxlength="255"
+                                   th:name="'lignes[' + ${it.index} + '].commentaire'" th:value="${l.commentaire}"
+                                   placeholder="ex. 3 cartons abîmés au fond de l'entrepôt">
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="d-flex flex-wrap justify-content-end gap-2">
+            <button type="submit" class="btn btn-outline-primary" data-action="enregistrer">
+                <i class="bi bi-save"></i> Enregistrer (continuer plus tard)</button>
+            <button type="submit" class="btn btn-primary" data-action="soumettre">
+                <i class="bi bi-flag"></i> Terminer le comptage</button>
+        </div>
+    </form>
+
+    <!-- Lecture seule pendant le comptage (controleur, acheteur) : pas de quantites -->
+    <div th:if="${st == 'EN_COMPTAGE' and !gestion}" class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-light"><tr><th>Article</th><th class="text-center">Compté</th></tr></thead>
+                <tbody>
+                <tr th:each="l : ${inv.lignes}">
+                    <td><code th:text="${l.article.reference}">ART</code> <span th:text="${l.article.designation}">Désignation</span></td>
+                    <td class="text-center">
+                        <i th:if="${l.comptee}" class="bi bi-check-circle-fill text-success"></i>
+                        <i th:unless="${l.comptee}" class="bi bi-circle text-muted"></i>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===================================================================
+         APRES LE COMPTAGE : ecarts (justification par le gestionnaire)
+         =================================================================== -->
+    <form th:unless="${st == 'EN_COMPTAGE'}" th:action="@{/stock/inventaires/{id}/justifier(id=${inv.id})}"
+          method="post" novalidate th:with="justification=${st == 'A_VALIDER' and gestion}">
+        <input type="hidden" name="version" th:value="${inv.version}">
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body pb-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <h3 class="h6 text-uppercase text-muted mb-0">Résultat du comptage</h3>
+                <div class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" id="ecarts-seulement" th:checked="${inv.nombreEcarts > 0}">
+                    <label class="form-check-label small" for="ecarts-seulement">Écarts seulement</label>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0" id="table-ecarts">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Article</th>
+                        <th class="text-end">Système</th>
+                        <th class="text-end">Compté</th>
+                        <th class="text-end">Écart</th>
+                        <th class="text-end">Écart (MGA)</th>
+                        <th style="min-width: 14rem;">Motif</th>
+                        <th style="min-width: 12rem;">Commentaire</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="l, it : ${inv.lignes}" th:attr="data-ecart=${l.avecEcart}"
+                        th:classappend="${l.avecEcart and !l.justifiee and st == 'A_VALIDER'} ? 'table-warning'">
+                        <td>
+                            <input type="hidden" th:if="${justification}" th:name="'lignes[' + ${it.index} + '].id'" th:value="${l.id}">
+                            <code th:text="${l.article.reference}">ART</code>
+                            <span th:text="${l.article.designation}">Désignation</span>
+                        </td>
+                        <td class="text-end text-muted text-nowrap"
+                            th:text="${l.quantiteTheorique.stripTrailingZeros().toPlainString()}">0</td>
+                        <td class="text-end text-nowrap fw-semibold">
+                            <span th:text="${l.comptee} ? ${l.quantiteComptee.stripTrailingZeros().toPlainString()} : '—'">0</span>
+                            <small class="text-muted fw-normal" th:text="${l.article.unite.libelle}">Pièce</small>
+                        </td>
+                        <td class="text-end text-nowrap fw-semibold"
+                            th:classappend="${l.avecEcart} ? (${l.ecart.signum() < 0} ? 'text-danger' : 'text-success') : 'text-muted'">
+                            <span th:if="${l.avecEcart}"
+                                  th:text="(${l.ecart.signum() > 0} ? '+' : '') + ${l.ecart.stripTrailingZeros().toPlainString()}">-2</span>
+                            <span th:unless="${l.avecEcart}">0</span>
+                            <small class="d-block fw-normal" th:if="${l.ecartPct != null and l.avecEcart}"
+                                   th:text="${l.ecartPct} + ' %'">-5 %</small>
+                        </td>
+                        <td class="text-end text-nowrap"
+                            th:classappend="${l.ecartValeur.signum() < 0} ? 'text-danger' : (${l.ecartValeur.signum() > 0} ? 'text-success' : 'text-muted')"
+                            th:text="${#numbers.formatDecimal(l.ecartValeur, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                        <td>
+                            <select th:if="${justification and l.avecEcart}" class="form-select form-select-sm"
+                                    th:name="'lignes[' + ${it.index} + '].motifEcart'">
+                                <option value="">— Choisir le motif —</option>
+                                <option th:each="m : ${motifs}" th:value="${m}" th:text="${m.libelle}"
+                                        th:selected="${m == l.motifEcart}">Motif</option>
+                            </select>
+                            <span th:unless="${justification and l.avecEcart}" class="small"
+                                  th:text="${l.motifEcart?.libelle}">motif</span>
+                        </td>
+                        <td>
+                            <input th:if="${justification}" type="text" class="form-control form-control-sm" maxlength="255"
+                                   th:name="'lignes[' + ${it.index} + '].commentaire'" th:value="${l.commentaire}">
+                            <span th:unless="${justification}" class="small" th:text="${l.commentaire}">commentaire</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                    <tfoot>
+                    <tr class="fw-semibold">
+                        <td colspan="4" class="text-end">Écart net</td>
+                        <td class="text-end text-nowrap" th:text="${#numbers.formatDecimal(inv.ecartNet, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                        <td colspan="2"></td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        <div class="d-flex justify-content-end" th:if="${justification and inv.nombreEcarts > 0}">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Enregistrer les justifications</button>
+        </div>
+    </form>
+
+    <!-- ===== Fenetre : demande de recomptage ===== -->
+    <div class="modal fade" id="modal-rejet" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form class="modal-content" th:action="@{/stock/inventaires/{id}/rejeter(id=${inv.id})}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">Demander un recomptage</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted">L'inventaire repart en comptage ; les quantités déjà saisies sont conservées.</p>
+                    <label for="motif-rejet" class="form-label">Articles à recompter et raison <span class="text-danger">*</span></label>
+                    <textarea id="motif-rejet" name="motif" class="form-control" rows="3" required
+                              placeholder="ex. Écart de 12 sacs de riz trop important : recompter la réserve et le rayon"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fermer</button>
+                    <button type="submit" class="btn btn-warning">Renvoyer en comptage</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== Fenetre : annulation ===== -->
+    <div class="modal fade" id="modal-annulation" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form class="modal-content" th:action="@{/stock/inventaires/{id}/annuler(id=${inv.id})}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">Annuler l'inventaire</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted">Le stock ne sera pas modifié et les articles seront dégelés. Les comptages saisis restent consultables.</p>
+                    <label for="motif-annulation" class="form-label">Motif <span class="text-danger">*</span></label>
+                    <textarea id="motif-annulation" name="motif" class="form-control" rows="2" required
+                              placeholder="ex. Livraison urgente à réceptionner, inventaire reporté à samedi"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fermer</button>
+                    <button type="submit" class="btn btn-danger">Annuler l'inventaire</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script th:src="@{/js/inventaire.js}"></script>
+</main>
+</body>
+</html>

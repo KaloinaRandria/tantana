@@ -68,7 +68,7 @@ public class CommandeAchatController {
         model.addAttribute("retard", retard);
         model.addAttribute("statuts", StatutCommande.values());
         model.addAttribute("fournisseurs", fournisseurService.listerActifs());
-        return "commandes/liste";
+        return "commandes/commande-liste";
     }
 
     @GetMapping("/{id}")
@@ -79,7 +79,7 @@ public class CommandeAchatController {
         model.addAttribute("receptions", receptionService.listerPourCommande(id));
         model.addAttribute("peutReceptionner",
                 commande.getStatut().estEnAttente() && !receptionService.aUneReceptionEnAttente(id));
-        return "commandes/detail";
+        return "commandes/commande-fiche";
     }
 
     // ===================== Saisie =====================
@@ -186,6 +186,6 @@ public class CommandeAchatController {
         model.addAttribute("fournisseurs", fournisseurs);
         model.addAttribute("articles", articles);
         model.addAttribute("devises", Devise.values());
-        return "commandes/formulaire";
+        return "commandes/commande-saisie";
     }
 }

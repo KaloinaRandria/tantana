@@ -85,7 +85,7 @@ public class VenteController {
         model.addAttribute("statut", statut);
         model.addAttribute("impayees", impayees);
         model.addAttribute("statuts", StatutVente.values());
-        return "ventes/liste";
+        return "ventes/vente-liste";
     }
 
     @GetMapping("/{id}")
@@ -102,7 +102,7 @@ public class VenteController {
             model.addAttribute("aujourdhui", LocalDate.now());
             model.addAttribute("creditable", vente.getLignes().stream().anyMatch(l -> l.getQuantiteCreditable().signum() > 0));
         }
-        return "ventes/detail";
+        return "ventes/vente-fiche";
     }
 
     // ===================== Paiements =====================
@@ -173,7 +173,7 @@ public class VenteController {
         model.addAttribute("lignesVente", vente.getLignes().stream()
                 .collect(java.util.stream.Collectors.toMap(l -> l.getId(), l -> l)));
         model.addAttribute("erreur", erreur);
-        return "ventes/avoir";
+        return "ventes/avoir-saisie";
     }
 
     @GetMapping("/{id}/facture.pdf")
@@ -302,6 +302,6 @@ public class VenteController {
         model.addAttribute("articles", articles);
         model.addAttribute("stocks", stocks);
         model.addAttribute("parametre", parametreService.obtenir());
-        return "ventes/formulaire";
+        return "ventes/vente-saisie";
     }
 }

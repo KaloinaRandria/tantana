@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="'Fiche de comptage ' + ${inventaire.numero}">Fiche de comptage</title>
+    <link rel="stylesheet" th:href="@{/webjars/inter-ui/3.19.3/inter-latin.css}">
+    <style>
+        :root { --tt-texte: #1f2937; --tt-gris: #6b7280; --tt-bordure: #d1d5db; --tt-fond: #f3f4f6; }
+        * { box-sizing: border-box; }
+        body { font-family: "Inter var", "Inter", system-ui, sans-serif; color: var(--tt-texte); margin: 0; padding: 24px; font-size: 12px; background: #fff; }
+        .entete { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+        h1 { font-size: 18px; margin: 0 0 4px; }
+        .muted { color: var(--tt-gris); }
+        .cadre { border: 1px solid var(--tt-bordure); border-radius: 6px; padding: 8px 12px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid var(--tt-bordure); padding: 6px 8px; text-align: left; vertical-align: middle; }
+        th { background: var(--tt-fond); font-size: 11px; text-transform: uppercase; letter-spacing: .02em; }
+        td.compte { width: 110px; }
+        td.num { width: 32px; color: var(--tt-gris); }
+        td.init { width: 60px; }
+        tr { page-break-inside: avoid; }
+        .signatures { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+        .signatures .cadre { height: 80px; }
+        .consignes { margin: 12px 0; padding-left: 18px; }
+        .actions { margin-bottom: 16px; }
+        .actions button { font: inherit; padding: 6px 14px; border-radius: 6px; border: 1px solid #2a78d6; background: #2a78d6; color: #fff; cursor: pointer; }
+        @media print { body { padding: 0; } .actions { display: none; } }
+    </style>
+</head>
+<body th:with="inv=${inventaire}">
+<div class="actions"><button type="button" onclick="window.print()">Imprimer</button></div>
+
+<div class="entete">
+    <div>
+        <h1>Fiche de comptage <span th:text="${inv.numero}">INV</span></h1>
+        <div class="muted">
+            <span th:text="${parametre.raisonSociale}">Société</span> —
+            inventaire <span th:text="${#strings.toLowerCase(inv.type.libelle)}">tournant</span>
+            du <span th:text="${#temporals.format(inv.dateInventaire, 'dd/MM/yyyy')}">date</span>
+            — <span th:text="${inv.nombreLignes}">0</span> article(s)
+        </div>
+    </div>
+    <div class="cadre">
+        Équipe de comptage : ..........................................<br><br>
+        Zone / rayon : ..........................................
+    </div>
+</div>
+
+<ol class="consignes muted">
+    <li>Comptez tout ce qui est physiquement présent (rayon, réserve, vitrine), y compris les articles abîmés : notez-les en commentaire.</li>
+    <li>Écrivez <strong>0</strong> si l'article est absent ; ne laissez aucune case vide.</li>
+    <li>Ne corrigez pas au blanc : barrez et réécrivez, puis paraphez.</li>
+</ol>
+
+<table>
+    <thead>
+    <tr>
+        <th>#</th><th>Référence</th><th>Désignation</th><th>Unité</th><th>Quantité comptée</th><th>Commentaire</th><th>Paraphe</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="l, it : ${inv.lignes}">
+        <td class="num" th:text="${it.count}">1</td>
+        <td th:text="${l.article.reference}">ART</td>
+        <td th:text="${l.article.designation}">Désignation</td>
+        <td th:text="${l.article.unite.libelle}">Pièce</td>
+        <td class="compte"></td>
+        <td></td>
+        <td class="init"></td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="signatures">
+    <div><div class="muted">Compté par (nom, signature)</div><div class="cadre"></div></div>
+    <div><div class="muted">Recompté par (si écart)</div><div class="cadre"></div></div>
+    <div><div class="muted">Contrôlé par (CHECKER)</div><div class="cadre"></div></div>
+</div>
+</body>
+</html>

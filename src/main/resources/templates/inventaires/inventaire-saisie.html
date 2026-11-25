@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Nouvel inventaire</title>
+</head>
+<body>
+<h1 layout:fragment="titre-page" class="h5 mb-0">
+    <a th:href="@{/stock/inventaires}" class="text-decoration-none text-muted">Inventaires</a>
+    <i class="bi bi-chevron-right small text-muted"></i>
+    <span>Nouvel inventaire</span>
+</h1>
+
+<main layout:fragment="content">
+<form th:action="@{/stock/inventaires/creer}" th:object="${form}" method="post" novalidate id="form-inventaire"
+      data-confirmation-titre="Ouvrir l'inventaire"
+      data-confirmation="Le stock théorique va être figé et les articles choisis seront gelés : plus aucune vente, réception ni retour ne pourra les mouvementer jusqu'à la validation ou l'annulation de l'inventaire."
+      data-confirmation-bouton="Ouvrir et geler les articles" data-confirmation-style="warning">
+
+    <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+        <p th:each="e : ${#fields.globalErrors()}" th:text="${e}" class="mb-0">Erreur</p>
+    </div>
+
+    <!-- ===== Type et date ===== -->
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <h2 class="h6 text-uppercase text-muted mb-3">Inventaire</h2>
+            <div class="row g-3">
+                <div class="col-lg-8">
+                    <div class="row g-2">
+                        <div class="col-md-6" th:each="t : ${types}">
+                            <input type="radio" class="btn-check" th:field="*{type}" th:value="${t}" th:id="'type-' + ${t}">
+                            <label class="btn btn-outline-primary w-100 h-100 text-start p-3" th:for="'type-' + ${t}">
+                                <span class="fw-semibold d-block">
+                                    <i class="bi" th:classappend="${t.name() == 'COMPLET'} ? 'bi-building' : 'bi-arrow-repeat'"></i>
+                                    <span th:text="${t.libelle}">Type</span></span>
+                                <small class="d-block opacity-75" th:text="${t.description}">description</small>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <label for="dateInventaire" class="form-label">Date du comptage <span class="text-danger">*</span></label>
+                    <input type="date" th:field="*{dateInventaire}" class="form-control"
+                           th:classappend="${#fields.hasErrors('dateInventaire')} ? 'is-invalid'">
+                    <div class="invalid-feedback" th:errors="*{dateInventaire}">Erreur</div>
+                </div>
+                <div class="col-12">
+                    <label for="observations" class="form-label">Observations</label>
+                    <textarea th:field="*{observations}" class="form-control" rows="2"
+                              placeholder="ex. Inventaire de fin de mois du rayon téléphonie, magasin fermé de 7 h à 9 h"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Inventaire complet ===== -->
+    <div class="alert alert-info" id="bloc-complet">
+        <i class="bi bi-building"></i>
+        <strong th:text="${#lists.size(articles)}">0</strong> article(s) seront comptés : tous les articles actifs,
+        et les inactifs qui ont encore du stock. Prévoyez de fermer le magasin pendant le comptage :
+        <strong>tous les articles seront gelés</strong>.
+    </div>
+
+    <!-- ===== Inventaire tournant : choix des articles ===== -->
+    <div class="card border-0 shadow-sm mb-3" id="bloc-tournant">
+        <div class="card-body pb-2">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                <h2 class="h6 text-uppercase text-muted mb-0">Articles à compter
+                    <span class="badge text-bg-primary ms-1" id="nb-coches">0</span></h2>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-cocher-classe="A">
+                        <i class="bi bi-star"></i> Cocher la classe A</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-cocher-classe="">
+                        <i class="bi bi-x-lg"></i> Tout décocher</button>
+                </div>
+            </div>
+            <p class="small text-muted mb-2">
+                Classe ABC sur la valeur du stock au prix de revient : la <strong>classe A</strong> (≈ 80 % de la valeur)
+                se compte chaque mois, la <strong>B</strong> chaque trimestre, la <strong>C</strong> une à deux fois par an.
+            </p>
+            <div class="invalid-feedback d-block mb-2" th:if="${#fields.hasErrors('articleIds')}" th:errors="*{articleIds}">Erreur</div>
+            <div class="input-group input-group-sm mb-2">
+                <span class="input-group-text"><i class="bi bi-funnel"></i></span>
+                <input type="search" class="form-control" id="filtre-articles" placeholder="Filtrer par référence ou désignation">
+            </div>
+        </div>
+        <div class="table-responsive" style="max-height: 28rem;">
+            <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-light sticky-top">
+                <tr>
+                    <th style="width: 2.5rem;"></th>
+                    <th>Référence</th>
+                    <th>Désignation</th>
+                    <th class="text-center">Classe</th>
+                    <th class="text-end">Stock</th>
+                    <th class="text-end">Valeur au revient</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="a : ${articles}" th:attr="data-classe=${a.classe},data-texte=${#strings.toLowerCase(a.reference + ' ' + a.designation)}"
+                    th:classappend="${a.gele} ? 'table-light text-muted'">
+                    <td>
+                        <input type="checkbox" class="form-check-input" name="articleIds" th:value="${a.id}"
+                               th:id="'article-' + ${a.id}" th:disabled="${a.gele}"
+                               th:checked="${#lists.contains(form.articleIds, a.id)}">
+                    </td>
+                    <td><label th:for="'article-' + ${a.id}"><code th:text="${a.reference}">ART</code></label></td>
+                    <td>
+                        <span th:text="${a.designation}">Désignation</span>
+                        <span th:unless="${a.actif}" class="badge text-bg-secondary ms-1">Inactif</span>
+                        <span th:if="${a.gele}" class="badge text-bg-info ms-1"><i class="bi bi-snow"></i>
+                            <span th:text="${a.inventaireGel}">INV</span></span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge" th:text="${a.classe}"
+                              th:classappend="${a.classe == 'A'} ? 'text-bg-primary' : (${a.classe == 'B'} ? 'text-bg-info' : 'text-bg-light border')">A</span>
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <span th:text="${a.quantite.stripTrailingZeros().toPlainString()}">0</span>
+                        <small class="text-muted" th:text="${a.unite}">Pièce</small>
+                    </td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(a.valeur, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+        <a th:href="@{/stock/inventaires}" class="btn btn-outline-secondary">Annuler</a>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-clipboard-check"></i> Ouvrir l'inventaire</button>
+    </div>
+</form>
+
+<script th:src="@{/js/inventaire.js}"></script>
+</main>
+</body>
+</html>

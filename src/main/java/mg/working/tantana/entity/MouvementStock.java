@@ -74,6 +74,10 @@ public class MouvementStock {
     @JoinColumn(name = "avoir_id", updatable = false)
     private Avoir avoir;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "inventaire_id", updatable = false)
+    private Inventaire inventaire;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "utilisateur_id", updatable = false)
     private Utilisateur utilisateur;

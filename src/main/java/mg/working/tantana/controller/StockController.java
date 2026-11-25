@@ -29,8 +29,9 @@ public class StockController {
         model.addAttribute("page", stockService.rechercher(q, pageable));
         model.addAttribute("valeurTotale", stockService.valeurTotale());
         model.addAttribute("valeurTotaleRevient", stockService.valeurTotaleRevient());
+        model.addAttribute("articlesGeles", stockService.articlesGeles());
         model.addAttribute("q", q);
-        return "stock/liste";
+        return "stock/stock-liste";
     }
 
     @GetMapping("/articles/{articleId}")
@@ -40,6 +41,6 @@ public class StockController {
         model.addAttribute("article", articleService.trouver(articleId));
         model.addAttribute("stock", stockService.trouverParArticle(articleId).orElse(null));
         model.addAttribute("page", stockService.mouvements(articleId, page));
-        return "stock/mouvements";
+        return "stock/stock-mouvements";
     }
 }

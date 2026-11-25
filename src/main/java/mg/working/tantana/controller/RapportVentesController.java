@@ -33,6 +33,6 @@ public class RapportVentesController {
             model.addAttribute("erreur", e.getMessage());
             model.addAttribute("tableau", rapportService.tableau(fin.withDayOfMonth(1), fin));
         }
-        return "ventes/tableau-de-bord";
+        return "ventes/vente-tableau-de-bord";
     }
 }

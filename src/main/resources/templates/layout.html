@@ -38,7 +38,7 @@
             </li>
         </ul>
 
-        <th:block sec:authorize="hasAnyRole('ADMIN','VENDEUR','GESTIONNAIRE_STOCK','ACHETEUR')">
+        <th:block sec:authorize="hasAnyRole('ADMIN','VENDEUR','GESTIONNAIRE_STOCK','ACHETEUR','CHECKER')">
             <div class="titre-section">Ventes &amp; stock</div>
             <ul class="nav flex-column">
                 <li sec:authorize="hasAnyRole('ADMIN','VENDEUR')">
@@ -55,8 +55,15 @@
                 </li>
                 <li sec:authorize="hasAnyRole('ADMIN','GESTIONNAIRE_STOCK','ACHETEUR')">
                     <a class="nav-link" th:href="@{/stock}"
-                       th:classappend="${#strings.startsWith(urlCourante, '/stock')} ? 'active'">
+                       th:classappend="${#strings.startsWith(urlCourante, '/stock') and !#strings.startsWith(urlCourante, '/stock/inventaires')} ? 'active'">
                         <i class="bi bi-boxes"></i> Stock</a>
+                </li>
+                <li sec:authorize="hasAnyRole('ADMIN','GESTIONNAIRE_STOCK','CHECKER','ACHETEUR')">
+                    <a class="nav-link" th:href="@{/stock/inventaires}"
+                       th:classappend="${#strings.startsWith(urlCourante, '/stock/inventaires')} ? 'active'">
+                        <i class="bi bi-clipboard-check"></i> Inventaires
+                        <span th:if="${inventairesAValider > 0}" class="badge rounded-pill text-bg-warning ms-auto"
+                              th:text="${inventairesAValider}" title="Inventaires à valider">1</span></a>
                 </li>
             </ul>
         </th:block>

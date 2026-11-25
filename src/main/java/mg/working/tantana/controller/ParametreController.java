@@ -25,7 +25,7 @@ public class ParametreController {
     @GetMapping
     public String formulaire(Model model) {
         model.addAttribute("parametre", parametreService.obtenir());
-        return "parametres/formulaire";
+        return "parametres/parametre-saisie";
     }
 
     @PostMapping
@@ -33,7 +33,7 @@ public class ParametreController {
                               BindingResult erreurs,
                               RedirectAttributes redirect) {
         if (erreurs.hasErrors()) {
-            return "parametres/formulaire";
+            return "parametres/parametre-saisie";
         }
         try {
             parametreService.enregistrer(parametre);
@@ -41,7 +41,7 @@ public class ParametreController {
             return "redirect:/admin/parametres";
         } catch (RegleMetierException e) {
             erreurs.reject("regle", e.getMessage());
-            return "parametres/formulaire";
+            return "parametres/parametre-saisie";
         }
     }
 }
