@@ -61,7 +61,10 @@
     document.getElementById('ajouter-ligne').addEventListener('click', () => {
         corps.appendChild(modele.content.cloneNode(true));
         renumeroter();
-        corps.querySelector('tr.ligne:last-child .champ-article').focus();
+        // nouvelle ligne : le curseur va dans la recherche d'article
+        const select = corps.querySelector('tr.ligne:last-child .champ-article');
+        const liste = window.ListeRecherchable ? window.ListeRecherchable.activer(select) : null;
+        (liste || select).focus();
     });
 
     corps.addEventListener('click', (e) => {

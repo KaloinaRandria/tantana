@@ -10,6 +10,7 @@
     <link rel="stylesheet" th:href="@{/webjars/inter-ui/3.19.3/inter-latin.css}">
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css}">
+    <link rel="stylesheet" th:href="@{/webjars/tom-select/2.3.1/dist/css/tom-select.bootstrap5.min.css}">
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -207,5 +208,8 @@
 <!-- confirmation.js AVANT loader.js : le loader ne demarre qu'une fois l'action confirmee -->
 <script th:src="@{/js/confirmation.js}"></script>
 <script th:src="@{/js/loader.js}"></script>
+<!-- Listes recherchables : tout <select data-recherche> devient un champ de recherche -->
+<script th:src="@{/webjars/tom-select/2.3.1/dist/js/tom-select.complete.min.js}"></script>
+<script th:src="@{/js/liste-recherchable.js}"></script>
 </body>
 </html>

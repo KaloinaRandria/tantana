@@ -2,6 +2,8 @@ package mg.working.tantana.controller;
 
 import lombok.RequiredArgsConstructor;
 import mg.working.tantana.dto.AvoirForm;
+import mg.working.tantana.dto.FiltrePeriode;
+import mg.working.tantana.dto.Periode;
 import mg.working.tantana.dto.LigneVenteForm;
 import mg.working.tantana.entity.Avoir;
 import mg.working.tantana.entity.ModePaiement;
@@ -76,11 +78,17 @@ public class VenteController {
     public String liste(@RequestParam(defaultValue = "") String q,
                         @RequestParam(required = false) StatutVente statut,
                         @RequestParam(defaultValue = "false") boolean impayees,
+                        @RequestParam(required = false) Periode periode,
+                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate du,
+                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate au,
                         @RequestParam(defaultValue = "0") int page,
                         Model model) {
         var pageable = PageRequest.of(Math.max(page, 0), TAILLE_PAGE, Sort.by(Sort.Direction.DESC, "id"));
-        model.addAttribute("page", impayees ? venteService.rechercherImpayees(q, pageable)
-                : venteService.rechercher(q, statut, pageable));
+        // par defaut : toutes les dates
+        FiltrePeriode filtre = FiltrePeriode.resoudre(periode, du, au, Periode.TOUT, FiltrePeriode.LISTE);
+        model.addAttribute("page", impayees ? venteService.rechercherImpayees(q, filtre, pageable)
+                : venteService.rechercher(q, statut, filtre, pageable));
+        model.addAttribute("filtre", filtre);
         model.addAttribute("q", q);
         model.addAttribute("statut", statut);
         model.addAttribute("impayees", impayees);

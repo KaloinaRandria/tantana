@@ -40,6 +40,10 @@
         <div class="col-4 col-md-2 d-grid">
             <button class="btn btn-outline-secondary" type="submit">Rechercher</button>
         </div>
+        <input type="hidden" name="impayees" value="true" th:if="${impayees}">
+        <div class="col-12">
+            <div th:replace="~{fragments/commun :: periode(${filtre})}"></div>
+        </div>
     </form>
 
     <div class="card border-0 shadow-sm">

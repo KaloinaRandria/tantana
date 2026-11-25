@@ -74,6 +74,44 @@
     </p>
 </nav>
 
+<!--
+    Filtre de periode, a placer DANS le formulaire GET de l'ecran (les autres filtres sont conserves).
+    Chaque bouton envoie « periode » ; « Appliquer » envoie les dates saisies (periode personnalisee).
+    Les dates sont avant les boutons : la touche Entree dans une date applique la plage saisie.
+-->
+<div th:fragment="periode(f)" class="filtre-periode">
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <div class="d-flex flex-wrap align-items-center gap-1 ms-lg-auto order-lg-2">
+            <label class="small text-muted" for="filtre-du">Du</label>
+            <input type="date" id="filtre-du" name="du" class="form-control form-control-sm w-auto" th:value="${f.du}">
+            <label class="small text-muted" for="filtre-au">au</label>
+            <input type="date" id="filtre-au" name="au" class="form-control form-control-sm w-auto" th:value="${f.au}">
+            <button type="submit" name="periode" value="PERSONNALISEE" class="btn btn-sm"
+                    th:classappend="${f.periode.name() == 'PERSONNALISEE'} ? 'btn-primary' : 'btn-outline-primary'">Appliquer</button>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-1 order-lg-1">
+            <button th:each="p : ${f.rapides}" type="submit" name="periode" th:value="${p}"
+                    class="btn btn-sm" th:classappend="${p == f.periode} ? 'btn-primary' : 'btn-outline-secondary'"
+                    th:attr="aria-pressed=${p == f.periode}" th:text="${p.libelle}">Ce mois</button>
+            <div class="dropdown" th:unless="${f.autres.empty}">
+                <button type="button" class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"
+                        th:classappend="${f.activeDansAutres} ? 'btn-primary' : 'btn-outline-secondary'"
+                        th:text="${f.activeDansAutres} ? ${f.periode.libelle} : 'Plus'">Plus</button>
+                <ul class="dropdown-menu">
+                    <li th:each="p : ${f.autres}">
+                        <button type="submit" name="periode" th:value="${p}" class="dropdown-item"
+                                th:classappend="${p == f.periode} ? 'active'" th:text="${p.libelle}">Hier</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="small text-muted mt-1">
+        <i class="bi bi-calendar3"></i> Période : <strong th:text="${f.periode.libelle}">Ce mois</strong>
+        — <span th:text="${f.description}">du 01/11/2026 au 25/11/2026</span>
+    </div>
+</div>
+
 <!-- Badge Actif / Inactif -->
 <span th:fragment="badgeStatut(actif)">
     <span th:if="${actif}" class="badge text-bg-success">Actif</span>
