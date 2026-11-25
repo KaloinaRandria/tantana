@@ -30,9 +30,10 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <label for="clientId" class="form-label">Client <span class="text-danger">*</span></label>
-                    <select th:field="*{clientId}" class="form-select"
+                    <select th:field="*{clientId}" class="form-select" data-recherche="Rechercher un client (nom, téléphone, NIF)"
                             th:classappend="${#fields.hasErrors('clientId')} ? 'is-invalid'">
                         <option th:each="c : ${clients}" th:value="${c.id}"
+                                th:attr="data-detail=${c.type.libelle} + (${c.telephone} != null ? ' · ' + ${c.telephone} : '') + (${c.nif} != null ? ' · NIF ' + ${c.nif} : '')"
                                 th:text="${c.nom} + (${c.comptoir} ? ' (vente anonyme)' : '') + (${c.actif} ? '' : ' — désactivé')">Client</option>
                     </select>
                     <div class="invalid-feedback" th:errors="*{clientId}">Erreur</div>
@@ -78,11 +79,12 @@
                     <tbody>
                     <tr th:each="l, it : *{lignes}" class="ligne">
                         <td>
-                            <select th:field="*{lignes[__${it.index}__].articleId}" class="form-select form-select-sm champ-article"
+                            <select th:field="*{lignes[__${it.index}__].articleId}" class="form-select form-select-sm champ-article" data-recherche="Référence ou désignation"
                                     th:classappend="${#fields.hasErrors('lignes[__${it.index}__].articleId')} ? 'is-invalid'">
                                 <option value="">— Choisir —</option>
                                 <option th:each="a : ${articles}" th:value="${a.id}"
-                                        th:attr="data-prix=${a.prixVenteHt}, data-stock=${stocks[a.id]}, data-unite=${a.unite.libelle}"
+                                        th:attr="data-prix=${a.prixVenteHt}, data-stock=${stocks[a.id]}, data-unite=${a.unite.libelle},
+                                                data-detail='Stock ' + ${stocks[a.id] != null ? stocks[a.id].stripTrailingZeros().toPlainString() : '0'} + ' ' + ${a.unite.libelle} + ' · ' + ${#numbers.formatDecimal(a.prixVenteHt, 1, 'WHITESPACE', 0, 'COMMA')} + ' MGA HT'"
                                         th:text="${a.reference} + ' — ' + ${a.designation}">Article</option>
                             </select>
                             <div class="invalid-feedback" th:errors="*{lignes[__${it.index}__].articleId}">Erreur</div>
@@ -140,10 +142,11 @@
 <template id="modele-ligne">
     <tr class="ligne">
         <td>
-            <select data-champ="articleId" class="form-select form-select-sm champ-article">
+            <select data-champ="articleId" class="form-select form-select-sm champ-article" data-recherche="Référence ou désignation">
                 <option value="">— Choisir —</option>
                 <option th:each="a : ${articles}" th:value="${a.id}"
-                        th:attr="data-prix=${a.prixVenteHt}, data-stock=${stocks[a.id]}, data-unite=${a.unite.libelle}"
+                        th:attr="data-prix=${a.prixVenteHt}, data-stock=${stocks[a.id]}, data-unite=${a.unite.libelle},
+                                                data-detail='Stock ' + ${stocks[a.id] != null ? stocks[a.id].stripTrailingZeros().toPlainString() : '0'} + ' ' + ${a.unite.libelle} + ' · ' + ${#numbers.formatDecimal(a.prixVenteHt, 1, 'WHITESPACE', 0, 'COMMA')} + ' MGA HT'"
                         th:text="${a.reference} + ' — ' + ${a.designation}">Article</option>
             </select>
         </td>

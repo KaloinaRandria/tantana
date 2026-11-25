@@ -94,14 +94,7 @@
         </div>
     </div>
 
-    <nav th:if="${page.totalPages > 1}" class="mt-3">
-        <ul class="pagination pagination-sm justify-content-center mb-0">
-            <li th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}" class="page-item"
-                th:classappend="${i == page.number} ? 'active'">
-                <a class="page-link" th:text="${i + 1}" th:href="@{/tarifs(page=${i}, q=${q})}">1</a>
-            </li>
-        </ul>
-    </nav>
+    <nav th:replace="~{fragments/commun :: pagination(${page})}"></nav>
 
     <!-- ===== Fenetre de modification du prix (une seule, remplie selon la ligne) ===== -->
     <div class="modal fade" id="modal-prix" tabindex="-1" aria-hidden="true">

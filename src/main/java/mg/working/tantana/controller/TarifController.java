@@ -38,7 +38,7 @@ public class TarifController {
         model.addAttribute("page", tarifService.lister(q, pageable));
         model.addAttribute("q", q);
         model.addAttribute("parametre", parametreService.obtenir());
-        return "tarifs/liste";
+        return "tarifs/tarif-liste";
     }
 
     @PostMapping("/{articleId}")
@@ -62,6 +62,6 @@ public class TarifController {
     public String historique(@PathVariable Long articleId, Model model) {
         model.addAttribute("article", articleService.trouver(articleId));
         model.addAttribute("historique", tarifService.historique(articleId));
-        return "tarifs/historique";
+        return "tarifs/tarif-historique";
     }
 }

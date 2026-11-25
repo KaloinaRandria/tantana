@@ -62,7 +62,7 @@ public class ReceptionController {
         model.addAttribute("q", q);
         model.addAttribute("statut", statut);
         model.addAttribute("statuts", StatutReception.values());
-        return "receptions/liste";
+        return "receptions/reception-liste";
     }
 
     @GetMapping("/{id}")
@@ -74,7 +74,7 @@ public class ReceptionController {
             RepartitionFrais.fraisUnitaires(reception).forEach(LigneReception::setFraisUnitaire);
         }
         model.addAttribute("reception", reception);
-        return "receptions/detail";
+        return "receptions/reception-fiche";
     }
 
     // ===================== Saisie (MAKER) =====================
@@ -194,6 +194,6 @@ public class ReceptionController {
         model.addAttribute("reception", existante);
         model.addAttribute("transitaires", transitaires);
         model.addAttribute("typesFrais", TypeFrais.values());
-        return "receptions/formulaire";
+        return "receptions/reception-saisie";
     }
 }

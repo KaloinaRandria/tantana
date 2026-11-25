@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Optional;
 
 public interface VenteRepository extends JpaRepository<Vente, Long> {
@@ -27,23 +28,27 @@ public interface VenteRepository extends JpaRepository<Vente, Long> {
             """)
     Optional<Vente> findAvecDetails(@Param("id") Long id);
 
-    /** Recherche sur le numero de facture ou le nom du client ; texte vide = tout. */
+    /** Recherche sur le numero de facture ou le nom du client (texte vide = tout), sur une periode de vente. */
     @EntityGraph(attributePaths = {"client", "vendeur"})
     @Query("""
             select v from Vente v
-            where lower(coalesce(v.numero, '')) like lower(concat('%', :texte, '%'))
-               or lower(v.client.nom) like lower(concat('%', :texte, '%'))
+            where v.dateVente between :du and :au
+              and (lower(coalesce(v.numero, '')) like lower(concat('%', :texte, '%'))
+                   or lower(v.client.nom) like lower(concat('%', :texte, '%')))
             """)
-    Page<Vente> rechercher(@Param("texte") String texte, Pageable pageable);
+    Page<Vente> rechercher(@Param("texte") String texte, @Param("du") LocalDate du, @Param("au") LocalDate au,
+                           Pageable pageable);
 
     @EntityGraph(attributePaths = {"client", "vendeur"})
     @Query("""
             select v from Vente v
             where v.statut = :statut
+              and v.dateVente between :du and :au
               and (lower(coalesce(v.numero, '')) like lower(concat('%', :texte, '%'))
                    or lower(v.client.nom) like lower(concat('%', :texte, '%')))
             """)
-    Page<Vente> rechercher(@Param("texte") String texte, @Param("statut") StatutVente statut, Pageable pageable);
+    Page<Vente> rechercher(@Param("texte") String texte, @Param("statut") StatutVente statut,
+                           @Param("du") LocalDate du, @Param("au") LocalDate au, Pageable pageable);
 
     long countByStatut(StatutVente statut);
 
@@ -66,8 +71,10 @@ public interface VenteRepository extends JpaRepository<Vente, Long> {
             select v from Vente v
             where v.statut = mg.working.tantana.entity.StatutVente.VALIDEE
               and v.totalTtc - v.montantAvoirs - v.montantPaye > 0
+              and v.dateVente between :du and :au
               and (lower(coalesce(v.numero, '')) like lower(concat('%', :texte, '%'))
                    or lower(v.client.nom) like lower(concat('%', :texte, '%')))
             """)
-    Page<Vente> rechercherImpayees(@Param("texte") String texte, Pageable pageable);
+    Page<Vente> rechercherImpayees(@Param("texte") String texte, @Param("du") LocalDate du, @Param("au") LocalDate au,
+                                   Pageable pageable);
 }

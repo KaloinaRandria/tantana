@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Changer mon mot de passe</title>
+</head>
+<body>
+<h1 layout:fragment="titre-page" class="h5 mb-0">Changer mon mot de passe</h1>
+
+<main layout:fragment="content">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6 col-xl-5">
+            <div th:if="${obligatoire}" class="alert alert-warning">
+                <i class="bi bi-shield-lock"></i>
+                <strong>Mot de passe temporaire.</strong> Choisissez votre mot de passe personnel pour continuer
+                à utiliser l'application.
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <!-- Les mots de passe ne sont jamais renvoyes : pas de th:field (qui reafficherait la saisie) -->
+                    <form th:action="@{/compte/mot-de-passe}" th:object="${form}" method="post" novalidate>
+                        <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                            <p th:each="e : ${#fields.globalErrors()}" th:text="${e}" class="mb-0">Erreur</p>
+                        </div>
+                        <div class="mb-3">
+                            <label for="actuel" class="form-label"
+                                   th:text="${obligatoire} ? 'Mot de passe temporaire reçu' : 'Mot de passe actuel'">Mot de passe actuel</label>
+                            <input type="password" id="actuel" name="actuel" class="form-control" autocomplete="current-password" autofocus
+                                   th:classappend="${#fields.hasErrors('actuel')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:errors="*{actuel}">Erreur</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="nouveau" class="form-label">Nouveau mot de passe</label>
+                            <input type="password" id="nouveau" name="nouveau" class="form-control" autocomplete="new-password"
+                                   th:classappend="${#fields.hasErrors('nouveau')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:errors="*{nouveau}">Erreur</div>
+                            <div class="form-text" th:text="${regle}">8 caractères minimum…</div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="confirmation" class="form-label">Confirmation</label>
+                            <input type="password" id="confirmation" name="confirmation" class="form-control" autocomplete="new-password"
+                                   th:classappend="${#fields.hasErrors('confirmation')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:errors="*{confirmation}">Erreur</div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Changer le mot de passe</button>
+                            <a th:unless="${obligatoire}" th:href="@{/}" class="btn btn-outline-secondary">Annuler</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

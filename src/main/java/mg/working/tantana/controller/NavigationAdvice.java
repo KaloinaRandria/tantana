@@ -2,6 +2,7 @@ package mg.working.tantana.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import mg.working.tantana.service.InventaireService;
 import mg.working.tantana.service.ReceptionService;
 import mg.working.tantana.service.UtilisateurService;
 import mg.working.tantana.service.VenteService;
@@ -11,7 +12,9 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 /** Donnees communes a toutes les pages (sidebar). */
 @ControllerAdvice
@@ -19,6 +22,7 @@ import java.util.Locale;
 public class NavigationAdvice {
 
     private final ReceptionService receptionService;
+    private final InventaireService inventaireService;
     private final VenteService venteService;
     private final UtilisateurService utilisateurService;
 
@@ -26,6 +30,20 @@ public class NavigationAdvice {
     @ModelAttribute("urlCourante")
     public String urlCourante(HttpServletRequest request) {
         return request.getRequestURI().substring(request.getContextPath().length());
+    }
+
+    /**
+     * Base des liens de pagination : URL courante avec tous ses filtres, sauf « page »,
+     * prete a recevoir un numero (ex. /ventes?q=rakoto&statut=VALIDEE&page=).
+     * Le fragment commun :: pagination n'a donc pas a connaitre les filtres de chaque liste.
+     */
+    @ModelAttribute("lienPagination")
+    public String lienPagination(HttpServletRequest request) {
+        String requete = request.getQueryString();
+        String filtres = requete == null ? "" : Arrays.stream(requete.split("&"))
+                .filter(p -> !p.isBlank() && !p.equals("page") && !p.startsWith("page="))
+                .collect(Collectors.joining("&"));
+        return request.getRequestURI() + "?" + (filtres.isEmpty() ? "" : filtres + "&") + "page=";
     }
 
     /** Nombre de receptions en attente de validation (pastille du sidebar). */
@@ -57,6 +75,12 @@ public class NavigationAdvice {
     public String dateDuJour() {
         String date = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.FRANCE));
         return Character.toUpperCase(date.charAt(0)) + date.substring(1);
+    }
+
+    /** Nombre d'inventaires dont le comptage attend la validation (pastille du sidebar). */
+    @ModelAttribute("inventairesAValider")
+    public long inventairesAValider(Principal principal) {
+        return principal == null ? 0 : inventaireService.nombreAValider();
     }
 
     /** Nombre de ventes en attente de controle (pastille du sidebar). */

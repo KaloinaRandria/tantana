@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="${utilisateur == null} ? 'Nouvel utilisateur' : 'Modifier ' + ${utilisateur.username}">Utilisateur</title>
+</head>
+<body>
+<h1 layout:fragment="titre-page" class="h5 mb-0">
+    <a th:href="@{/admin/utilisateurs}" class="text-decoration-none text-muted">Utilisateurs</a>
+    <i class="bi bi-chevron-right small text-muted"></i>
+    <span th:text="${utilisateur == null} ? 'Nouvel utilisateur' : ${utilisateur.nomComplet}">Utilisateur</span>
+</h1>
+
+<main layout:fragment="content"
+      th:with="soiMeme=${utilisateur != null and #strings.equalsIgnoreCase(#authentication.name, utilisateur.username)}">
+<form th:action="@{/admin/utilisateurs/enregistrer}" th:object="${form}" method="post" novalidate>
+    <input type="hidden" th:field="*{id}">
+
+    <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+        <p th:each="e : ${#fields.globalErrors()}" th:text="${e}" class="mb-0">Erreur</p>
+    </div>
+
+    <div class="row g-3">
+        <!-- ===== Identite ===== -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="h6 text-uppercase text-muted mb-3">Compte</h2>
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Identifiant de connexion <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{username}" class="form-control" maxlength="50" autocomplete="off"
+                               th:readonly="${utilisateur != null}" th:autofocus="${utilisateur == null}"
+                               th:classappend="${#fields.hasErrors('username')} ? 'is-invalid'"
+                               placeholder="ex. rakoto.jean">
+                        <div class="invalid-feedback" th:errors="*{username}">Erreur</div>
+                        <div class="form-text" th:if="${utilisateur != null}">L'identifiant ne se modifie pas : il apparaît dans l'historique des opérations.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nomComplet" class="form-label">Nom complet <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{nomComplet}" class="form-control" maxlength="150"
+                               th:classappend="${#fields.hasErrors('nomComplet')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{nomComplet}">Erreur</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">E-mail</label>
+                        <input type="email" th:field="*{email}" class="form-control" maxlength="150"
+                               th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{email}">Erreur</div>
+                    </div>
+                    <div class="form-check form-switch" th:if="${utilisateur != null}">
+                        <input class="form-check-input" type="checkbox" th:field="*{actif}" th:disabled="${soiMeme}">
+                        <label class="form-check-label" th:for="${#ids.prev('actif')}">Compte actif (connexion autorisée)</label>
+                        <input type="hidden" name="actif" value="true" th:if="${soiMeme}">
+                    </div>
+
+                    <div class="alert alert-light border small mt-3 mb-0" th:if="${utilisateur == null}">
+                        <i class="bi bi-key"></i> Un <strong>mot de passe temporaire</strong> sera généré et affiché une seule fois
+                        après l'enregistrement. L'utilisateur devra le changer à sa première connexion.
+                    </div>
+                    <div class="small text-muted mt-3" th:if="${utilisateur != null}">
+                        Créé le <span th:text="${#temporals.format(utilisateur.dateCreation, 'dd/MM/yyyy')}">date</span>
+                        <th:block th:if="${utilisateur.derniereConnexion}">
+                            · dernière connexion le <span th:text="${#temporals.format(utilisateur.derniereConnexion, 'dd/MM/yyyy à HH:mm')}">date</span></th:block>
+                        <th:block th:if="${utilisateur.dateMotDePasse}">
+                            · mot de passe défini le <span th:text="${#temporals.format(utilisateur.dateMotDePasse, 'dd/MM/yyyy')}">date</span></th:block>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Roles ===== -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="h6 text-uppercase text-muted mb-1">Rôles <span class="text-danger">*</span></h2>
+                    <p class="small text-muted">Un utilisateur peut cumuler plusieurs rôles. Le double contrôle (MAKER / CHECKER)
+                        garantit qu'une même personne ne valide jamais sa propre saisie.</p>
+                    <div class="invalid-feedback d-block mb-2" th:if="${#fields.hasErrors('roleIds')}" th:errors="*{roleIds}">Erreur</div>
+                    <div class="list-group">
+                        <label class="list-group-item d-flex gap-3 align-items-start" th:each="r : ${roles}"
+                               th:with="verrou=${soiMeme and r.code == 'ADMIN'}">
+                            <input class="form-check-input flex-shrink-0 mt-1" type="checkbox" name="roleIds" th:value="${r.id}"
+                                   th:checked="${#sets.contains(form.roleIds, r.id)}" th:disabled="${verrou}">
+                            <input type="hidden" name="roleIds" th:value="${r.id}" th:if="${verrou}">
+                            <span>
+                                <span class="fw-semibold" th:text="${r.libelle}">Rôle</span>
+                                <code class="small ms-1" th:text="${r.code}">CODE</code>
+                                <span class="d-block small text-muted" th:text="${r.description}">description</span>
+                                <span class="d-block small text-warning-emphasis" th:if="${verrou}">
+                                    <i class="bi bi-lock"></i> Vous ne pouvez pas retirer votre propre rôle Administrateur.</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i>
+            <span th:text="${utilisateur == null} ? 'Créer le compte' : 'Enregistrer'">Enregistrer</span></button>
+        <a th:href="@{/admin/utilisateurs}" class="btn btn-outline-secondary">Annuler</a>
+    </div>
+</form>
+</main>
+</body>
+</html>

@@ -10,6 +10,7 @@
     <link rel="stylesheet" th:href="@{/webjars/inter-ui/3.19.3/inter-latin.css}">
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css}">
+    <link rel="stylesheet" th:href="@{/webjars/tom-select/2.3.1/dist/css/tom-select.bootstrap5.min.css}">
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -38,7 +39,7 @@
             </li>
         </ul>
 
-        <th:block sec:authorize="hasAnyRole('ADMIN','VENDEUR','GESTIONNAIRE_STOCK','ACHETEUR')">
+        <th:block sec:authorize="hasAnyRole('ADMIN','VENDEUR','GESTIONNAIRE_STOCK','ACHETEUR','CHECKER')">
             <div class="titre-section">Ventes &amp; stock</div>
             <ul class="nav flex-column">
                 <li sec:authorize="hasAnyRole('ADMIN','VENDEUR')">
@@ -55,8 +56,15 @@
                 </li>
                 <li sec:authorize="hasAnyRole('ADMIN','GESTIONNAIRE_STOCK','ACHETEUR')">
                     <a class="nav-link" th:href="@{/stock}"
-                       th:classappend="${#strings.startsWith(urlCourante, '/stock')} ? 'active'">
+                       th:classappend="${#strings.startsWith(urlCourante, '/stock') and !#strings.startsWith(urlCourante, '/stock/inventaires')} ? 'active'">
                         <i class="bi bi-boxes"></i> Stock</a>
+                </li>
+                <li sec:authorize="hasAnyRole('ADMIN','GESTIONNAIRE_STOCK','CHECKER','ACHETEUR')">
+                    <a class="nav-link" th:href="@{/stock/inventaires}"
+                       th:classappend="${#strings.startsWith(urlCourante, '/stock/inventaires')} ? 'active'">
+                        <i class="bi bi-clipboard-check"></i> Inventaires
+                        <span th:if="${inventairesAValider > 0}" class="badge rounded-pill text-bg-warning ms-auto"
+                              th:text="${inventairesAValider}" title="Inventaires à valider">1</span></a>
                 </li>
             </ul>
         </th:block>
@@ -105,13 +113,18 @@
             <div class="titre-section">Administration</div>
             <ul class="nav flex-column">
                 <li>
+                    <a class="nav-link" th:href="@{/admin/utilisateurs}"
+                       th:classappend="${#strings.startsWith(urlCourante, '/admin/utilisateurs')} ? 'active'">
+                        <i class="bi bi-people-fill"></i> Utilisateurs</a>
+                </li>
+                <li>
                     <a class="nav-link" th:href="@{/tarifs}"
                        th:classappend="${#strings.startsWith(urlCourante, '/tarifs')} ? 'active'">
                         <i class="bi bi-currency-exchange"></i> Prix de vente</a>
                 </li>
                 <li>
                     <a class="nav-link" th:href="@{/admin/parametres}"
-                       th:classappend="${#strings.startsWith(urlCourante, '/admin')} ? 'active'">
+                       th:classappend="${#strings.startsWith(urlCourante, '/admin/parametres')} ? 'active'">
                         <i class="bi bi-sliders"></i> Paramètres</a>
                 </li>
             </ul>
@@ -153,6 +166,9 @@
                         <div class="fw-semibold" th:text="${nomUtilisateur}">Utilisateur</div>
                         <div class="small text-muted" sec:authentication="name">login</div>
                     </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" th:href="@{/compte/mot-de-passe}">
+                        <i class="bi bi-key me-2"></i>Changer mon mot de passe</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
                         <form th:action="@{/logout}" method="post" data-sans-loader>
@@ -200,5 +216,8 @@
 <!-- confirmation.js AVANT loader.js : le loader ne demarre qu'une fois l'action confirmee -->
 <script th:src="@{/js/confirmation.js}"></script>
 <script th:src="@{/js/loader.js}"></script>
+<!-- Listes recherchables : tout <select data-recherche> devient un champ de recherche -->
+<script th:src="@{/webjars/tom-select/2.3.1/dist/js/tom-select.complete.min.js}"></script>
+<script th:src="@{/js/liste-recherchable.js}"></script>
 </body>
 </html>

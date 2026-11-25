@@ -75,7 +75,12 @@
                 </tr>
                 <tr th:each="s : ${page.content}">
                     <td><code th:text="${s.article.reference}">ART</code></td>
-                    <td th:text="${s.article.designation}">Désignation</td>
+                    <td>
+                        <span th:text="${s.article.designation}">Désignation</span>
+                        <span th:if="${articlesGeles.containsKey(s.article.id)}" class="badge text-bg-info ms-1"
+                              th:title="'Gelé par l\'inventaire ' + ${articlesGeles.get(s.article.id)} + ' : aucune entrée ni sortie possible'">
+                            <i class="bi bi-snow"></i> <span th:text="${articlesGeles.get(s.article.id)}">INV</span></span>
+                    </td>
                     <td class="text-end text-nowrap fw-semibold">
                         <span th:text="${s.quantite.stripTrailingZeros().toPlainString()}">0</span>
                         <small class="text-muted fw-normal" th:text="${s.article.unite.libelle}">Pièce</small>
@@ -94,14 +99,7 @@
         </div>
     </div>
 
-    <nav th:if="${page.totalPages > 1}" class="mt-3">
-        <ul class="pagination pagination-sm justify-content-center mb-0">
-            <li th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}" class="page-item"
-                th:classappend="${i == page.number} ? 'active'">
-                <a class="page-link" th:text="${i + 1}" th:href="@{/stock(page=${i}, q=${q})}">1</a>
-            </li>
-        </ul>
-    </nav>
+    <nav th:replace="~{fragments/commun :: pagination(${page})}"></nav>
 </main>
 </body>
 </html>

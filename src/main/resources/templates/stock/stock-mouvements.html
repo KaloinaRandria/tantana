@@ -79,7 +79,8 @@
                         <a th:if="${m.reception}" th:href="@{/achats/receptions/{id}(id=${m.reception.id})}" th:text="${m.reference}">BR</a>
                         <a th:if="${m.vente}" th:href="@{/ventes/{id}(id=${m.vente.id})}" th:text="${m.reference}">FV</a>
                         <a th:if="${m.avoir}" th:href="@{/ventes/{id}(id=${m.avoir.vente.id})}" th:text="${m.reference}">AV</a>
-                        <span th:if="${m.reception == null and m.vente == null and m.avoir == null}" th:text="${m.reference}">ref</span>
+                        <a th:if="${m.inventaire}" th:href="@{/stock/inventaires/{id}(id=${m.inventaire.id})}" th:text="${m.reference}">INV</a>
+                        <span th:if="${m.reception == null and m.vente == null and m.avoir == null and m.inventaire == null}" th:text="${m.reference}">ref</span>
                     </td>
                     <td class="text-end fw-semibold" th:classappend="${m.type.sens > 0} ? 'text-success' : 'text-danger'"
                         th:text="(${m.type.sens > 0} ? '+' : '−') + ${m.quantite.stripTrailingZeros().toPlainString()}">+10</td>
@@ -95,14 +96,7 @@
         </div>
     </div>
 
-    <nav th:if="${page.totalPages > 1}" class="mt-3">
-        <ul class="pagination pagination-sm justify-content-center mb-0">
-            <li th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}" class="page-item"
-                th:classappend="${i == page.number} ? 'active'">
-                <a class="page-link" th:text="${i + 1}" th:href="@{/stock/articles/{id}(id=${article.id}, page=${i})}">1</a>
-            </li>
-        </ul>
-    </nav>
+    <nav th:replace="~{fragments/commun :: pagination(${page})}"></nav>
 </main>
 </body>
 </html>

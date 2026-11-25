@@ -26,10 +26,10 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <label for="fournisseurId" class="form-label">Fournisseur <span class="text-danger">*</span></label>
-                    <select th:field="*{fournisseurId}" class="form-select"
+                    <select th:field="*{fournisseurId}" class="form-select" data-recherche="Rechercher un fournisseur (nom, pays, devise)"
                             th:classappend="${#fields.hasErrors('fournisseurId')} ? 'is-invalid'">
                         <option value="">— Choisir —</option>
-                        <option th:each="f : ${fournisseurs}" th:value="${f.id}" th:attr="data-devise=${f.devise}"
+                        <option th:each="f : ${fournisseurs}" th:value="${f.id}" th:attr="data-devise=${f.devise}, data-detail='Devise ' + ${f.devise}"
                                 th:text="${f.nom} + ' (' + ${f.pays} + ')' + (${f.actif} ? '' : ' — désactivé')">Fournisseur</option>
                     </select>
                     <div class="invalid-feedback" th:errors="*{fournisseurId}">Erreur</div>
@@ -102,7 +102,7 @@
                     <tbody>
                     <tr th:each="l, it : *{lignes}" class="ligne">
                         <td>
-                            <select th:field="*{lignes[__${it.index}__].articleId}" class="form-select form-select-sm champ-article"
+                            <select th:field="*{lignes[__${it.index}__].articleId}" class="form-select form-select-sm champ-article" data-recherche="Référence ou désignation"
                                     th:classappend="${#fields.hasErrors('lignes[__${it.index}__].articleId')} ? 'is-invalid'">
                                 <option value="">— Choisir —</option>
                                 <option th:each="a : ${articles}" th:value="${a.id}"
@@ -158,7 +158,7 @@
 <template id="modele-ligne">
     <tr class="ligne">
         <td>
-            <select data-champ="articleId" class="form-select form-select-sm champ-article">
+            <select data-champ="articleId" class="form-select form-select-sm champ-article" data-recherche="Référence ou désignation">
                 <option value="">— Choisir —</option>
                 <option th:each="a : ${articles}" th:if="${a.actif}" th:value="${a.id}"
                         th:text="${a.reference} + ' — ' + ${a.designation} + ' (' + ${a.unite.libelle} + ')'">Article</option>

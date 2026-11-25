@@ -486,3 +486,15 @@ details.donnees-graphique table { margin-top: .5rem; }
 
 /* Pas de fondu a l'arrivee du contenu : une animation d'opacite reste figee si l'onglet
    passe en arriere-plan pendant le chargement (page delavee). La barre de chargement suffit. */
+
+/* ===== Evolution d'un indicateur (accueil) ===== */
+.tuile .evolution { font-size: .78rem; color: var(--tt-texte-3); margin-top: .35rem; display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; }
+.tuile .evolution strong { font-weight: 650; }
+.tuile .evolution.hausse strong, .tuile .evolution.hausse .bi, .texte-hausse { color: var(--tt-succes); }
+.tuile .evolution.baisse strong, .tuile .evolution.baisse .bi, .texte-baisse { color: var(--tt-danger); }
+
+/* ===== Listes recherchables (Tom Select) ===== */
+.ts-wrapper.en-saisie .ts-control > .item { display: none; }
+.ts-dropdown { font-size: .875rem; z-index: 1060; }
+.ts-dropdown .option .small { font-size: .75rem; }
+.ts-dropdown .active { background-color: var(--tt-primaire-doux, #e8f1fc); color: inherit; }

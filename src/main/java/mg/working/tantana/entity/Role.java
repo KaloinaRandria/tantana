@@ -30,4 +30,8 @@ public class Role {
 
     @Column(nullable = false, length = 100)
     private String libelle;
+
+    /** Ce que le role permet, affiche a l'attribution des roles. */
+    @Column(length = 255)
+    private String description;
 }

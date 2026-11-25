@@ -36,19 +36,19 @@ public class TransitaireController {
         model.addAttribute("page", transitaireService.rechercher(q, FiltreStatut.versBooleen(statut), pageable));
         model.addAttribute("q", q);
         model.addAttribute("statut", statut);
-        return "transitaires/liste";
+        return "transitaires/transitaire-liste";
     }
 
     @GetMapping("/nouveau")
     public String nouveau(Model model) {
         model.addAttribute("transitaire", new Transitaire());
-        return "transitaires/formulaire";
+        return "transitaires/transitaire-saisie";
     }
 
     @GetMapping("/{id}/modifier")
     public String modifier(@PathVariable Long id, Model model) {
         model.addAttribute("transitaire", transitaireService.trouver(id));
-        return "transitaires/formulaire";
+        return "transitaires/transitaire-saisie";
     }
 
     @PostMapping("/enregistrer")
@@ -56,7 +56,7 @@ public class TransitaireController {
                               BindingResult erreurs,
                               RedirectAttributes redirect) {
         if (erreurs.hasErrors()) {
-            return "transitaires/formulaire";
+            return "transitaires/transitaire-saisie";
         }
         try {
             Transitaire enregistre = transitaireService.enregistrer(transitaire);
@@ -64,7 +64,7 @@ public class TransitaireController {
             return "redirect:/achats/transitaires";
         } catch (DoublonException e) {
             erreurs.rejectValue(e.getChamp(), "doublon", e.getMessage());
-            return "transitaires/formulaire";
+            return "transitaires/transitaire-saisie";
         }
     }
 

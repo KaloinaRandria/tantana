@@ -42,19 +42,19 @@ public class ArticleController {
         model.addAttribute("page", articleService.rechercher(q, FiltreStatut.versBooleen(statut), pageable));
         model.addAttribute("q", q);
         model.addAttribute("statut", statut);
-        return "articles/liste";
+        return "articles/article-liste";
     }
 
     @GetMapping("/nouveau")
     public String nouveau(Model model) {
         model.addAttribute("article", new Article());
-        return "articles/formulaire";
+        return "articles/article-saisie";
     }
 
     @GetMapping("/{id}/modifier")
     public String modifier(@PathVariable Long id, Model model) {
         model.addAttribute("article", articleService.trouver(id));
-        return "articles/formulaire";
+        return "articles/article-saisie";
     }
 
     @PostMapping("/enregistrer")
@@ -62,7 +62,7 @@ public class ArticleController {
                               BindingResult erreurs,
                               RedirectAttributes redirect) {
         if (erreurs.hasErrors()) {
-            return "articles/formulaire";
+            return "articles/article-saisie";
         }
         try {
             Article enregistre = articleService.enregistrer(article);
@@ -70,7 +70,7 @@ public class ArticleController {
             return "redirect:/articles";
         } catch (DoublonException e) {
             erreurs.rejectValue(e.getChamp(), "doublon", e.getMessage());
-            return "articles/formulaire";
+            return "articles/article-saisie";
         }
     }
 

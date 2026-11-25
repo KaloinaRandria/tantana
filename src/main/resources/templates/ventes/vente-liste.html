@@ -40,6 +40,10 @@
         <div class="col-4 col-md-2 d-grid">
             <button class="btn btn-outline-secondary" type="submit">Rechercher</button>
         </div>
+        <input type="hidden" name="impayees" value="true" th:if="${impayees}">
+        <div class="col-12">
+            <div th:replace="~{fragments/commun :: periode(${filtre})}"></div>
+        </div>
     </form>
 
     <div class="card border-0 shadow-sm">
@@ -88,14 +92,7 @@
         </div>
     </div>
 
-    <nav th:if="${page.totalPages > 1}" class="mt-3">
-        <ul class="pagination pagination-sm justify-content-center mb-0">
-            <li th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}" class="page-item"
-                th:classappend="${i == page.number} ? 'active'">
-                <a class="page-link" th:text="${i + 1}" th:href="@{/ventes(page=${i}, q=${q}, statut=${statut}, impayees=${impayees})}">1</a>
-            </li>
-        </ul>
-    </nav>
+    <nav th:replace="~{fragments/commun :: pagination(${page})}"></nav>
 </main>
 </body>
 </html>

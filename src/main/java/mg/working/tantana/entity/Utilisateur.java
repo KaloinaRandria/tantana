@@ -12,6 +12,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -44,14 +45,32 @@ public class Utilisateur {
     @Column(nullable = false)
     private boolean actif = true;
 
+    /** Mot de passe temporaire (cree ou reinitialise par l'ADMIN) : a changer a la prochaine connexion. */
+    @Column(name = "doit_changer_mot_de_passe", nullable = false)
+    private boolean doitChangerMotDePasse;
+
+    @Column(name = "date_mot_de_passe")
+    private LocalDateTime dateMotDePasse;
+
+    @Column(name = "derniere_connexion")
+    private LocalDateTime derniereConnexion;
+
+    @Column(name = "date_modification")
+    private LocalDateTime dateModification;
+
     @Column(name = "date_creation", nullable = false, insertable = false, updatable = false)
     private LocalDateTime dateCreation;
 
     /** Un utilisateur peut avoir plusieurs roles, un role peut etre donne a plusieurs utilisateurs. */
+    @BatchSize(size = 50)
     @ManyToMany
     @JoinTable(
             name = "utilisateur_role",
             joinColumns = @JoinColumn(name = "utilisateur_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
+
+    public boolean aLeRole(String code) {
+        return roles.stream().anyMatch(r -> r.getCode().equals(code));
+    }
 }

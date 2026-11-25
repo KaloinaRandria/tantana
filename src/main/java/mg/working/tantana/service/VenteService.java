@@ -1,6 +1,7 @@
 package mg.working.tantana.service;
 
 import lombok.RequiredArgsConstructor;
+import mg.working.tantana.dto.FiltrePeriode;
 import mg.working.tantana.dto.LigneVenteForm;
 import mg.working.tantana.dto.VenteForm;
 import mg.working.tantana.entity.Article;
@@ -53,14 +54,18 @@ public class VenteService {
 
     // ===================== Lecture =====================
 
-    public Page<Vente> rechercher(String texte, StatutVente statut, Pageable pageable) {
+    public Page<Vente> rechercher(String texte, StatutVente statut, FiltrePeriode periode, Pageable pageable) {
         String t = texte == null ? "" : texte.trim();
-        return statut == null ? venteRepository.rechercher(t, pageable) : venteRepository.rechercher(t, statut, pageable);
+        LocalDate du = periode.debutRequete();
+        LocalDate au = periode.finRequete();
+        return statut == null ? venteRepository.rechercher(t, du, au, pageable)
+                : venteRepository.rechercher(t, statut, du, au, pageable);
     }
 
     /** Factures validees avec un reste a payer. */
-    public Page<Vente> rechercherImpayees(String texte, Pageable pageable) {
-        return venteRepository.rechercherImpayees(texte == null ? "" : texte.trim(), pageable);
+    public Page<Vente> rechercherImpayees(String texte, FiltrePeriode periode, Pageable pageable) {
+        return venteRepository.rechercherImpayees(texte == null ? "" : texte.trim(),
+                periode.debutRequete(), periode.finRequete(), pageable);
     }
 
     public BigDecimal encoursClient(Long clientId) {

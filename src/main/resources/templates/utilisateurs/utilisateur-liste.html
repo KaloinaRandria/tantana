@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Utilisateurs</title>
+</head>
+<body>
+<h1 layout:fragment="titre-page" class="h5 mb-0">Utilisateurs</h1>
+
+<main layout:fragment="content">
+    <div th:replace="~{fragments/commun :: alertes}"></div>
+
+    <!-- Mot de passe temporaire : affiche UNE seule fois (attribut flash) -->
+    <div th:if="${motDePasseTemporaire}" class="alert alert-warning border-warning" role="alert">
+        <h2 class="h6 mb-2"><i class="bi bi-key"></i> Mot de passe temporaire de
+            <strong th:text="${nomTemporaire}">Nom</strong> (<code th:text="${compteTemporaire}">login</code>)</h2>
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <code class="fs-5 px-3 py-1 bg-white border rounded user-select-all" id="mot-de-passe-temporaire"
+                  th:text="${motDePasseTemporaire}">Ab3dEf7gHk2m</code>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-sans-loader
+                    data-copier="#mot-de-passe-temporaire"><i class="bi bi-clipboard"></i> Copier</button>
+        </div>
+        <ul class="small mb-0 ps-3">
+            <li>Il <strong>ne sera plus affiché</strong> : communiquez-le maintenant, de préférence en main propre.</li>
+            <li>L'utilisateur devra le <strong>remplacer à sa première connexion</strong> par un mot de passe personnel.</li>
+        </ul>
+    </div>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <p class="text-muted mb-0"><span th:text="${page.totalElements}">0</span> compte(s)</p>
+        <a th:href="@{/admin/utilisateurs/nouveau}" class="btn btn-primary"><i class="bi bi-person-plus"></i> Nouvel utilisateur</a>
+    </div>
+
+    <form th:replace="~{fragments/commun :: filtres('/admin/utilisateurs', 'Identifiant, nom ou e-mail')}"></form>
+
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Utilisateur</th>
+                    <th>Rôles</th>
+                    <th>Dernière connexion</th>
+                    <th>Statut</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${page.empty}">
+                    <td colspan="5" class="text-center text-muted py-4">Aucun utilisateur trouvé.</td>
+                </tr>
+                <tr th:each="u : ${page.content}" th:classappend="${!u.actif} ? 'text-muted'"
+                    th:with="soiMeme=${#strings.equalsIgnoreCase(#authentication.name, u.username)}">
+                    <td>
+                        <div class="fw-semibold">
+                            <span th:text="${u.nomComplet}">Nom</span>
+                            <span th:if="${soiMeme}" class="badge text-bg-light border ms-1">vous</span>
+                        </div>
+                        <div class="small text-muted">
+                            <code th:text="${u.username}">login</code>
+                            <span th:if="${u.email}"> · <span th:text="${u.email}">email</span></span>
+                        </div>
+                    </td>
+                    <td>
+                        <span th:each="r : ${u.roles}" class="badge me-1"
+                              th:classappend="${r.code == 'ADMIN'} ? 'text-bg-danger' : (${r.code == 'MAKER' or r.code == 'CHECKER'} ? 'text-bg-warning' : 'text-bg-primary')"
+                              th:text="${r.libelle}" th:title="${r.description}">Rôle</span>
+                    </td>
+                    <td class="small text-nowrap">
+                        <span th:if="${u.derniereConnexion}" th:text="${#temporals.format(u.derniereConnexion, 'dd/MM/yyyy HH:mm')}">date</span>
+                        <span th:unless="${u.derniereConnexion}" class="text-muted">Jamais</span>
+                        <div th:if="${u.doitChangerMotDePasse}" class="text-warning-emphasis">
+                            <i class="bi bi-key"></i> Mot de passe temporaire</div>
+                    </td>
+                    <td><span th:replace="~{fragments/commun :: badgeStatut(${u.actif})}"></span></td>
+                    <td class="text-end text-nowrap">
+                        <a th:href="@{/admin/utilisateurs/{id}/modifier(id=${u.id})}" class="btn btn-sm btn-outline-primary"
+                           title="Modifier"><i class="bi bi-pencil"></i></a>
+                        <form th:unless="${soiMeme}" th:action="@{/admin/utilisateurs/{id}/reinitialiser-mot-de-passe(id=${u.id})}"
+                              method="post" class="d-inline"
+                              data-confirmation-titre="Réinitialiser le mot de passe"
+                              th:attr="data-confirmation='Un nouveau mot de passe temporaire va être généré pour ' + ${u.nomComplet}
+                                       + '. L\'actuel ne fonctionnera plus et l\'utilisateur devra en choisir un nouveau à sa prochaine connexion.'"
+                              data-confirmation-bouton="Réinitialiser" data-confirmation-style="warning">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Réinitialiser le mot de passe">
+                                <i class="bi bi-key"></i></button>
+                        </form>
+                        <th:block th:unless="${soiMeme}">
+                            <form th:replace="~{fragments/commun :: boutonStatut('/admin/utilisateurs/' + ${u.id} + '/statut', ${u.actif})}"></form>
+                        </th:block>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <nav th:replace="~{fragments/commun :: pagination(${page})}"></nav>
+
+    <script>
+        // Copie du mot de passe temporaire dans le presse-papiers
+        document.querySelectorAll('[data-copier]').forEach(bouton => bouton.addEventListener('click', async () => {
+            const texte = document.querySelector(bouton.dataset.copier).textContent.trim();
+            try {
+                await navigator.clipboard.writeText(texte);
+                bouton.innerHTML = '<i class="bi bi-check2"></i> Copié';
+            } catch (e) {
+                bouton.innerHTML = 'Sélectionnez et copiez manuellement';
+            }
+        }));
+    </script>
+</main>
+</body>
+</html>

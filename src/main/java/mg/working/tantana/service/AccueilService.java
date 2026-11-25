@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.TextStyle;
@@ -52,12 +53,19 @@ public class AccueilService {
 
         if (!financier) {
             return new TableauAccueil(receptions, ventes, retards, sansStock == null ? 0 : sansStock,
-                    null, null, null, null, List.of(), List.of(), List.of(), List.of(), List.of());
+                    null, null, null, null, null, null, List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
         }
 
         LocalDate aujourdhui = LocalDate.now();
         LocalDate debutMois = aujourdhui.withDayOfMonth(1);
         RapportVentes.Synthese mois = rapportRepository.synthese(debutMois, aujourdhui);
+        // Mois en cours (du 1er a aujourd'hui) compare a la MEME periode du mois precedent :
+        // comparer a un mois complet ferait toujours apparaitre une baisse en debut de mois.
+        LocalDate finComparaison = aujourdhui.minusMonths(1); // 31 mars -> 28/29 fevrier
+        RapportVentes.Synthese precedent = rapportRepository.synthese(debutMois.minusMonths(1), finComparaison);
+        BigDecimal evolutionCa = evolution(mois.getCaNetHt(), precedent.getCaNetHt());
+        String periodeComparaison = "1er–" + finComparaison.getDayOfMonth() + " "
+                + finComparaison.getMonth().getDisplayName(TextStyle.SHORT, FR);
         BigDecimal encaisse = rapportRepository.encaissements(debutMois, aujourdhui).stream()
                 .map(RapportVentes.Encaissement::montant).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal creances = rapportRepository.creances().stream()
@@ -66,22 +74,35 @@ public class AccueilService {
         // 12 derniers mois, mois sans vente compris (valeur 0), du plus ancien au plus recent
         YearMonth courant = YearMonth.from(aujourdhui);
         YearMonth premier = courant.minusMonths(NB_MOIS - 1L);
-        Map<YearMonth, BigDecimal[]> donnees = rapportRepository.parMois(premier.atDay(1));
+        // un mois de plus en arriere pour calculer l'evolution du premier mois affiche
+        Map<YearMonth, BigDecimal[]> donnees = rapportRepository.parMois(premier.minusMonths(1).atDay(1));
         List<String> libelles = new ArrayList<>();
         List<BigDecimal> ca = new ArrayList<>();
         List<BigDecimal> marge = new ArrayList<>();
+        List<BigDecimal> evolutions = new ArrayList<>();
+        BigDecimal caPrecedent = donnees.getOrDefault(premier.minusMonths(1), new BigDecimal[]{BigDecimal.ZERO})[0];
         for (YearMonth m = premier; !m.isAfter(courant); m = m.plusMonths(1)) {
             BigDecimal[] v = donnees.getOrDefault(m, new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO});
             libelles.add(m.getMonth().getDisplayName(TextStyle.SHORT, FR) + " " + String.valueOf(m.getYear()).substring(2));
             ca.add(v[0]);
             marge.add(v[0].subtract(v[1]));
+            evolutions.add(m.equals(courant) ? evolutionCa : evolution(v[0], caPrecedent));
+            caPrecedent = v[0];
         }
 
         List<RapportVentes.LigneMarge> top = rapportRepository.parArticle(premier.atDay(1), aujourdhui).stream()
                 .limit(5).toList();
 
         return new TableauAccueil(receptions, ventes, retards, sansStock == null ? 0 : sansStock,
-                mois, encaisse, creances, stockRepository.valeurTotaleRevient(),
-                libelles, ca, marge, top, rapportRepository.encaissements(debutMois, aujourdhui));
+                mois, encaisse, creances, stockRepository.valeurTotaleRevient(), evolutionCa, periodeComparaison,
+                libelles, ca, marge, evolutions, top, rapportRepository.encaissements(debutMois, aujourdhui));
+    }
+
+    /** Variation en % de « actuel » par rapport a « reference » ; null si la reference est nulle. */
+    private static BigDecimal evolution(BigDecimal actuel, BigDecimal reference) {
+        if (reference == null || reference.signum() <= 0) {
+            return null;
+        }
+        return actuel.subtract(reference).multiply(BigDecimal.valueOf(100)).divide(reference, 1, RoundingMode.HALF_UP);
     }
 }

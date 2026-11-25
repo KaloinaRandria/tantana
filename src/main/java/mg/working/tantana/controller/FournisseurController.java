@@ -42,19 +42,19 @@ public class FournisseurController {
         model.addAttribute("page", fournisseurService.rechercher(q, FiltreStatut.versBooleen(statut), pageable));
         model.addAttribute("q", q);
         model.addAttribute("statut", statut);
-        return "fournisseurs/liste";
+        return "fournisseurs/fournisseur-liste";
     }
 
     @GetMapping("/nouveau")
     public String nouveau(Model model) {
         model.addAttribute("fournisseur", new Fournisseur());
-        return "fournisseurs/formulaire";
+        return "fournisseurs/fournisseur-saisie";
     }
 
     @GetMapping("/{id}/modifier")
     public String modifier(@PathVariable Long id, Model model) {
         model.addAttribute("fournisseur", fournisseurService.trouver(id));
-        return "fournisseurs/formulaire";
+        return "fournisseurs/fournisseur-saisie";
     }
 
     @PostMapping("/enregistrer")
@@ -62,7 +62,7 @@ public class FournisseurController {
                               BindingResult erreurs,
                               RedirectAttributes redirect) {
         if (erreurs.hasErrors()) {
-            return "fournisseurs/formulaire";
+            return "fournisseurs/fournisseur-saisie";
         }
         try {
             Fournisseur enregistre = fournisseurService.enregistrer(fournisseur);
@@ -70,7 +70,7 @@ public class FournisseurController {
             return "redirect:/achats/fournisseurs";
         } catch (DoublonException e) {
             erreurs.rejectValue(e.getChamp(), "doublon", e.getMessage());
-            return "fournisseurs/formulaire";
+            return "fournisseurs/fournisseur-saisie";
         }
     }
 

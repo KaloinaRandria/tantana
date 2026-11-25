@@ -18,10 +18,15 @@ public record TableauAccueil(
         BigDecimal encaisseMois,
         BigDecimal creances,
         BigDecimal valeurStockRevient,
+        // evolution du CA HT vs la meme periode du mois precedent (null si rien a comparer)
+        BigDecimal evolutionCaPct,
+        String periodeComparaison,
         // series des graphiques
         List<String> moisLibelles,
         List<BigDecimal> caParMois,
         List<BigDecimal> margeParMois,
+        // evolution du CA de chaque mois vs le mois precedent (le mois en cours : a periode egale)
+        List<BigDecimal> evolutionCaParMois,
         List<RapportVentes.LigneMarge> topArticles,
         List<RapportVentes.Encaissement> encaissements) {
 
@@ -37,6 +42,9 @@ public record TableauAccueil(
     public BigDecimal getEncaisseMois() { return encaisseMois; }
     public BigDecimal getCreances() { return creances; }
     public BigDecimal getValeurStockRevient() { return valeurStockRevient; }
+    public BigDecimal getEvolutionCaPct() { return evolutionCaPct; }
+    public String getPeriodeComparaison() { return periodeComparaison; }
+    public List<BigDecimal> getEvolutionCaParMois() { return evolutionCaParMois; }
     public List<String> getMoisLibelles() { return moisLibelles; }
     public List<BigDecimal> getCaParMois() { return caParMois; }
     public List<BigDecimal> getMargeParMois() { return margeParMois; }

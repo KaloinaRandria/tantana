@@ -22,6 +22,8 @@ public class SecurityConfig {
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 // Prix de vente et marges : reserves a l'ADMIN
                 .requestMatchers("/tarifs/**").hasRole("ADMIN")
+                // Inventaires : comptes par le stock, controles par un CHECKER (les actions sont filtrees par @PreAuthorize)
+                .requestMatchers("/stock/inventaires/**").hasAnyRole("ADMIN", "GESTIONNAIRE_STOCK", "CHECKER", "ACHETEUR")
                 // Consultation du stock : l'acheteur voit l'effet de ses receptions
                 .requestMatchers("/stock/**").hasAnyRole("ADMIN", "GESTIONNAIRE_STOCK", "ACHETEUR")
                 .requestMatchers("/ventes/**").hasAnyRole("ADMIN", "VENDEUR")
