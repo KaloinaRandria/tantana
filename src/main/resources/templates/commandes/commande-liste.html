@@ -33,7 +33,7 @@
             </select>
         </div>
         <div class="col-6 col-md-3">
-            <select name="fournisseurId" class="form-select" onchange="this.form.submit()">
+            <select name="fournisseurId" class="form-select" onchange="this.form.submit()" data-recherche="Rechercher un fournisseur" data-recherche-vide>
                 <option value="">Tous les fournisseurs</option>
                 <option th:each="f : ${fournisseurs}" th:value="${f.id}" th:text="${f.nom}"
                         th:selected="${f.id == fournisseurId}">Fournisseur</option>
@@ -48,6 +48,9 @@
         </div>
         <div class="col-6 col-md-1 d-grid">
             <button class="btn btn-outline-secondary" type="submit" title="Rechercher"><i class="bi bi-funnel"></i></button>
+        </div>
+        <div class="col-12">
+            <div th:replace="~{fragments/commun :: periode(${filtre})}"></div>
         </div>
     </form>
 

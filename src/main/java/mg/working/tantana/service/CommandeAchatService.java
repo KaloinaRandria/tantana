@@ -2,6 +2,7 @@ package mg.working.tantana.service;
 
 import lombok.RequiredArgsConstructor;
 import mg.working.tantana.dto.CommandeAchatForm;
+import mg.working.tantana.dto.FiltrePeriode;
 import mg.working.tantana.dto.LigneCommandeForm;
 import mg.working.tantana.entity.Article;
 import mg.working.tantana.entity.CommandeAchat;
@@ -32,6 +33,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static mg.working.tantana.repository.CommandeAchatSpecifications.commandeeEntre;
 import static mg.working.tantana.repository.CommandeAchatSpecifications.enRetard;
 import static mg.working.tantana.repository.CommandeAchatSpecifications.fournisseur;
 import static mg.working.tantana.repository.CommandeAchatSpecifications.numeroContient;
@@ -52,10 +54,10 @@ public class CommandeAchatService {
     // ===================== Lecture =====================
 
     public Page<CommandeAchat> rechercher(String numero, StatutCommande statutFiltre, Long fournisseurId,
-                                          boolean seulementEnRetard, Pageable pageable) {
+                                          boolean seulementEnRetard, FiltrePeriode periode, Pageable pageable) {
         return commandeRepository.findAll(CommandeAchatSpecifications.tous(
                 numeroContient(numero), statut(statutFiltre), fournisseur(fournisseurId),
-                enRetard(seulementEnRetard)), pageable);
+                enRetard(seulementEnRetard), commandeeEntre(periode.du(), periode.au())), pageable);
     }
 
     public CommandeAchat trouverAvecDetails(Long id) {

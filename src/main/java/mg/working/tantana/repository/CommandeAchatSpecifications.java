@@ -33,6 +33,20 @@ public final class CommandeAchatSpecifications {
                 : (root, query, cb) -> cb.equal(root.get("fournisseur").get("id"), fournisseurId);
     }
 
+    /** Date de commande comprise dans la periode (bornes incluses ; une borne null est ignoree). */
+    public static Specification<CommandeAchat> commandeeEntre(LocalDate du, LocalDate au) {
+        if (du == null && au == null) {
+            return null;
+        }
+        return (root, query, cb) -> {
+            if (du == null) {
+                return cb.lessThanOrEqualTo(root.get("dateCommande"), au);
+            }
+            return au == null ? cb.greaterThanOrEqualTo(root.get("dateCommande"), du)
+                    : cb.between(root.get("dateCommande"), du, au);
+        };
+    }
+
     /** Combine les filtres presents par un ET (les filtres null sont ignores). */
     @SafeVarargs
     public static Specification<CommandeAchat> tous(Specification<CommandeAchat>... filtres) {

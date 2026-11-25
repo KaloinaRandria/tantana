@@ -5,6 +5,8 @@
  * (reference, nom, pays...). Le <select> d'origine reste dans le formulaire et garde sa valeur :
  * les scripts existants (change, selectedOptions, dataset des options) fonctionnent sans changement.
  *
+ * Ajouter data-recherche-vide pour garder l'option vide choisissable (filtres « Tous … »).
+ *
  * Une option peut porter data-detail="..." : affiche sous le libelle et inclus dans la recherche
  * (ex. « Stock 25 Pièce · 1 007 900 MGA HT »).
  *
@@ -23,6 +25,8 @@
             // la premiere option de la liste non encore filtree
             refreshThrottle: 0,
             placeholder: select.dataset.recherche || 'Rechercher…',
+            // filtres de liste : l'option vide (« Tous les fournisseurs ») reste choisissable
+            allowEmptyOption: select.hasAttribute('data-recherche-vide'),
             searchField: ['text', 'detail'],
             // hors du tableau : la liste n'est pas coupee par le defilement horizontal
             dropdownParent: 'body',

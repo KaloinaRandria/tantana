@@ -2,7 +2,11 @@ package mg.working.tantana.controller;
 
 import lombok.RequiredArgsConstructor;
 import mg.working.tantana.dto.CommandeAchatForm;
+import mg.working.tantana.dto.FiltrePeriode;
 import mg.working.tantana.dto.LigneCommandeForm;
+import mg.working.tantana.dto.Periode;
+import org.springframework.format.annotation.DateTimeFormat;
+import java.time.LocalDate;
 import mg.working.tantana.entity.Article;
 import mg.working.tantana.entity.CommandeAchat;
 import mg.working.tantana.entity.Devise;
@@ -57,11 +61,17 @@ public class CommandeAchatController {
                         @RequestParam(required = false) StatutCommande statut,
                         @RequestParam(required = false) Long fournisseurId,
                         @RequestParam(defaultValue = "false") boolean retard,
+                        @RequestParam(required = false) Periode periode,
+                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate du,
+                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate au,
                         @RequestParam(defaultValue = "0") int page,
                         Model model) {
         var pageable = PageRequest.of(Math.max(page, 0), TAILLE_PAGE,
                 Sort.by(Sort.Direction.DESC, "dateCommande").and(Sort.by(Sort.Direction.DESC, "id")));
-        model.addAttribute("page", commandeService.rechercher(q, statut, fournisseurId, retard, pageable));
+        // par defaut : toutes les dates (filtre sur la date de commande)
+        FiltrePeriode filtre = FiltrePeriode.resoudre(periode, du, au, Periode.TOUT, FiltrePeriode.LISTE);
+        model.addAttribute("page", commandeService.rechercher(q, statut, fournisseurId, retard, filtre, pageable));
+        model.addAttribute("filtre", filtre);
         model.addAttribute("q", q);
         model.addAttribute("statut", statut);
         model.addAttribute("fournisseurId", fournisseurId);

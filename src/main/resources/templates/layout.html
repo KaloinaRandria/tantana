@@ -113,13 +113,18 @@
             <div class="titre-section">Administration</div>
             <ul class="nav flex-column">
                 <li>
+                    <a class="nav-link" th:href="@{/admin/utilisateurs}"
+                       th:classappend="${#strings.startsWith(urlCourante, '/admin/utilisateurs')} ? 'active'">
+                        <i class="bi bi-people-fill"></i> Utilisateurs</a>
+                </li>
+                <li>
                     <a class="nav-link" th:href="@{/tarifs}"
                        th:classappend="${#strings.startsWith(urlCourante, '/tarifs')} ? 'active'">
                         <i class="bi bi-currency-exchange"></i> Prix de vente</a>
                 </li>
                 <li>
                     <a class="nav-link" th:href="@{/admin/parametres}"
-                       th:classappend="${#strings.startsWith(urlCourante, '/admin')} ? 'active'">
+                       th:classappend="${#strings.startsWith(urlCourante, '/admin/parametres')} ? 'active'">
                         <i class="bi bi-sliders"></i> Paramètres</a>
                 </li>
             </ul>
@@ -161,6 +166,9 @@
                         <div class="fw-semibold" th:text="${nomUtilisateur}">Utilisateur</div>
                         <div class="small text-muted" sec:authentication="name">login</div>
                     </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" th:href="@{/compte/mot-de-passe}">
+                        <i class="bi bi-key me-2"></i>Changer mon mot de passe</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
                         <form th:action="@{/logout}" method="post" data-sans-loader>
