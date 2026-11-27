@@ -4,7 +4,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import mg.working.tantana.entity.Article;
 import mg.working.tantana.entity.Unite;
-import mg.working.tantana.exception.DoublonException;
 import mg.working.tantana.service.ArticleService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -64,14 +63,9 @@ public class ArticleController {
         if (erreurs.hasErrors()) {
             return "articles/article-saisie";
         }
-        try {
-            Article enregistre = articleService.enregistrer(article);
-            redirect.addFlashAttribute("succes", "Article " + enregistre.getReference() + " enregistré.");
-            return "redirect:/articles";
-        } catch (DoublonException e) {
-            erreurs.rejectValue(e.getChamp(), "doublon", e.getMessage());
-            return "articles/article-saisie";
-        }
+        Article enregistre = articleService.enregistrer(article);
+        redirect.addFlashAttribute("succes", "Article " + enregistre.getReference() + " enregistré.");
+        return "redirect:/articles";
     }
 
     @PostMapping("/{id}/statut")

@@ -22,16 +22,16 @@
 
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label for="reference" class="form-label">Référence <span class="text-danger">*</span></label>
-                        <input type="text" th:field="*{reference}" class="form-control text-uppercase"
-                               th:classappend="${#fields.hasErrors('reference')} ? 'is-invalid'"
-                               placeholder="ART-0001" maxlength="50" autofocus>
-                        <div class="invalid-feedback" th:errors="*{reference}">Erreur</div>
+                        <label for="reference" class="form-label">Référence</label>
+                        <!-- generee par le serveur a la creation : affichee seulement, jamais envoyee -->
+                        <input type="text" id="reference" class="form-control" readonly tabindex="-1"
+                               th:value="${article.reference}"
+                               th:placeholder="${article.id == null} ? 'Générée automatiquement' : ''">
                     </div>
                     <div class="col-md-8">
                         <label for="designation" class="form-label">Désignation <span class="text-danger">*</span></label>
                         <input type="text" th:field="*{designation}" class="form-control"
-                               th:classappend="${#fields.hasErrors('designation')} ? 'is-invalid'" maxlength="200">
+                               th:classappend="${#fields.hasErrors('designation')} ? 'is-invalid'" maxlength="200" autofocus>
                         <div class="invalid-feedback" th:errors="*{designation}">Erreur</div>
                     </div>
                     <div class="col-md-4">

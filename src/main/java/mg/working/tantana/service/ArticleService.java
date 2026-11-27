@@ -2,7 +2,6 @@ package mg.working.tantana.service;
 
 import lombok.RequiredArgsConstructor;
 import mg.working.tantana.entity.Article;
-import mg.working.tantana.exception.DoublonException;
 import mg.working.tantana.exception.ElementIntrouvableException;
 import mg.working.tantana.repository.ArticleRepository;
 import org.springframework.data.domain.Page;
@@ -18,6 +17,7 @@ import java.util.List;
 public class ArticleService {
 
     private final ArticleRepository articleRepository;
+    private final NumerotationService numerotationService;
 
     /** @param actif null = tous, true = actifs, false = inactifs */
     public Page<Article> rechercher(String texte, Boolean actif, Pageable pageable) {
@@ -36,19 +36,20 @@ public class ArticleService {
         return articleRepository.findByActifTrueOrderByDesignationAsc();
     }
 
-    /** Cree l'article (id null) ou met a jour ses champs modifiables. */
+    /**
+     * Cree l'article (id null) ou met a jour ses champs modifiables.
+     * La reference est generee a la creation et ne change plus ensuite :
+     * la valeur eventuellement envoyee par le formulaire est ignoree.
+     */
     @Transactional
     public Article enregistrer(Article saisie) {
-        String reference = saisie.getReference().trim().toUpperCase();
-
-        articleRepository.findByReferenceIgnoreCase(reference)
-                .filter(existant -> !existant.getId().equals(saisie.getId()))
-                .ifPresent(existant -> {
-                    throw new DoublonException("reference", "La référence " + reference + " est déjà utilisée");
-                });
-
-        Article article = saisie.getId() == null ? new Article() : trouver(saisie.getId());
-        article.setReference(reference);
+        Article article;
+        if (saisie.getId() == null) {
+            article = new Article();
+            article.setReference(nouvelleReference());
+        } else {
+            article = trouver(saisie.getId());
+        }
         article.setDesignation(saisie.getDesignation().trim());
         article.setUnite(saisie.getUnite());
         article.setDescription(vide(saisie.getDescription()));
@@ -61,6 +62,15 @@ public class ArticleService {
         Article article = trouver(id);
         article.setActif(!article.isActif());
         return article;
+    }
+
+    /** Saute les numeros deja pris (reference saisie a la main avant la numerotation automatique). */
+    private String nouvelleReference() {
+        String reference;
+        do {
+            reference = numerotationService.prochaineReferenceArticle();
+        } while (articleRepository.findByReferenceIgnoreCase(reference).isPresent());
+        return reference;
     }
 
     private static String vide(String valeur) {

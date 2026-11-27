@@ -18,6 +18,10 @@ public class NumerotationService {
     /** Factures de vente : suite continue, attribuee a la validation seulement. */
     public static final String FACTURE = "FV";
     public static final String AVOIR = "AV";
+    /** Articles du catalogue : compteur unique, sans annee (ART-0001). */
+    public static final String ARTICLE = "ART";
+    /** Valeur de la colonne annee pour les compteurs non annuels. */
+    private static final int SANS_ANNEE = 0;
 
     private final NumerotationRepository numerotationRepository;
 
@@ -27,5 +31,12 @@ public class NumerotationService {
         int annee = date.getYear();
         int numero = numerotationRepository.incrementer(prefixe, annee);
         return "%s-%d-%04d".formatted(prefixe, annee, numero);
+    }
+
+    /** Prochaine reference article (ART-0001, ART-0002, ...). Meme contrainte de transaction. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public String prochaineReferenceArticle() {
+        int numero = numerotationRepository.incrementer(ARTICLE, SANS_ANNEE);
+        return "%s-%04d".formatted(ARTICLE, numero);
     }
 }

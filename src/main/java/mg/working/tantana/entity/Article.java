@@ -10,7 +10,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,10 +30,8 @@ public class Article {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "La référence est obligatoire")
-    @Size(max = 50, message = "50 caractères maximum")
-    @Pattern(regexp = "^[A-Za-z0-9._/-]*$", message = "Lettres, chiffres et . _ / - uniquement")
-    @Column(nullable = false, unique = true, length = 50)
+    /** Generee automatiquement a la creation (ART-0001) par ArticleService, jamais saisie. */
+    @Column(nullable = false, unique = true, length = 50, updatable = false)
     private String reference;
 
     @NotBlank(message = "La désignation est obligatoire")
