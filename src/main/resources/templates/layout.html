@@ -12,6 +12,10 @@
     <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css}">
     <link rel="stylesheet" th:href="@{/webjars/tom-select/2.3.1/dist/css/tom-select.bootstrap5.min.css}">
     <link rel="stylesheet" th:href="@{/css/app.css}">
+    <!-- Applique l'etat reduit de la sidebar avant l'affichage (evite un clignotement) -->
+    <script>
+        try { if (localStorage.getItem('tt-sidebar-reduite') === '1') document.documentElement.classList.add('sidebar-reduite'); } catch (e) {}
+    </script>
 </head>
 <body>
 
@@ -21,7 +25,7 @@
 <!-- ===== Sidebar (fixe sur grand ecran, tiroir sur mobile) ===== -->
 <aside class="sidebar offcanvas-lg offcanvas-start d-flex flex-column" tabindex="-1" id="sidebar">
     <div class="d-flex align-items-center justify-content-between px-4 pt-4 pb-3">
-        <a class="marque" th:href="@{/}"><span class="logo"><i class="bi bi-box-seam"></i></span>Tantana</a>
+        <a class="marque" th:href="@{/}"><span class="logo"><i class="bi bi-box-seam"></i></span><span class="libelle-marque">Tantana</span></a>
         <button type="button" class="btn-close btn-close-white d-lg-none" data-bs-dismiss="offcanvas"
                 data-bs-target="#sidebar" aria-label="Fermer"></button>
     </div>
@@ -153,6 +157,10 @@
                 data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">
             <i class="bi bi-list"></i>
         </button>
+        <button class="btn btn-outline-secondary btn-sm d-none d-lg-inline-flex" type="button" data-sans-loader
+                id="bascule-sidebar" title="Réduire le menu" aria-label="Réduire le menu" aria-controls="sidebar" aria-expanded="true">
+            <i class="bi bi-layout-sidebar-inset"></i>
+        </button>
         <h1 class="h5 mb-0 text-truncate" layout:fragment="titre-page">Tantana</h1>
         <div class="ms-auto d-flex align-items-center gap-3">
             <span class="date-du-jour d-none d-md-inline" th:text="${dateDuJour}">Lundi 1 janvier 2026</span>
@@ -219,5 +227,6 @@
 <!-- Listes recherchables : tout <select data-recherche> devient un champ de recherche -->
 <script th:src="@{/webjars/tom-select/2.3.1/dist/js/tom-select.complete.min.js}"></script>
 <script th:src="@{/js/liste-recherchable.js}"></script>
+<script th:src="@{/js/sidebar.js}"></script>
 </body>
 </html>

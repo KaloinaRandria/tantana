@@ -161,6 +161,41 @@ a { text-underline-offset: 3px; }
 /* defilement discret dans la sidebar */
 .sidebar nav { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .15) transparent; }
 
+/* ----- Sidebar reduite (grand ecran) : seules les icones restent visibles ----- */
+:root { --tt-sidebar-largeur-reduite: 72px; }
+
+@media (min-width: 992px) {
+    /* animation seulement apres le premier affichage (sidebar.js ajoute la classe) */
+    .sidebar-anime .sidebar { transition: width .2s ease; }
+    .sidebar-anime .contenu { transition: margin-left .2s ease; }
+
+    .sidebar-reduite .sidebar { width: var(--tt-sidebar-largeur-reduite); }
+    .sidebar-reduite .contenu { margin-left: var(--tt-sidebar-largeur-reduite); }
+
+    .sidebar-reduite .sidebar > div:first-child { padding-left: 0 !important; padding-right: 0 !important; justify-content: center !important; }
+    .sidebar-reduite .sidebar .libelle-marque { display: none; }
+
+    /* les titres de section deviennent un simple separateur */
+    .sidebar-reduite .sidebar .titre-section {
+        font-size: 0; padding: 0; margin: .7rem 1.1rem .5rem;
+        border-top: 1px solid rgba(255, 255, 255, .08);
+    }
+
+    /* le texte des liens est masque (font-size: 0), l'icone et la pastille restent (tailles en rem) */
+    .sidebar-reduite .sidebar .nav-link {
+        font-size: 0; justify-content: center; gap: 0;
+        padding: .6rem 0; margin: 2px .75rem;
+    }
+    .sidebar-reduite .sidebar .nav-link i { font-size: 1.15rem; width: auto; }
+    .sidebar-reduite .sidebar .nav-link .badge {
+        position: absolute; top: 2px; right: 2px; margin: 0 !important;
+        font-size: .58rem; padding: .2em .45em;
+    }
+
+    .sidebar-reduite .sidebar .utilisateur { flex-direction: column; padding-left: 0 !important; padding-right: 0 !important; }
+    .sidebar-reduite .sidebar .utilisateur > .flex-grow-1 { display: none; }
+}
+
 /* =========================== Barre du haut =========================== */
 
 .barre-haut {
