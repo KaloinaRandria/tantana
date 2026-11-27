@@ -2,10 +2,14 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "tantana",
-      "runtimeExecutable": "G:\\WORKING-DIR\\tantana\\mvnw.cmd",
-      "runtimeArgs": ["-B", "spring-boot:run"],
-      "port": 8080
+      "name": "tantana-test",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-Command",
+        "$env:SPRING_PROFILES_ACTIVE='dev,test'; $env:SERVER_PORT='8081'; ./mvnw.cmd spring-boot:run"
+      ],
+      "port": 8081
     }
   ]
 }
