@@ -35,8 +35,8 @@
     <div class="row g-3 mb-3" th:if="${t.financier}" th:with="s=${t.moisEnCours}">
         <div class="col-6 col-xl-3">
             <div class="card border-0 shadow-sm tuile">
-                <div class="libelle"><span class="icone icone-bleu"><i class="bi bi-receipt"></i></span> Chiffre d'affaires HT</div>
-                <div class="valeur"><span th:text="${#numbers.formatDecimal(s.caNetHt, 1, 'WHITESPACE', 0, 'COMMA')}">0</span> <small>MGA</small></div>
+                <div class="libelle"><span class="icone icone-bleu"><i class="bi bi-receipt"></i></span> <span th:text="|Chiffre d'affaires${ht}|">Chiffre d'affaires HT</span></div>
+                <div class="valeur"><span th:text="${#numbers.formatDecimal(s.caNetHt, 1, 'WHITESPACE', 2, 'COMMA')}">0</span> <small>MGA</small></div>
                 <div class="detail"><span th:text="${s.nbFactures}">0</span> facture(s) ce mois, avoirs déduits</div>
                 <div class="evolution" th:if="${t.evolutionCaPct != null}"
                      th:classappend="${t.evolutionCaPct.signum() > 0} ? 'hausse' : (${t.evolutionCaPct.signum() < 0} ? 'baisse')"
@@ -54,14 +54,14 @@
             <div class="card border-0 shadow-sm tuile">
                 <div class="libelle"><span class="icone icone-vert"><i class="bi bi-graph-up-arrow"></i></span> Marge nette</div>
                 <div class="valeur" th:classappend="${s.margeNette.signum() < 0} ? 'text-danger'">
-                    <span th:text="${#numbers.formatDecimal(s.margeNette, 1, 'WHITESPACE', 0, 'COMMA')}">0</span> <small>MGA</small></div>
+                    <span th:text="${#numbers.formatDecimal(s.margeNette, 1, 'WHITESPACE', 2, 'COMMA')}">0</span> <small>MGA</small></div>
                 <div class="detail" th:text="${s.tauxMarque != null} ? ${s.tauxMarque} + ' % du chiffre d’affaires' : 'Aucune vente ce mois'">0 %</div>
             </div>
         </div>
         <div class="col-6 col-xl-3">
             <div class="card border-0 shadow-sm tuile">
                 <div class="libelle"><span class="icone icone-bleu"><i class="bi bi-cash-coin"></i></span> Encaissé ce mois</div>
-                <div class="valeur"><span th:text="${#numbers.formatDecimal(t.encaisseMois, 1, 'WHITESPACE', 0, 'COMMA')}">0</span> <small>MGA</small></div>
+                <div class="valeur"><span th:text="${#numbers.formatDecimal(t.encaisseMois, 1, 'WHITESPACE', 2, 'COMMA')}">0</span> <small>MGA</small></div>
                 <div class="detail">tous modes de paiement</div>
             </div>
         </div>
@@ -69,7 +69,7 @@
             <a th:href="@{/ventes(impayees=true)}" class="card border-0 shadow-sm tuile tuile-lien">
                 <div class="libelle"><span class="icone" th:classappend="${t.creances.signum() > 0} ? 'icone-rouge' : 'icone-gris'">
                     <i class="bi bi-wallet2"></i></span> Créances clients</div>
-                <div class="valeur"><span th:text="${#numbers.formatDecimal(t.creances, 1, 'WHITESPACE', 0, 'COMMA')}">0</span> <small>MGA</small></div>
+                <div class="valeur"><span th:text="${#numbers.formatDecimal(t.creances, 1, 'WHITESPACE', 2, 'COMMA')}">0</span> <small>MGA</small></div>
                 <div class="detail">à encaisser à ce jour <i class="bi bi-arrow-right-short"></i></div>
             </a>
         </div>
@@ -108,7 +108,7 @@
                     <i class="bi bi-boxes"></i></span> Articles en rupture</div>
                 <div class="valeur" th:text="${t.articlesSansStock}">0</div>
                 <div class="detail" th:if="${t.financier}">stock au revient :
-                    <span th:text="${#numbers.formatDecimal(t.valeurStockRevient, 1, 'WHITESPACE', 0, 'COMMA')}">0</span> MGA</div>
+                    <span th:text="${#numbers.formatDecimal(t.valeurStockRevient, 1, 'WHITESPACE', 2, 'COMMA')}">0</span> MGA</div>
                 <div class="detail" th:unless="${t.financier}">articles à prix fixé sans stock</div>
             </a>
         </div>
@@ -122,25 +122,25 @@
                 <div class="card border-0 shadow-sm carte-graphique h-100">
                     <div class="entete">
                         <h2>Chiffre d'affaires et marge</h2>
-                        <span class="note">12 derniers mois · HT, avoirs déduits</span>
+                        <span class="note" th:text="${tvaApplicable} ? '12 derniers mois · HT, avoirs déduits' : '12 derniers mois · avoirs déduits'">12 derniers mois · HT, avoirs déduits</span>
                     </div>
                     <div class="legende mt-2">
-                        <span><span class="pastille" style="background:#2a78d6"></span>Chiffre d'affaires HT</span>
+                        <span><span class="pastille" style="background:#2a78d6"></span><span th:text="|Chiffre d'affaires${ht}|">Chiffre d'affaires HT</span></span>
                         <span><span class="pastille" style="background:#eb6834"></span>Marge nette</span>
                     </div>
                     <div class="zone-graphique"><canvas id="graphique-mensuel" aria-label="Chiffre d'affaires et marge par mois" role="img"></canvas></div>
                     <details class="donnees-graphique">
                         <summary>Voir les données</summary>
                         <table class="table table-sm">
-                            <thead><tr><th>Mois</th><th class="text-end">CA HT</th><th class="text-end">Évol. CA</th><th class="text-end">Marge</th></tr></thead>
+                            <thead><tr><th>Mois</th><th class="text-end" th:text="|CA${ht}|">CA HT</th><th class="text-end">Évol. CA</th><th class="text-end">Marge</th></tr></thead>
                             <tbody>
                             <tr th:each="m, it : ${t.moisLibelles}" th:with="e=${t.evolutionCaParMois[it.index]}">
                                 <td><span th:text="${m}">jan</span><span th:if="${it.last}" class="text-muted">*</span></td>
-                                <td class="text-end" th:text="${#numbers.formatDecimal(t.caParMois[it.index], 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(t.caParMois[it.index], 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
                                 <td class="text-end text-nowrap"
                                     th:classappend="${e == null} ? 'text-muted' : (${e.signum() > 0} ? 'texte-hausse' : (${e.signum() < 0} ? 'texte-baisse'))"
                                     th:text="${e == null} ? '—' : (${e.signum() > 0} ? '+' : '') + ${#numbers.formatDecimal(e, 1, 'WHITESPACE', 1, 'COMMA')} + ' %'">+5,0 %</td>
-                                <td class="text-end" th:text="${#numbers.formatDecimal(t.margeParMois[it.index], 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(t.margeParMois[it.index], 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
                             </tr>
                             </tbody>
                         </table>

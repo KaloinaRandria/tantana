@@ -24,11 +24,11 @@
     <div class="row g-3 mb-3">
         <div class="col-6 col-lg-3">
             <div class="card border-0 shadow-sm h-100"><div class="card-body">
-                <div class="small text-muted">Chiffre d'affaires net HT</div>
-                <div class="fs-4 fw-semibold" th:text="${#numbers.formatDecimal(s.caNetHt, 1, 'WHITESPACE', 0, 'COMMA')}">0</div>
+                <div class="small text-muted" th:text="|Chiffre d'affaires net${ht}|">Chiffre d'affaires net HT</div>
+                <div class="fs-4 fw-semibold" th:text="${#numbers.formatDecimal(s.caNetHt, 1, 'WHITESPACE', 2, 'COMMA')}">0</div>
                 <div class="small text-muted"><span th:text="${s.nbFactures}">0</span> facture(s)
                     <th:block th:if="${s.nbAvoirs > 0}">· <span th:text="${s.nbAvoirs}">0</span> avoir(s)
-                        (− <span th:text="${#numbers.formatDecimal(s.avoirsHt, 1, 'WHITESPACE', 0, 'COMMA')}">0</span>)</th:block>
+                        (− <span th:text="${#numbers.formatDecimal(s.avoirsHt, 1, 'WHITESPACE', 2, 'COMMA')}">0</span>)</th:block>
                 </div>
             </div></div>
         </div>
@@ -36,7 +36,7 @@
             <div class="card border-0 shadow-sm h-100"><div class="card-body">
                 <div class="small text-muted">Marge nette</div>
                 <div class="fs-4 fw-semibold" th:classappend="${s.margeNette.signum() < 0} ? 'text-danger' : 'text-success'"
-                     th:text="${#numbers.formatDecimal(s.margeNette, 1, 'WHITESPACE', 0, 'COMMA')}">0</div>
+                     th:text="${#numbers.formatDecimal(s.margeNette, 1, 'WHITESPACE', 2, 'COMMA')}">0</div>
                 <div class="small text-muted" th:if="${s.tauxMarque != null}">
                     <span th:text="${s.tauxMarque}">0</span> % du chiffre d'affaires</div>
             </div></div>
@@ -44,16 +44,16 @@
         <div class="col-6 col-lg-3">
             <div class="card border-0 shadow-sm h-100"><div class="card-body">
                 <div class="small text-muted">Encaissé sur la période</div>
-                <div class="fs-4 fw-semibold" th:text="${#numbers.formatDecimal(t.totalEncaisse, 1, 'WHITESPACE', 0, 'COMMA')}">0</div>
-                <div class="small text-muted">facturé TTC net :
-                    <span th:text="${#numbers.formatDecimal(s.ttcNet, 1, 'WHITESPACE', 0, 'COMMA')}">0</span></div>
+                <div class="fs-4 fw-semibold" th:text="${#numbers.formatDecimal(t.totalEncaisse, 1, 'WHITESPACE', 2, 'COMMA')}">0</div>
+                <div class="small text-muted"><span th:text="${tvaApplicable} ? 'facturé TTC net :' : 'facturé net :'">facturé TTC net :</span>
+                    <span th:text="${#numbers.formatDecimal(s.ttcNet, 1, 'WHITESPACE', 2, 'COMMA')}">0</span></div>
             </div></div>
         </div>
         <div class="col-6 col-lg-3">
             <div class="card border-0 shadow-sm h-100"><div class="card-body">
                 <div class="small text-muted">Créances clients (à ce jour)</div>
                 <div class="fs-4 fw-semibold" th:classappend="${t.totalCreances.signum() > 0} ? 'text-danger'"
-                     th:text="${#numbers.formatDecimal(t.totalCreances, 1, 'WHITESPACE', 0, 'COMMA')}">0</div>
+                     th:text="${#numbers.formatDecimal(t.totalCreances, 1, 'WHITESPACE', 2, 'COMMA')}">0</div>
                 <a class="small" th:href="@{/ventes(impayees=true)}">Voir les factures impayées</a>
             </div></div>
         </div>
@@ -67,18 +67,18 @@
                 <div class="table-responsive">
                     <table class="table table-sm table-hover align-middle mb-0">
                         <thead class="table-light">
-                        <tr><th>Article</th><th class="text-end">Qté</th><th class="text-end">CA HT</th>
+                        <tr><th>Article</th><th class="text-end">Qté</th><th class="text-end" th:text="|CA${ht}|">CA HT</th>
                             <th class="text-end">Revient</th><th class="text-end">Marge</th><th class="text-end">%</th></tr>
                         </thead>
                         <tbody>
                         <tr th:if="${t.parArticle.empty}"><td colspan="6" class="text-center text-muted py-3">Aucune vente sur la période.</td></tr>
                         <tr th:each="l : ${t.parArticle}">
                             <td><code th:text="${l.libelle}">ART</code> <span class="small" th:text="${l.detail}">Désignation</span></td>
-                            <td class="text-end" th:text="${l.quantite.stripTrailingZeros().toPlainString()}">0</td>
-                            <td class="text-end text-nowrap" th:text="${#numbers.formatDecimal(l.caHt, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
-                            <td class="text-end text-muted text-nowrap" th:text="${#numbers.formatDecimal(l.cout, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                            <td class="text-end" th:text="${@nombres.qte(l.quantite)}">0</td>
+                            <td class="text-end text-nowrap" th:text="${#numbers.formatDecimal(l.caHt, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
+                            <td class="text-end text-muted text-nowrap" th:text="${#numbers.formatDecimal(l.cout, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
                             <td class="text-end fw-semibold text-nowrap" th:classappend="${l.marge.signum() < 0} ? 'text-danger' : 'text-success'"
-                                th:text="${#numbers.formatDecimal(l.marge, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                                th:text="${#numbers.formatDecimal(l.marge, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
                             <td class="text-end small text-nowrap" th:text="${l.tauxMarque != null} ? ${l.tauxMarque} + ' %' : '—'">0</td>
                         </tr>
                         </tbody>
@@ -97,7 +97,7 @@
                         <div class="d-flex justify-content-between small">
                             <span><i class="bi" th:classappend="${e.mode.icone}"></i> <span th:text="${e.mode.libelle}">Mode</span>
                                 <span class="text-muted" th:text="'(' + ${e.nombre} + ')'">(1)</span></span>
-                            <strong th:text="${#numbers.formatDecimal(e.montant, 1, 'WHITESPACE', 0, 'COMMA')}">0</strong>
+                            <strong th:text="${#numbers.formatDecimal(e.montant, 1, 'WHITESPACE', 2, 'COMMA')}">0</strong>
                         </div>
                         <div class="progress" style="height:6px" role="progressbar">
                             <div class="progress-bar bg-success"
@@ -115,17 +115,17 @@
                 <div class="table-responsive">
                     <table class="table table-sm table-hover align-middle mb-0">
                         <thead class="table-light">
-                        <tr><th>Client</th><th class="text-end">Factures</th><th class="text-end">CA HT</th>
+                        <tr><th>Client</th><th class="text-end">Factures</th><th class="text-end" th:text="|CA${ht}|">CA HT</th>
                             <th class="text-end">Marge</th><th class="text-end">%</th></tr>
                         </thead>
                         <tbody>
                         <tr th:if="${t.parClient.empty}"><td colspan="5" class="text-center text-muted py-3">Aucune vente sur la période.</td></tr>
                         <tr th:each="l : ${t.parClient}">
                             <td th:text="${l.libelle}">Client</td>
-                            <td class="text-end" th:text="${l.quantite.stripTrailingZeros().toPlainString()}">0</td>
-                            <td class="text-end text-nowrap" th:text="${#numbers.formatDecimal(l.caHt, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                            <td class="text-end" th:text="${@nombres.qte(l.quantite)}">0</td>
+                            <td class="text-end text-nowrap" th:text="${#numbers.formatDecimal(l.caHt, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
                             <td class="text-end fw-semibold text-nowrap" th:classappend="${l.marge.signum() < 0} ? 'text-danger' : 'text-success'"
-                                th:text="${#numbers.formatDecimal(l.marge, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                                th:text="${#numbers.formatDecimal(l.marge, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
                             <td class="text-end small text-nowrap" th:text="${l.tauxMarque != null} ? ${l.tauxMarque} + ' %' : '—'">0</td>
                         </tr>
                         </tbody>
@@ -151,7 +151,7 @@
                                 <span th:if="${c.auDessusDuPlafond}" class="badge text-bg-danger ms-1" title="Au-dessus du plafond de crédit">Plafond</span>
                                 <div class="small text-muted" th:text="${c.nbFactures} + ' facture(s)'">1</div>
                             </td>
-                            <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(c.reste, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                            <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(c.reste, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
                             <td class="text-end small" th:classappend="${c.jours > 30} ? 'text-danger fw-semibold'"
                                 th:text="${c.jours} + ' j'">0 j</td>
                         </tr>

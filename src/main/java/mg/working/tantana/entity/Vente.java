@@ -180,6 +180,11 @@ public class Vente {
         return montantPaye.signum() > 0 ? StatutPaiement.PARTIELLE : StatutPaiement.NON_PAYEE;
     }
 
+    /** Taux de TVA de CETTE vente (fige a sa creation) superieur a 0. */
+    public boolean isTvaApplicable() {
+        return tauxTva != null && tauxTva.signum() > 0;
+    }
+
     public boolean isModifiable() {
         return statut == StatutVente.BROUILLON;
     }

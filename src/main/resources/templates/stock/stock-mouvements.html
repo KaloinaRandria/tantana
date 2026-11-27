@@ -23,28 +23,28 @@
             <div class="text-end">
                 <div class="small text-muted">Quantité</div>
                 <div class="fs-5 fw-semibold">
-                    <span th:text="${stock != null} ? ${stock.quantite.stripTrailingZeros().toPlainString()} : '0'">0</span>
+                    <span th:text="${stock != null} ? ${@nombres.qte(stock.quantite)} : '0'">0</span>
                     <small class="text-muted fs-6" th:text="${article.unite.libelle}">Pièce</small>
                 </div>
             </div>
             <div class="text-end">
                 <div class="small text-muted">Prix d'achat (CMUP)</div>
                 <div class="fs-5">
-                    <span th:text="${stock != null} ? ${#numbers.formatDecimal(stock.cmup, 1, 'WHITESPACE', 0, 'COMMA')} : '—'">0</span>
+                    <span th:text="${stock != null} ? ${#numbers.formatDecimal(stock.cmup, 1, 'WHITESPACE', 2, 'COMMA')} : '—'">0</span>
                     <small class="text-muted fs-6">MGA</small>
                 </div>
             </div>
             <div class="text-end">
                 <div class="small text-muted">Prix de revient</div>
                 <div class="fs-5 fw-semibold">
-                    <span th:text="${stock != null} ? ${#numbers.formatDecimal(stock.cmupRevient, 1, 'WHITESPACE', 0, 'COMMA')} : '—'">0</span>
+                    <span th:text="${stock != null} ? ${#numbers.formatDecimal(stock.cmupRevient, 1, 'WHITESPACE', 2, 'COMMA')} : '—'">0</span>
                     <small class="text-muted fs-6">MGA</small>
                 </div>
             </div>
             <div class="text-end">
                 <div class="small text-muted">Valeur au revient</div>
                 <div class="fs-5 fw-semibold">
-                    <span th:text="${stock != null} ? ${#numbers.formatDecimal(stock.valeurRevient, 1, 'WHITESPACE', 0, 'COMMA')} : '0'">0</span>
+                    <span th:text="${stock != null} ? ${#numbers.formatDecimal(stock.valeurRevient, 1, 'WHITESPACE', 2, 'COMMA')} : '0'">0</span>
                     <small class="text-muted fs-6">MGA</small>
                 </div>
             </div>
@@ -83,12 +83,12 @@
                         <span th:if="${m.reception == null and m.vente == null and m.avoir == null and m.inventaire == null}" th:text="${m.reference}">ref</span>
                     </td>
                     <td class="text-end fw-semibold" th:classappend="${m.type.sens > 0} ? 'text-success' : 'text-danger'"
-                        th:text="(${m.type.sens > 0} ? '+' : '−') + ${m.quantite.stripTrailingZeros().toPlainString()}">+10</td>
-                    <td class="text-end text-muted" th:text="${#numbers.formatDecimal(m.coutUnitaire, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
-                    <td class="text-end" th:text="${#numbers.formatDecimal(m.coutRevientUnitaire, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
-                    <td class="text-end" th:text="${m.quantiteApres.stripTrailingZeros().toPlainString()}">0</td>
-                    <td class="text-end text-muted" th:text="${#numbers.formatDecimal(m.cmupApres, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
-                    <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(m.cmupRevientApres, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                        th:text="(${m.type.sens > 0} ? '+' : '−') + ${@nombres.qte(m.quantite)}">+10</td>
+                    <td class="text-end text-muted" th:text="${#numbers.formatDecimal(m.coutUnitaire, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(m.coutRevientUnitaire, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
+                    <td class="text-end" th:text="${@nombres.qte(m.quantiteApres)}">0</td>
+                    <td class="text-end text-muted" th:text="${#numbers.formatDecimal(m.cmupApres, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
+                    <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(m.cmupRevientApres, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
                     <td class="small" th:text="${m.utilisateur.nomComplet}">Nom</td>
                 </tr>
                 </tbody>

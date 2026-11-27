@@ -119,7 +119,8 @@ public class FactureService {
         t.setWidthPercentage(100);
         t.setSpacingBefore(16);
         t.setHeaderRows(1);
-        for (String titre : new String[]{"Réf.", "Désignation", "Qté", "P.U. HT", "Remise", "Montant HT"}) {
+        String ht = v.isTvaApplicable() ? " HT" : "";
+        for (String titre : new String[]{"Réf.", "Désignation", "Qté", "P.U." + ht, "Remise", "Montant" + ht}) {
             PdfPCell h = new PdfPCell(new Phrase(titre, police(9, Font.BOLD, Color.WHITE)));
             h.setBackgroundColor(FOND_ENTETE);
             h.setPadding(5);
@@ -146,13 +147,19 @@ public class FactureService {
         PdfPTable t = new PdfPTable(new float[]{60, 22, 18});
         t.setWidthPercentage(100);
         t.setSpacingBefore(8);
+        boolean tva = v.isTvaApplicable();
         if (v.getTotalRemise().signum() > 0) {
-            ligneTotal(t, "Total brut HT", v.getTotalBrutHt(), false);
+            ligneTotal(t, tva ? "Total brut HT" : "Total brut", v.getTotalBrutHt(), false);
             ligneTotal(t, "Remises", v.getTotalRemise().negate(), false);
         }
-        ligneTotal(t, "Total HT", v.getTotalHt(), false);
-        ligneTotal(t, "TVA " + v.getTauxTva().stripTrailingZeros().toPlainString() + " %", v.getTotalTva(), false);
-        ligneTotal(t, "Total TTC (Ariary)", v.getTotalTtc(), true);
+        if (tva) {
+            ligneTotal(t, "Total HT", v.getTotalHt(), false);
+            ligneTotal(t, "TVA " + v.getTauxTva().stripTrailingZeros().toPlainString() + " %", v.getTotalTva(), false);
+            ligneTotal(t, "Total TTC (Ariary)", v.getTotalTtc(), true);
+        } else {
+            // TVA 0 % : entreprise non assujettie, ni TVA ni mention HT / TTC sur la facture
+            ligneTotal(t, "Total (Ariary)", v.getTotalTtc(), true);
+        }
         return t;
     }
 
@@ -235,10 +242,10 @@ public class FactureService {
         return valeur == null ? null : prefixe + valeur;
     }
 
-    /** 1234567 -> « 1 234 567 » (Ariary, sans decimales). */
+    /** 1234567 -> « 1 234 567,00 » (Ariary, 2 decimales). */
     private static String ariary(BigDecimal montant) {
         DecimalFormatSymbols symboles = new DecimalFormatSymbols(Locale.FRANCE);
         symboles.setGroupingSeparator(' ');
-        return new DecimalFormat("#,##0", symboles).format(montant);
+        return new DecimalFormat("#,##0.00", symboles).format(montant.setScale(2, java.math.RoundingMode.HALF_UP));
     }
 }

@@ -10,7 +10,7 @@
     const champPrix = form.querySelector('#prix');
     const champMotif = form.querySelector('#motif');
     const tva = parseFloat(champPrix.dataset.tva) || 0;
-    const fmt = new Intl.NumberFormat('fr-FR', {maximumFractionDigits: 0});
+    const fmt = new Intl.NumberFormat('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     let revient = null;
 
     function recalculer() {

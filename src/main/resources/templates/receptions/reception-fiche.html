@@ -104,13 +104,13 @@
                     <dl class="row mb-0">
                         <dt class="col-7 fw-normal text-muted">Marchandises reçues (prix × taux du jour)</dt>
                         <dd class="col-5 mb-1 text-end"
-                            th:text="${#numbers.formatDecimal(r.valeurMarchandisesMga, 1, 'WHITESPACE', 0, 'COMMA')}">0</dd>
+                            th:text="${#numbers.formatDecimal(r.valeurMarchandisesMga, 1, 'WHITESPACE', 2, 'COMMA')}">0</dd>
                         <dt class="col-7 fw-normal text-muted">Frais du transitaire</dt>
                         <dd class="col-5 mb-1 text-end"
-                            th:text="${#numbers.formatDecimal(r.totalFrais, 1, 'WHITESPACE', 0, 'COMMA')}">0</dd>
+                            th:text="${#numbers.formatDecimal(r.totalFrais, 1, 'WHITESPACE', 2, 'COMMA')}">0</dd>
                         <dt class="col-7">Total décaissé</dt>
                         <dd class="col-5 mb-1 text-end fw-semibold"
-                            th:text="${#numbers.formatDecimal(r.valeurMarchandisesMga + r.totalFrais, 1, 'WHITESPACE', 0, 'COMMA')}">0</dd>
+                            th:text="${#numbers.formatDecimal(r.valeurMarchandisesMga + r.totalFrais, 1, 'WHITESPACE', 2, 'COMMA')}">0</dd>
                     </dl>
                     <p class="text-muted mt-2 mb-0">Les frais sont répartis sur les articles reçus au prorata de leur valeur
                         pour calculer le prix de revient.</p>
@@ -146,16 +146,16 @@
                     <td><code th:text="${l.ligneCommande.article.reference}">ART</code>
                         <span th:text="${l.ligneCommande.article.designation}">Désignation</span></td>
                     <td class="text-end fw-semibold text-nowrap">
-                        <span th:text="${l.quantiteRecue.stripTrailingZeros().toPlainString()}">10</span>
+                        <span th:text="${@nombres.qte(l.quantiteRecue)}">10</span>
                         <small class="text-muted fw-normal" th:text="${l.ligneCommande.article.unite.libelle}">Pièce</small>
                     </td>
                     <td class="text-end" th:classappend="${l.quantiteRefusee.signum() > 0} ? 'text-danger fw-semibold'"
-                        th:text="${l.quantiteRefusee.stripTrailingZeros().toPlainString()}">0</td>
+                        th:text="${@nombres.qte(l.quantiteRefusee)}">0</td>
                     <td class="text-end" th:text="${#numbers.formatDecimal(l.ligneCommande.prixUnitaire, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
-                    <td class="text-end text-muted" th:text="${#numbers.formatDecimal(l.coutUnitaireMga, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
-                    <td class="text-end text-muted" th:text="${#numbers.formatDecimal(l.fraisUnitaire, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
-                    <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(l.coutRevientUnitaireMga, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
-                    <td class="text-end" th:text="${#numbers.formatDecimal(l.coutRevientUnitaireMga * l.quantiteRecue, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                    <td class="text-end text-muted" th:text="${#numbers.formatDecimal(l.coutUnitaireMga, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
+                    <td class="text-end text-muted" th:text="${#numbers.formatDecimal(l.fraisUnitaire, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
+                    <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(l.coutRevientUnitaireMga, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(l.coutRevientUnitaireMga * l.quantiteRecue, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
                     <td class="small" th:text="${l.commentaire}">commentaire</td>
                 </tr>
                 </tbody>
@@ -177,13 +177,13 @@
                     <td th:text="${f.type.libelle}">Type</td>
                     <td th:text="${f.referenceFacture}">ref</td>
                     <td class="small" th:text="${f.commentaire}">commentaire</td>
-                    <td class="text-end" th:text="${#numbers.formatDecimal(f.montant, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(f.montant, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
                 </tr>
                 </tbody>
                 <tfoot th:unless="${r.frais.empty}">
                 <tr class="fw-semibold">
                     <td colspan="3" class="text-end">Total</td>
-                    <td class="text-end" th:text="${#numbers.formatDecimal(r.totalFrais, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(r.totalFrais, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
                 </tr>
                 </tfoot>
             </table>

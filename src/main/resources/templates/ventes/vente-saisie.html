@@ -56,8 +56,8 @@
                     <i class="bi bi-plus-lg"></i> Ajouter un article</button>
             </div>
             <p class="small text-muted mb-3">
-                Prix catalogue HT. Remise autorisée sans contrôle : jusqu'à
-                <strong th:text="${parametre.remiseMaxVendeur.stripTrailingZeros().toPlainString()} + ' %'">10 %</strong>.
+                <span th:text="|Prix catalogue${ht}.|">Prix catalogue HT.</span> Remise autorisée sans contrôle : jusqu'à
+                <strong th:text="${@nombres.qte(parametre.remiseMaxVendeur)} + ' %'">10 %</strong>.
                 Au-delà, la vente sera contrôlée par un CHECKER avant facturation.
             </p>
 
@@ -69,10 +69,10 @@
                     <tr>
                         <th style="min-width:260px">Article</th>
                         <th class="text-end" style="width:110px">Stock</th>
-                        <th class="text-end" style="width:130px">Prix HT</th>
+                        <th class="text-end" style="width:130px" th:text="|Prix${ht}|">Prix HT</th>
                         <th class="text-end" style="width:120px">Quantité</th>
                         <th class="text-end" style="width:110px">Remise %</th>
-                        <th class="text-end" style="width:140px">Montant HT</th>
+                        <th class="text-end" style="width:140px" th:text="|Montant${ht}|">Montant HT</th>
                         <th style="width:50px"></th>
                     </tr>
                     </thead>
@@ -83,8 +83,9 @@
                                     th:classappend="${#fields.hasErrors('lignes[__${it.index}__].articleId')} ? 'is-invalid'">
                                 <option value="">— Choisir —</option>
                                 <option th:each="a : ${articles}" th:value="${a.id}"
-                                        th:attr="data-prix=${a.prixVenteHt}, data-stock=${stocks[a.id]}, data-unite=${a.unite.libelle},
-                                                data-detail='Stock ' + ${stocks[a.id] != null ? stocks[a.id].stripTrailingZeros().toPlainString() : '0'} + ' ' + ${a.unite.libelle} + ' · ' + ${#numbers.formatDecimal(a.prixVenteHt, 1, 'WHITESPACE', 0, 'COMMA')} + ' MGA HT'"
+                                        th:attr="data-prix=${a.prixVenteHt}, data-stock=${stocks[a.id]}, data-unite=${a.unite.libelle}"
+                                                th:with="stockAffiche=${stocks[a.id] != null} ? ${@nombres.qte(stocks[a.id])} : '0'"
+                                                th:data-detail="'Stock ' + ${stockAffiche} + ' ' + ${a.unite.libelle} + ' · ' + ${#numbers.formatDecimal(a.prixVenteHt, 1, 'WHITESPACE', 2, 'COMMA')} + ' MGA' + ${ht}"
                                         th:text="${a.reference} + ' — ' + ${a.designation}">Article</option>
                             </select>
                             <div class="invalid-feedback" th:errors="*{lignes[__${it.index}__].articleId}">Erreur</div>
@@ -111,11 +112,12 @@
                     </tr>
                     </tbody>
                     <tfoot>
-                    <tr><td colspan="5" class="text-end">Total HT</td>
+                    <!-- TVA 0 % : lignes HT et TVA masquees (gardees pour vente.js), seul le total reste -->
+                    <tr th:classappend="${tvaApplicable} ? '' : 'd-none'"><td colspan="5" class="text-end">Total HT</td>
                         <td class="text-end text-nowrap"><span id="total-ht">0</span> MGA</td><td></td></tr>
-                    <tr class="text-muted"><td colspan="5" class="text-end">TVA <span th:text="${parametre.tauxTva.stripTrailingZeros().toPlainString()}">20</span> %</td>
+                    <tr class="text-muted" th:classappend="${tvaApplicable} ? '' : 'd-none'"><td colspan="5" class="text-end">TVA <span th:text="${@nombres.qte(parametre.tauxTva)}">20</span> %</td>
                         <td class="text-end text-nowrap"><span id="total-tva">0</span> MGA</td><td></td></tr>
-                    <tr class="fw-semibold fs-6"><td colspan="5" class="text-end">Total TTC</td>
+                    <tr class="fw-semibold fs-6"><td colspan="5" class="text-end" th:text="|Total${ttc}|">Total TTC</td>
                         <td class="text-end text-nowrap"><span id="total-ttc">0</span> MGA</td><td></td></tr>
                     </tfoot>
                 </table>
@@ -145,8 +147,9 @@
             <select data-champ="articleId" class="form-select form-select-sm champ-article" data-recherche="Référence ou désignation">
                 <option value="">— Choisir —</option>
                 <option th:each="a : ${articles}" th:value="${a.id}"
-                        th:attr="data-prix=${a.prixVenteHt}, data-stock=${stocks[a.id]}, data-unite=${a.unite.libelle},
-                                                data-detail='Stock ' + ${stocks[a.id] != null ? stocks[a.id].stripTrailingZeros().toPlainString() : '0'} + ' ' + ${a.unite.libelle} + ' · ' + ${#numbers.formatDecimal(a.prixVenteHt, 1, 'WHITESPACE', 0, 'COMMA')} + ' MGA HT'"
+                        th:attr="data-prix=${a.prixVenteHt}, data-stock=${stocks[a.id]}, data-unite=${a.unite.libelle}"
+                                                th:with="stockAffiche=${stocks[a.id] != null} ? ${@nombres.qte(stocks[a.id])} : '0'"
+                                                th:data-detail="'Stock ' + ${stockAffiche} + ' ' + ${a.unite.libelle} + ' · ' + ${#numbers.formatDecimal(a.prixVenteHt, 1, 'WHITESPACE', 2, 'COMMA')} + ' MGA' + ${ht}"
                         th:text="${a.reference} + ' — ' + ${a.designation}">Article</option>
             </select>
         </td>

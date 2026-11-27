@@ -11,8 +11,8 @@
     const modele = document.getElementById('modele-ligne');
     const tva = parseFloat(form.dataset.tva) || 0;
     const remiseMax = parseFloat(form.dataset.remiseMax) || 0;
-    const fmt = new Intl.NumberFormat('fr-FR', {maximumFractionDigits: 0});
-    const fmtQte = new Intl.NumberFormat('fr-FR', {maximumFractionDigits: 3});
+    const fmt = new Intl.NumberFormat('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const fmtQte = new Intl.NumberFormat('fr-FR', {maximumFractionDigits: 2});
     const nombre = (c) => { const v = parseFloat(c && c.value); return isNaN(v) ? 0 : v; };
 
     function renumeroter() {

@@ -15,13 +15,14 @@
 function dessiner(d) {
 
     const COULEURS = {serie1: '#2a78d6', serie2: '#eb6834', grille: '#e8ebf0', axe: '#d3d8e0', texte: '#475569', muet: '#8590a2'};
-    const fmt = new Intl.NumberFormat('fr-FR', {maximumFractionDigits: 0});
+    const fmt = new Intl.NumberFormat('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const fmtAxe = new Intl.NumberFormat('fr-FR', {maximumFractionDigits: 0}); // graduations des axes
     const compact = (v) => {
         const a = Math.abs(v);
         if (a >= 1e9) return (v / 1e9).toLocaleString('fr-FR', {maximumFractionDigits: 1}) + ' Md';
         if (a >= 1e6) return (v / 1e6).toLocaleString('fr-FR', {maximumFractionDigits: 1}) + ' M';
         if (a >= 1e3) return (v / 1e3).toLocaleString('fr-FR', {maximumFractionDigits: 0}) + ' k';
-        return fmt.format(v);
+        return fmtAxe.format(v);
     };
     const nombre = (v) => Number(v) || 0;
 

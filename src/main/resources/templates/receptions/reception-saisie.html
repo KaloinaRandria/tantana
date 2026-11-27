@@ -99,8 +99,8 @@
                             <code th:text="${l.reference}">ART</code> <span th:text="${l.designation}">Désignation</span>
                             <div class="small text-muted" th:text="${l.unite}">Pièce</div>
                         </td>
-                        <td class="text-end" th:text="${l.quantiteCommandee?.stripTrailingZeros()?.toPlainString()}">10</td>
-                        <td class="text-end fw-semibold" th:text="${l.quantiteRestante?.stripTrailingZeros()?.toPlainString()}">10</td>
+                        <td class="text-end" th:text="${@nombres.qte(l.quantiteCommandee)}">10</td>
+                        <td class="text-end fw-semibold" th:text="${@nombres.qte(l.quantiteRestante)}">10</td>
                         <td>
                             <input type="number" step="0.001" min="0" th:max="${l.quantiteRestante}"
                                    th:field="*{lignes[__${it.index}__].quantiteRecue}" class="form-control form-control-sm text-end"

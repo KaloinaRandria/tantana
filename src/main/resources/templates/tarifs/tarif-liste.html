@@ -16,8 +16,8 @@
         <i class="bi bi-info-circle"></i>
         <strong>Prix d'achat</strong> = prix fournisseur × taux du jour (moyenne pondérée).
         <strong>Prix de revient</strong> = prix d'achat + frais du transitaire répartis.
-        <strong>Marge</strong> = prix de vente HT − prix de revient, en % du prix de vente.
-        Les prix sont hors taxe ; TVA actuelle : <strong th:text="${#numbers.formatDecimal(parametre.tauxTva, 1, 0)} + ' %'">20 %</strong>.
+        <strong>Marge</strong> = prix de vente<th:block th:text="${ht}"> HT</th:block> − prix de revient, en % du prix de vente.
+        <th:block th:if="${tvaApplicable}">Les prix sont hors taxe ; TVA actuelle : <strong th:text="${#numbers.formatDecimal(parametre.tauxTva, 1, 0)} + ' %'">20 %</strong>.</th:block>
     </div>
 
     <form th:action="@{/tarifs}" method="get" class="row g-2 mb-3">
@@ -39,8 +39,8 @@
                     <th class="text-end">En stock</th>
                     <th class="text-end">Prix d'achat</th>
                     <th class="text-end">Prix de revient</th>
-                    <th class="text-end">Prix de vente HT</th>
-                    <th class="text-end">Prix TTC</th>
+                    <th class="text-end" th:text="|Prix de vente${ht}|">Prix de vente HT</th>
+                    <th class="text-end" th:if="${tvaApplicable}">Prix TTC</th>
                     <th class="text-end">Marge</th>
                     <th class="text-end">Actions</th>
                 </tr>
@@ -55,23 +55,23 @@
                         <span th:text="${t.article.designation}">Désignation</span>
                     </td>
                     <td class="text-end text-nowrap">
-                        <span th:text="${t.quantite.stripTrailingZeros().toPlainString()}">0</span>
+                        <span th:text="${@nombres.qte(t.quantite)}">0</span>
                         <small class="text-muted" th:text="${t.article.unite.libelle}">Pièce</small>
                     </td>
                     <td class="text-end text-muted"
-                        th:text="${t.prixAchat != null} ? ${#numbers.formatDecimal(t.prixAchat, 1, 'WHITESPACE', 0, 'COMMA')} : '—'">0</td>
+                        th:text="${t.prixAchat != null} ? ${#numbers.formatDecimal(t.prixAchat, 1, 'WHITESPACE', 2, 'COMMA')} : '—'">0</td>
                     <td class="text-end"
-                        th:text="${t.prixRevient != null} ? ${#numbers.formatDecimal(t.prixRevient, 1, 'WHITESPACE', 0, 'COMMA')} : '—'">0</td>
+                        th:text="${t.prixRevient != null} ? ${#numbers.formatDecimal(t.prixRevient, 1, 'WHITESPACE', 2, 'COMMA')} : '—'">0</td>
                     <td class="text-end fw-semibold">
-                        <span th:if="${t.prixVente != null}" th:text="${#numbers.formatDecimal(t.prixVente, 1, 'WHITESPACE', 0, 'COMMA')}">0</span>
+                        <span th:if="${t.prixVente != null}" th:text="${#numbers.formatDecimal(t.prixVente, 1, 'WHITESPACE', 2, 'COMMA')}">0</span>
                         <span th:if="${t.prixVente == null}" class="badge text-bg-warning">À fixer</span>
                     </td>
-                    <td class="text-end text-muted"
-                        th:text="${t.prixVente != null} ? ${#numbers.formatDecimal(t.prixVente * (100 + parametre.tauxTva) / 100, 1, 'WHITESPACE', 0, 'COMMA')} : '—'">0</td>
+                    <td class="text-end text-muted" th:if="${tvaApplicable}"
+                        th:text="${t.prixVente != null} ? ${#numbers.formatDecimal(t.prixVente * (100 + parametre.tauxTva) / 100, 1, 'WHITESPACE', 2, 'COMMA')} : '—'">0</td>
                     <td class="text-end text-nowrap">
                         <th:block th:if="${t.marge != null}">
                             <span th:classappend="${t.sousRevient} ? 'text-danger fw-semibold' : 'text-success'"
-                                  th:text="${#numbers.formatDecimal(t.marge, 1, 'WHITESPACE', 0, 'COMMA')}">0</span>
+                                  th:text="${#numbers.formatDecimal(t.marge, 1, 'WHITESPACE', 2, 'COMMA')}">0</span>
                             <small class="text-muted" th:text="'(' + ${t.tauxMarque} + ' %)'">(0 %)</small>
                             <i th:if="${t.sousRevient}" class="bi bi-exclamation-triangle-fill text-danger" title="Vente à perte"></i>
                         </th:block>
@@ -110,13 +110,13 @@
                     <p class="fw-semibold mb-3" data-role="article">Article</p>
                     <div class="row g-2 small text-muted mb-3">
                         <div class="col-6">Prix de revient : <strong data-role="revient">—</strong> MGA</div>
-                        <div class="col-6">TVA : <span th:text="${#numbers.formatDecimal(parametre.tauxTva, 1, 0)}">20</span> %</div>
+                        <div class="col-6" th:if="${tvaApplicable}">TVA : <span th:text="${#numbers.formatDecimal(parametre.tauxTva, 1, 0)}">20</span> %</div>
                     </div>
-                    <label for="prix" class="form-label">Nouveau prix de vente HT (MGA) <span class="text-danger">*</span></label>
+                    <label for="prix" class="form-label"><span th:text="|Nouveau prix de vente${ht} (MGA)|">Nouveau prix de vente HT (MGA)</span> <span class="text-danger">*</span></label>
                     <input type="number" step="1" min="0" class="form-control text-end" id="prix" name="prix" required
                            th:attr="data-tva=${parametre.tauxTva}">
                     <div class="d-flex justify-content-between small mt-1">
-                        <span>TTC : <strong data-role="ttc">—</strong> MGA</span>
+                        <span th:classappend="${tvaApplicable} ? '' : 'invisible'">TTC : <strong data-role="ttc">—</strong> MGA</span>
                         <span>Marge : <strong data-role="marge">—</strong></span>
                     </div>
                     <div class="alert alert-danger py-2 small mt-2 d-none" data-role="alerte-perte">

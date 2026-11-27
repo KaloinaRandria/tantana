@@ -119,10 +119,10 @@
                               th:classappend="${a.classe == 'A'} ? 'text-bg-primary' : (${a.classe == 'B'} ? 'text-bg-info' : 'text-bg-light border')">A</span>
                     </td>
                     <td class="text-end text-nowrap">
-                        <span th:text="${a.quantite.stripTrailingZeros().toPlainString()}">0</span>
+                        <span th:text="${@nombres.qte(a.quantite)}">0</span>
                         <small class="text-muted" th:text="${a.unite}">Pièce</small>
                     </td>
-                    <td class="text-end" th:text="${#numbers.formatDecimal(a.valeur, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(a.valeur, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
                 </tr>
                 </tbody>
             </table>

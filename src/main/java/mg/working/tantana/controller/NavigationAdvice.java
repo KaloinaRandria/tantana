@@ -3,9 +3,11 @@ package mg.working.tantana.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import mg.working.tantana.service.InventaireService;
+import mg.working.tantana.service.ParametreService;
 import mg.working.tantana.service.ReceptionService;
 import mg.working.tantana.service.UtilisateurService;
 import mg.working.tantana.service.VenteService;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
@@ -25,6 +27,20 @@ public class NavigationAdvice {
     private final InventaireService inventaireService;
     private final VenteService venteService;
     private final UtilisateurService utilisateurService;
+    private final ParametreService parametreService;
+
+    /**
+     * TVA a 0 % (PME non assujettie) : les ecrans de vente n'affichent ni TVA ni mentions HT / TTC.
+     * tvaApplicable, ht (" HT" ou "") et ttc (" TTC" ou "") servent dans les libelles des pages.
+     * Les pages d'une vente precise redefinissent ht / ttc selon le taux de CETTE vente.
+     */
+    @ModelAttribute
+    public void tva(Model model) {
+        boolean applicable = parametreService.obtenir().isTvaApplicable();
+        model.addAttribute("tvaApplicable", applicable);
+        model.addAttribute("ht", applicable ? " HT" : "");
+        model.addAttribute("ttc", applicable ? " TTC" : "");
+    }
 
     /** URL courante, pour surligner le lien actif du sidebar. */
     @ModelAttribute("urlCourante")

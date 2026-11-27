@@ -168,7 +168,7 @@ public class VenteController {
         try {
             Avoir avoir = avoirService.creer(id, form, principal.getName());
             redirect.addFlashAttribute("succes", "Avoir " + avoir.getNumero() + " émis pour "
-                    + Montants.ariary(avoir.getTotalTtc()) + " TTC.");
+                    + Montants.ariary(avoir.getTotalTtc()) + (avoir.getTauxTva().signum() > 0 ? " TTC." : "."));
             return "redirect:/ventes/" + id;
         } catch (RegleMetierException e) {
             return afficherAvoir(venteService.trouverAvecDetails(id), form, e.getMessage(), model);

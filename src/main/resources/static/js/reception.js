@@ -8,7 +8,7 @@
 
     const corps = form.querySelector('#table-frais tbody');
     const modele = document.getElementById('modele-frais');
-    const format = new Intl.NumberFormat('fr-FR', {maximumFractionDigits: 2});
+    const format = new Intl.NumberFormat('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
     function renumeroter() {
         corps.querySelectorAll('tr.frais').forEach((tr, i) => {

@@ -55,7 +55,7 @@
                     <th>Date</th>
                     <th>Client</th>
                     <th>Vendeur</th>
-                    <th class="text-end">Total TTC</th>
+                    <th class="text-end" th:text="|Total${ttc}|">Total TTC</th>
                     <th class="text-end">Reste à payer</th>
                     <th>Statut</th>
                     <th></th>
@@ -72,11 +72,11 @@
                     <td th:text="${v.client.nom}">Client</td>
                     <td class="small" th:text="${v.vendeur.nomComplet}">Vendeur</td>
                     <td class="text-end text-nowrap fw-semibold"
-                        th:text="${#numbers.formatDecimal(v.totalTtc, 1, 'WHITESPACE', 0, 'COMMA')} + ' MGA'">0</td>
+                        th:text="${#numbers.formatDecimal(v.totalTtc, 1, 'WHITESPACE', 2, 'COMMA')} + ' MGA'">0</td>
                     <td class="text-end text-nowrap">
                         <th:block th:if="${v.numero != null}">
                             <span th:if="${v.resteAPayer.signum() > 0}" class="text-danger"
-                                  th:text="${#numbers.formatDecimal(v.resteAPayer, 1, 'WHITESPACE', 0, 'COMMA')}">0</span>
+                                  th:text="${#numbers.formatDecimal(v.resteAPayer, 1, 'WHITESPACE', 2, 'COMMA')}">0</span>
                             <span th:unless="${v.resteAPayer.signum() > 0}" class="badge"
                                   th:classappend="'text-bg-' + ${v.statutPaiement.couleur}" th:text="${v.statutPaiement.libelle}">Payée</span>
                         </th:block>

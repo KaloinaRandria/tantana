@@ -79,6 +79,11 @@ public class Parametre {
     @Version
     private Long version;
 
+    /** TVA 0 % : entreprise non assujettie (ex. PME a l'impot synthetique) -> pas de TVA ni de HT/TTC affiches. */
+    public boolean isTvaApplicable() {
+        return tauxTva != null && tauxTva.signum() > 0;
+    }
+
     @PreUpdate
     void avantMiseAJour() {
         dateModification = LocalDateTime.now();

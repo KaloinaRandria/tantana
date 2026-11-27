@@ -73,7 +73,7 @@
                         <div class="invalid-feedback" th:errors="*{stat}">Erreur</div>
                     </div>
                     <div class="col-md-6">
-                        <label for="plafondCredit" class="form-label">Plafond de crédit (MGA TTC) <span class="text-danger">*</span></label>
+                        <label for="plafondCredit" class="form-label"><span th:text="|Plafond de crédit (MGA${ttc})|">Plafond de crédit (MGA TTC)</span> <span class="text-danger">*</span></label>
                         <input type="number" step="1" min="0" th:field="*{plafondCredit}" class="form-control text-end"
                                th:classappend="${#fields.hasErrors('plafondCredit')} ? 'is-invalid'">
                         <div class="invalid-feedback" th:errors="*{plafondCredit}">Erreur</div>

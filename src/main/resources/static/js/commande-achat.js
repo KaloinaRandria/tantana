@@ -15,7 +15,7 @@
     const champTaux = form.querySelector('#tauxChange');
 
     const formatDevise = new Intl.NumberFormat('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    const formatAriary = new Intl.NumberFormat('fr-FR', {maximumFractionDigits: 0});
+    const formatAriary = new Intl.NumberFormat('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
     const nombre = (champ) => {
         const v = parseFloat(champ && champ.value);

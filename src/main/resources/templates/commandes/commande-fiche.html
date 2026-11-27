@@ -123,13 +123,13 @@
                         <span th:unless="${l.article.actif}" class="badge text-bg-secondary ms-1">désactivé</span>
                     </td>
                     <td class="text-end text-nowrap">
-                        <span th:text="${l.quantiteCommandee.stripTrailingZeros().toPlainString()}">10</span>
+                        <span th:text="${@nombres.qte(l.quantiteCommandee)}">10</span>
                         <small class="text-muted" th:text="${l.article.unite.libelle}">Pièce</small>
                     </td>
-                    <td class="text-end" th:text="${l.quantiteRecue.stripTrailingZeros().toPlainString()}">0</td>
+                    <td class="text-end" th:text="${@nombres.qte(l.quantiteRecue)}">0</td>
                     <td class="text-end"
                         th:classappend="${l.quantiteRestante.signum() > 0 and c.statut.estEnAttente()} ? 'fw-semibold text-warning-emphasis'"
-                        th:text="${l.quantiteRestante.stripTrailingZeros().toPlainString()}">10</td>
+                        th:text="${@nombres.qte(l.quantiteRestante)}">10</td>
                     <td class="text-end text-nowrap"
                         th:text="${#numbers.formatDecimal(l.prixUnitaire, 1, 'WHITESPACE', 2, 'COMMA')}">0,00</td>
                     <td class="text-end text-nowrap"
@@ -147,7 +147,7 @@
                 <tr class="small text-muted">
                     <td colspan="5" class="text-end">Estimation en Ariary (au taux de la commande)</td>
                     <td class="text-end text-nowrap">
-                        <span th:text="${#numbers.formatDecimal(c.montantTotalMga, 1, 'WHITESPACE', 0, 'COMMA')}">0</span> MGA
+                        <span th:text="${#numbers.formatDecimal(c.montantTotalMga, 1, 'WHITESPACE', 2, 'COMMA')}">0</span> MGA
                     </td>
                 </tr>
                 </tfoot>

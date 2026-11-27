@@ -17,7 +17,7 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
         <h2 class="h5 mb-0" th:text="${article.designation}">Désignation</h2>
         <div>Prix actuel :
-            <strong th:text="${article.prixVenteHt != null} ? ${#numbers.formatDecimal(article.prixVenteHt, 1, 'WHITESPACE', 0, 'COMMA')} + ' MGA HT' : 'non fixé'">0</strong>
+            <strong th:text="${article.prixVenteHt != null} ? ${#numbers.formatDecimal(article.prixVenteHt, 1, 'WHITESPACE', 2, 'COMMA')} + ' MGA' + ${ht} : 'non fixé'">0</strong>
         </div>
     </div>
 
@@ -41,10 +41,10 @@
                 <tr th:each="h : ${historique}">
                     <td class="text-nowrap" th:text="${#temporals.format(h.dateModification, 'dd/MM/yyyy HH:mm')}">date</td>
                     <td class="text-end text-muted"
-                        th:text="${h.ancienPrix != null} ? ${#numbers.formatDecimal(h.ancienPrix, 1, 'WHITESPACE', 0, 'COMMA')} : '—'">0</td>
-                    <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(h.nouveauPrix, 1, 'WHITESPACE', 0, 'COMMA')}">0</td>
+                        th:text="${h.ancienPrix != null} ? ${#numbers.formatDecimal(h.ancienPrix, 1, 'WHITESPACE', 2, 'COMMA')} : '—'">0</td>
+                    <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(h.nouveauPrix, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
                     <td class="text-end"
-                        th:text="${h.cmupRevient != null} ? ${#numbers.formatDecimal(h.cmupRevient, 1, 'WHITESPACE', 0, 'COMMA')} : '—'">0</td>
+                        th:text="${h.cmupRevient != null} ? ${#numbers.formatDecimal(h.cmupRevient, 1, 'WHITESPACE', 2, 'COMMA')} : '—'">0</td>
                     <td class="small" th:text="${h.motif}">motif</td>
                     <td class="small" th:text="${h.modifiePar.nomComplet}">Nom</td>
                 </tr>
