@@ -85,12 +85,12 @@ public class ReceptionService {
 
         ReceptionForm form = new ReceptionForm();
         form.setCommandeId(commande.getId());
-        form.setTauxChange(commande.getTauxChange());
+        form.setTauxChange(Nombres.sansZeros(commande.getTauxChange()));
         for (LigneCommandeAchat lc : commande.getLignes()) {
             if (lc.getQuantiteRestante().signum() > 0) {
                 LigneReceptionForm l = new LigneReceptionForm();
                 l.setLigneCommandeId(lc.getId());
-                l.setQuantiteRecue(lc.getQuantiteRestante());
+                l.setQuantiteRecue(Nombres.sansZeros(lc.getQuantiteRestante()));
                 form.getLignes().add(l);
             }
         }
@@ -107,7 +107,7 @@ public class ReceptionService {
         form.setCommandeId(reception.getCommande().getId());
         form.setTransitaireId(reception.getTransitaire().getId());
         form.setDateReception(reception.getDateReception());
-        form.setTauxChange(reception.getTauxChange());
+        form.setTauxChange(Nombres.sansZeros(reception.getTauxChange()));
         form.setObservations(reception.getObservations());
 
         Map<Long, LigneReception> saisies = reception.getLignes().stream()
@@ -120,14 +120,14 @@ public class ReceptionService {
             LigneReceptionForm l = new LigneReceptionForm();
             l.setLigneCommandeId(lc.getId());
             if (existante != null) {
-                l.setQuantiteRecue(existante.getQuantiteRecue());
-                l.setQuantiteRefusee(existante.getQuantiteRefusee());
+                l.setQuantiteRecue(Nombres.sansZeros(existante.getQuantiteRecue()));
+                l.setQuantiteRefusee(Nombres.sansZeros(existante.getQuantiteRefusee()));
                 l.setCommentaire(existante.getCommentaire());
             }
             form.getLignes().add(l);
         }
         reception.getFrais().forEach(f -> form.getFrais().add(new FraisReceptionForm(
-                f.getType(), f.getMontant(), f.getReferenceFacture(), f.getCommentaire())));
+                f.getType(), Nombres.sansZeros(f.getMontant()), f.getReferenceFacture(), f.getCommentaire())));
         completerAffichage(form, reception.getCommande());
         return form;
     }

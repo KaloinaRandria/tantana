@@ -87,7 +87,8 @@ public class VenteService {
         form.setClientId(vente.getClient().getId());
         form.setObservations(vente.getObservations());
         vente.getLignes().forEach(l -> form.getLignes().add(
-                new LigneVenteForm(l.getArticle().getId(), l.getQuantite(), l.getRemisePct())));
+                new LigneVenteForm(l.getArticle().getId(),
+                        Nombres.sansZeros(l.getQuantite()), Nombres.sansZeros(l.getRemisePct()))));
         return form;
     }
 

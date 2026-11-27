@@ -74,10 +74,11 @@ public class CommandeAchatService {
         form.setDateCommande(commande.getDateCommande());
         form.setDateArriveePrevue(commande.getDateArriveePrevue());
         form.setDevise(commande.getDevise());
-        form.setTauxChange(commande.getTauxChange());
+        form.setTauxChange(Nombres.sansZeros(commande.getTauxChange()));
         form.setObservations(commande.getObservations());
         form.setLignes(commande.getLignes().stream()
-                .map(l -> new LigneCommandeForm(l.getArticle().getId(), l.getQuantiteCommandee(), l.getPrixUnitaire()))
+                .map(l -> new LigneCommandeForm(l.getArticle().getId(),
+                        Nombres.sansZeros(l.getQuantiteCommandee()), Nombres.sansZeros(l.getPrixUnitaire())))
                 .collect(Collectors.toList()));
         return form;
     }

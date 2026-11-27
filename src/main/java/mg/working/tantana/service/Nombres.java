@@ -26,4 +26,12 @@ public class Nombres {
         symboles.setDecimalSeparator(',');
         return new DecimalFormat("#,##0.##", symboles).format(valeur.setScale(2, RoundingMode.HALF_UP));
     }
+
+    /**
+     * Valeur pre-remplie dans un champ de saisie : zeros inutiles retires (20.000 -> 20,
+     * 615.920000 -> 615.92), SANS arrondi : un formulaire renvoye tel quel garde la valeur exacte.
+     */
+    public static BigDecimal sansZeros(BigDecimal valeur) {
+        return valeur == null ? null : new BigDecimal(valeur.stripTrailingZeros().toPlainString());
+    }
 }
