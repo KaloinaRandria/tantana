@@ -24,6 +24,7 @@
     };
 
     let formulaireEnAttente = null;
+    let boutonEnvoi = null; // bouton qui a declenche l'envoi (son name/value doit partir avec le formulaire)
 
     document.addEventListener('submit', (e) => {
         const form = e.target;
@@ -34,6 +35,7 @@
         }
         e.preventDefault();
         formulaireEnAttente = form;
+        boutonEnvoi = e.submitter || null;
 
         const style = form.dataset.confirmationStyle || 'primary';
         titre.textContent = form.dataset.confirmationTitre || 'Confirmation';
@@ -47,16 +49,29 @@
     bouton.addEventListener('click', () => {
         if (!formulaireEnAttente) return;
         const form = formulaireEnAttente;
+        const envoi = boutonEnvoi;
         formulaireEnAttente = null;
-        bouton.disabled = true; // evite le double envoi
+        boutonEnvoi = null;
         form.dataset.confirme = 'oui';
-        modal.hide();
-        form.requestSubmit ? form.requestSubmit() : form.submit();
+        // la fenetre reste ouverte avec une roue sur « Confirmer » jusqu'au changement de page
+        if (window.TantanaLoader) {
+            window.TantanaLoader.activer(bouton);
+        } else {
+            bouton.disabled = true; // evite le double envoi
+        }
+        fenetre.querySelectorAll('[data-bs-dismiss="modal"]').forEach((b) => { b.disabled = true; });
+        if (form.requestSubmit) {
+            form.requestSubmit(envoi && envoi.form === form ? envoi : undefined);
+        } else {
+            form.submit();
+        }
     });
 
     fenetre.addEventListener('hidden.bs.modal', () => {
         formulaireEnAttente = null;
+        boutonEnvoi = null;
         bouton.disabled = false;
+        fenetre.querySelectorAll('[data-bs-dismiss="modal"]').forEach((b) => { b.disabled = false; });
     });
 
     // Focus sur le bouton de confirmation a l'ouverture (validation au clavier avec Entree)

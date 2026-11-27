@@ -6,6 +6,12 @@
  *  - Lien en forme de bouton (<a class="btn">) -> meme roue pendant le changement de page.
  *  - Toute navigation   -> fine barre de progression en haut de l'ecran.
  *
+ * Texte pendant le chargement : attribut data-texte-chargement="Connexion..." sur le bouton
+ * (sinon le libelle reste et la roue remplace les icones).
+ *
+ * Fenetres modales : une fenetre dont un bouton est en cours de chargement reste ouverte
+ * (le bouton et sa roue restent visibles jusqu'au changement de page).
+ *
  * Exclusions : boutons qui ouvrent une fenetre / un menu (data-bs-toggle), liens vers un
  * nouvel onglet (target=_blank, ex. facture PDF), ancres (#), et tout element marque
  * data-sans-loader.
@@ -31,14 +37,16 @@
         bouton.dataset.contenuInitial = bouton.innerHTML;
         // largeur figee : le bouton ne « saute » pas quand son contenu change
         bouton.style.minWidth = bouton.offsetWidth + 'px';
-        const icone = bouton.querySelector('i.bi');
-        if (icone) {
-            icone.outerHTML = ROUE;          // la roue remplace l'icone, le libelle reste
-        } else if (bouton.textContent.trim()) {
-            bouton.insertAdjacentHTML('afterbegin', ROUE);
+        const texte = bouton.dataset.texteChargement;
+        if (texte) {
+            bouton.textContent = ' ' + texte;
         } else {
-            bouton.innerHTML = ROUE;
+            // les icones sont retirees, le libelle reste
+            bouton.querySelectorAll('i.bi').forEach((i) => i.remove());
+            bouton.innerHTML = bouton.innerHTML.trim();
+            if (bouton.textContent.trim()) bouton.insertAdjacentText('afterbegin', ' ');
         }
+        bouton.insertAdjacentHTML('afterbegin', ROUE); // la roue toujours en tete, bien visible
         bouton.classList.add('en-cours');
         bouton.setAttribute('aria-busy', 'true');
         if (bouton.tagName === 'BUTTON') {
@@ -55,8 +63,18 @@
             b.style.minWidth = '';
             if (b.tagName === 'BUTTON') b.disabled = false;
         });
+        document.querySelectorAll('.modal [data-bs-dismiss="modal"]:disabled').forEach((x) => { x.disabled = false; });
         if (barre) barre.classList.remove('actif');
+        // fenetres restees ouvertes pendant le chargement
+        if (typeof bootstrap !== 'undefined') {
+            document.querySelectorAll('.modal.show').forEach((m) => bootstrap.Modal.getInstance(m)?.hide());
+        }
     }
+
+    // Une fenetre modale ne se ferme pas (Echap, clic a cote, Annuler) pendant un envoi
+    document.addEventListener('hide.bs.modal', (e) => {
+        if (e.target.querySelector('.btn.en-cours')) e.preventDefault();
+    });
 
     // ----- Formulaires -----
     document.addEventListener('submit', (e) => {
@@ -65,8 +83,10 @@
         if (form.target === '_blank') return;
         const bouton = e.submitter && e.submitter.classList.contains('btn') ? e.submitter
             : form.querySelector('button[type="submit"].btn, button:not([type]).btn');
-        // les fenetres modales se referment proprement avant le changement de page
         activer(bouton);
+        // dans une fenetre modale : Annuler / croix desactives pendant l'envoi
+        const fenetre = form.closest('.modal');
+        if (fenetre) fenetre.querySelectorAll('[data-bs-dismiss="modal"]').forEach((x) => { x.disabled = true; });
         demarrerBarre();
     });
 
@@ -83,6 +103,9 @@
         if (lien.classList.contains('btn')) activer(lien);
         demarrerBarre();
     });
+
+    // Utilise par confirmation.js (bouton « Confirmer » de la fenetre commune)
+    window.TantanaLoader = { activer, demarrerBarre };
 
     // Retour arriere du navigateur (page restauree depuis le cache) : on remet les boutons a zero
     window.addEventListener('pageshow', (e) => { if (e.persisted) reinitialiser(); });
