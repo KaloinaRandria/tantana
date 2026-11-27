@@ -1,20 +1,21 @@
 package mg.working.tantana.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-/** Devises d'achat (code ISO 4217). Le stock est toujours valorise en MGA. */
+/** Devise d'achat (code ISO 4217). Le stock est toujours valorise dans la monnaie locale. */
+@Entity
+@Table(name = "devise")
 @Getter
-@RequiredArgsConstructor
-public enum Devise {
-    USD("Dollar américain"),
-    EUR("Euro"),
-    CNY("Yuan chinois"),
-    AED("Dirham des Émirats"),
-    INR("Roupie indienne"),
-    JPY("Yen japonais"),
-    ZAR("Rand sud-africain"),
-    MGA("Ariary malgache");
+@Setter
+@NoArgsConstructor
+public class Devise extends ReferentielModifiable {
 
-    private final String libelle;
+    /** Monnaie de valorisation du stock (Ariary) : taux de change force a 1. Une seule. */
+    @Column(name = "monnaie_locale", nullable = false)
+    private boolean monnaieLocale;
 }

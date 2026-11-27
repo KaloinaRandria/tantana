@@ -1,18 +1,43 @@
 package mg.working.tantana.entity;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
 /** Nature d'un mouvement de stock ; le signe indique le sens (+1 entree, -1 sortie). */
-@Getter
-@RequiredArgsConstructor
-public enum TypeMouvement {
-    ENTREE_ACHAT("Entrée (réception achat)", 1),
-    SORTIE_VENTE("Sortie (vente)", -1),
-    RETOUR_VENTE("Retour client (avoir)", 1),
-    AJUSTEMENT_POSITIF("Ajustement +", 1),
-    AJUSTEMENT_NEGATIF("Ajustement −", -1);
+public enum TypeMouvement implements ValeurSysteme {
+    ENTREE_ACHAT(1, 1),
+    SORTIE_VENTE(2, -1),
+    RETOUR_VENTE(3, 1),
+    AJUSTEMENT_POSITIF(4, 1),
+    AJUSTEMENT_NEGATIF(5, -1);
 
-    private final String libelle;
+    private final short id;
+    /** +1 entree, -1 sortie : fige, utilise par les calculs. */
     private final int sens;
+
+    TypeMouvement(int id, int sens) {
+        this.id = (short) id;
+        this.sens = sens;
+    }
+
+    @Override
+    public short getId() {
+        return id;
+    }
+
+    @Override
+    public String getTable() {
+        return "type_mouvement";
+    }
+
+    /** Libelle affiche (table type_mouvement). */
+    public String getLibelle() {
+        return LibellesSysteme.libelle(this);
+    }
+
+    /** Couleur Bootstrap du badge (text-bg-...). */
+    public String getCouleur() {
+        return LibellesSysteme.couleur(this);
+    }
+
+    public int getSens() {
+        return sens;
+    }
 }

@@ -35,12 +35,13 @@
                         <div class="invalid-feedback" th:errors="*{designation}">Erreur</div>
                     </div>
                     <div class="col-md-4">
-                        <label for="unite" class="form-label">Unité de stock <span class="text-danger">*</span></label>
-                        <select th:field="*{unite}" class="form-select"
-                                th:classappend="${#fields.hasErrors('unite')} ? 'is-invalid'">
-                            <option th:each="u : ${unites}" th:value="${u}" th:text="${u.libelle}">Pièce</option>
+                        <label for="unite.id" class="form-label">Unité de stock <span class="text-danger">*</span></label>
+                        <select th:field="*{unite.id}" class="form-select"
+                                th:classappend="${#fields.hasErrors('unite.id')} ? 'is-invalid'">
+                            <option th:each="u : ${unites}" th:value="${u.id}"
+                                    th:text="${u.libelle} + (${u.actif} ? '' : ' (désactivée)')">Pièce</option>
                         </select>
-                        <div class="invalid-feedback" th:errors="*{unite}">Erreur</div>
+                        <div class="invalid-feedback" th:errors="*{unite.id}">Erreur</div>
                     </div>
                     <div class="col-12">
                         <label for="description" class="form-label">Description</label>

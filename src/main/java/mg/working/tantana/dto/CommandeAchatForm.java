@@ -7,7 +7,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-import mg.working.tantana.entity.Devise;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
@@ -41,7 +40,7 @@ public class CommandeAchatForm {
     private LocalDate dateArriveePrevue;
 
     @NotNull(message = "Choisissez une devise")
-    private Devise devise;
+    private Short deviseId;
 
     @NotNull(message = "Taux obligatoire")
     @DecimalMin(value = "0", inclusive = false, message = "Doit être supérieur à 0")

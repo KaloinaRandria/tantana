@@ -2,11 +2,12 @@ package mg.working.tantana.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -39,10 +40,11 @@ public class Article {
     @Column(nullable = false, length = 200)
     private String designation;
 
+    /** Unite de stock (article.unite_id -> unite.id). */
     @NotNull(message = "L'unité est obligatoire")
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private Unite unite = Unite.PIECE;
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "unite_id", nullable = false)
+    private Unite unite;
 
     @Size(max = 2000, message = "2000 caractères maximum")
     @Column(columnDefinition = "TEXT")

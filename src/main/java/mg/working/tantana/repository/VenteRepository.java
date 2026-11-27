@@ -29,7 +29,7 @@ public interface VenteRepository extends JpaRepository<Vente, Long> {
     Optional<Vente> findAvecDetails(@Param("id") Long id);
 
     /** Recherche sur le numero de facture ou le nom du client (texte vide = tout), sur une periode de vente. */
-    @EntityGraph(attributePaths = {"client", "vendeur"})
+    @EntityGraph(type = EntityGraph.EntityGraphType.LOAD, attributePaths = {"client", "vendeur"})
     @Query("""
             select v from Vente v
             where v.dateVente between :du and :au
@@ -39,7 +39,7 @@ public interface VenteRepository extends JpaRepository<Vente, Long> {
     Page<Vente> rechercher(@Param("texte") String texte, @Param("du") LocalDate du, @Param("au") LocalDate au,
                            Pageable pageable);
 
-    @EntityGraph(attributePaths = {"client", "vendeur"})
+    @EntityGraph(type = EntityGraph.EntityGraphType.LOAD, attributePaths = {"client", "vendeur"})
     @Query("""
             select v from Vente v
             where v.statut = :statut
@@ -60,21 +60,29 @@ public interface VenteRepository extends JpaRepository<Vente, Long> {
     /** Encours du client : total restant du sur ses factures validees (avoirs et paiements deduits). */
     @Query("""
             select coalesce(sum(v.totalTtc - v.montantAvoirs - v.montantPaye), 0) from Vente v
-            where v.client.id = :clientId and v.statut = mg.working.tantana.entity.StatutVente.VALIDEE
+            where v.client.id = :clientId and v.statut = :validee
               and v.totalTtc - v.montantAvoirs - v.montantPaye > 0
             """)
-    BigDecimal encoursClient(@Param("clientId") Long clientId);
+    BigDecimal encoursClient(@Param("clientId") Long clientId, @Param("validee") StatutVente validee);
+
+    default BigDecimal encoursClient(Long clientId) {
+        return encoursClient(clientId, StatutVente.VALIDEE);
+    }
 
     /** Factures validees avec un reste a payer (filtre « impayees »). */
-    @EntityGraph(attributePaths = {"client", "vendeur"})
+    @EntityGraph(type = EntityGraph.EntityGraphType.LOAD, attributePaths = {"client", "vendeur"})
     @Query("""
             select v from Vente v
-            where v.statut = mg.working.tantana.entity.StatutVente.VALIDEE
+            where v.statut = :validee
               and v.totalTtc - v.montantAvoirs - v.montantPaye > 0
               and v.dateVente between :du and :au
               and (lower(coalesce(v.numero, '')) like lower(concat('%', :texte, '%'))
                    or lower(v.client.nom) like lower(concat('%', :texte, '%')))
             """)
     Page<Vente> rechercherImpayees(@Param("texte") String texte, @Param("du") LocalDate du, @Param("au") LocalDate au,
-                                   Pageable pageable);
+                                   @Param("validee") StatutVente validee, Pageable pageable);
+
+    default Page<Vente> rechercherImpayees(String texte, LocalDate du, LocalDate au, Pageable pageable) {
+        return rechercherImpayees(texte, du, au, StatutVente.VALIDEE, pageable);
+    }
 }

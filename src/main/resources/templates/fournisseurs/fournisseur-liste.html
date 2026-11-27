@@ -39,7 +39,7 @@
                 <tr th:each="f : ${page.content}" th:classappend="${!f.actif} ? 'text-muted'">
                     <td class="fw-semibold" th:text="${f.nom}">Nom</td>
                     <td th:text="${f.pays}">Pays</td>
-                    <td><span class="badge text-bg-light border" th:text="${f.devise}" th:title="${f.devise.libelle}">USD</span></td>
+                    <td><span class="badge text-bg-light border" th:text="${f.devise.code}" th:title="${f.devise.libelle}">USD</span></td>
                     <td class="small">
                         <div th:text="${f.contact}">contact</div>
                         <div class="text-muted">

@@ -33,6 +33,7 @@ public class PaiementService {
     private final PaiementRepository paiementRepository;
     private final VenteRepository venteRepository;
     private final UtilisateurRepository utilisateurRepository;
+    private final ReferentielService referentielService;
 
     public List<Paiement> lister(Long venteId) {
         return paiementRepository.findByVenteIdOrderByIdAsc(venteId);
@@ -46,16 +47,17 @@ public class PaiementService {
     }
 
     @Transactional
-    public Paiement enregistrer(Long venteId, LocalDate date, BigDecimal montant, ModePaiement mode,
+    public Paiement enregistrer(Long venteId, LocalDate date, BigDecimal montant, Short modeId,
                                 String reference, String username) {
         Vente vente = venteRepository.findPourMiseAJour(venteId)
                 .orElseThrow(() -> new ElementIntrouvableException("Vente", venteId));
         if (vente.getStatut() != StatutVente.VALIDEE) {
             throw new RegleMetierException("Seule une facture validée peut être encaissée.");
         }
-        if (mode == null) {
+        if (modeId == null) {
             throw new RegleMetierException("Choisissez le mode de paiement.");
         }
+        ModePaiement mode = referentielService.choisirModePaiement(modeId);
         if (montant == null || montant.signum() <= 0) {
             throw new RegleMetierException("Le montant doit être supérieur à 0.");
         }
@@ -72,7 +74,7 @@ public class PaiementService {
             throw new RegleMetierException("La date de paiement ne peut pas précéder la facture.");
         }
         String ref = reference == null || reference.isBlank() ? null : reference.trim();
-        if (mode != ModePaiement.ESPECES && ref == null) {
+        if (mode.isReferenceObligatoire() && ref == null) {
             throw new RegleMetierException("Indiquez la référence (n° de transaction, de chèque ou de virement) : "
                     + "elle permet de rapprocher le paiement.");
         }

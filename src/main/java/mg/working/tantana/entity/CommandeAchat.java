@@ -3,8 +3,6 @@ package mg.working.tantana.entity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -51,8 +49,8 @@ public class CommandeAchat {
     @Column(name = "date_arrivee_prevue", nullable = false)
     private LocalDate dateArriveePrevue;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 3)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "devise_id", nullable = false)
     private Devise devise;
 
     /** Nombre d'Ariary pour 1 unite de la devise. */
@@ -63,8 +61,7 @@ public class CommandeAchat {
     @Column(name = "montant_total", nullable = false, precision = 20, scale = 2)
     private BigDecimal montantTotal = BigDecimal.ZERO;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
+    @Column(name = "statut_id", nullable = false)
     private StatutCommande statut = StatutCommande.BROUILLON;
 
     @Column(columnDefinition = "TEXT")

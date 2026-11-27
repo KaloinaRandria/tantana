@@ -1,18 +1,17 @@
 package mg.working.tantana.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-/** Nature des frais factures par le transitaire. */
+/** Nature des frais factures par le transitaire (fret, douane...). */
+@Entity
+@Table(name = "type_frais")
 @Getter
-@RequiredArgsConstructor
-public enum TypeFrais {
-    FRET("Fret / transport"),
-    DOUANE("Droits et taxes de douane"),
-    TRANSIT("Honoraires de transit"),
-    MANUTENTION("Manutention"),
-    STOCKAGE("Magasinage / stockage"),
-    AUTRE("Autre");
-
-    private final String libelle;
+@Setter
+@NoArgsConstructor
+public class TypeFrais extends ReferentielModifiable {
 }

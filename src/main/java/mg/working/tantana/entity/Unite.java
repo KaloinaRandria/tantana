@@ -1,19 +1,17 @@
 package mg.working.tantana.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-/** Unite dans laquelle un article est compte en stock. */
+/** Unite dans laquelle un article est compte en stock (Piece, Carton, Kilogramme...). */
+@Entity
+@Table(name = "unite")
 @Getter
-@RequiredArgsConstructor
-public enum Unite {
-    PIECE("Pièce"),
-    CARTON("Carton"),
-    SAC("Sac"),
-    LOT("Lot"),
-    KG("Kilogramme"),
-    LITRE("Litre"),
-    METRE("Mètre");
-
-    private final String libelle;
+@Setter
+@NoArgsConstructor
+public class Unite extends ReferentielModifiable {
 }

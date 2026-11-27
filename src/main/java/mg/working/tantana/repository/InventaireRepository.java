@@ -29,11 +29,11 @@ public interface InventaireRepository extends JpaRepository<Inventaire, Long> {
             """)
     Optional<Inventaire> findAvecDetails(@Param("id") Long id);
 
-    @EntityGraph(attributePaths = {"creePar", "validePar"})
+    @EntityGraph(type = EntityGraph.EntityGraphType.LOAD, attributePaths = {"creePar", "validePar"})
     @Query("select i from Inventaire i where lower(i.numero) like lower(concat('%', :texte, '%'))")
     Page<Inventaire> rechercher(@Param("texte") String texte, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"creePar", "validePar"})
+    @EntityGraph(type = EntityGraph.EntityGraphType.LOAD, attributePaths = {"creePar", "validePar"})
     @Query("""
             select i from Inventaire i
             where i.statut = :statut and lower(i.numero) like lower(concat('%', :texte, '%'))

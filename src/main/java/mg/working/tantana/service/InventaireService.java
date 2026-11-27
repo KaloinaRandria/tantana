@@ -63,6 +63,7 @@ public class InventaireService {
     private final UtilisateurRepository utilisateurRepository;
     private final NumerotationService numerotationService;
     private final StockService stockService;
+    private final ReferentielService referentielService;
 
     // ===================== Lecture =====================
 
@@ -233,7 +234,9 @@ public class InventaireService {
             if (ligne == null) {
                 throw new RegleMetierException("Ligne d'inventaire inconnue.");
             }
-            ligne.setMotifEcart(ligne.isAvecEcart() ? saisie.getMotifEcart() : null);
+            ligne.setMotifEcart(ligne.isAvecEcart() && saisie.getMotifEcartId() != null
+                    ? referentielService.choisirMotifEcart(saisie.getMotifEcartId(), ligne.getMotifEcart(), null)
+                    : null);
             ligne.setCommentaire(texte(saisie.getCommentaire()));
         }
         return inventaire;
@@ -248,7 +251,7 @@ public class InventaireService {
         long nonJustifies = inventaire.getNombreNonJustifies();
         if (nonJustifies > 0) {
             throw new RegleMetierException(nonJustifies + " écart(s) sans motif : chaque écart doit être justifié "
-                    + "(motif, et commentaire pour « Autre ») avant la validation.");
+                    + "(motif, et commentaire si le motif l'exige) avant la validation.");
         }
         for (LigneInventaire ligne : inventaire.getLignes()) {
             if (ligne.isAvecEcart()) {
@@ -325,8 +328,8 @@ public class InventaireService {
     }
 
     /** Motifs proposes a la justification. */
-    public MotifEcart[] motifs() {
-        return MotifEcart.values();
+    public List<MotifEcart> motifs() {
+        return referentielService.motifsEcart();
     }
 
     private Utilisateur utilisateur(String username) {

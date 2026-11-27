@@ -9,7 +9,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDate;
 import mg.working.tantana.entity.Article;
 import mg.working.tantana.entity.CommandeAchat;
-import mg.working.tantana.entity.Devise;
 import mg.working.tantana.entity.Fournisseur;
 import mg.working.tantana.entity.StatutCommande;
 import mg.working.tantana.exception.RegleMetierException;
@@ -17,6 +16,7 @@ import mg.working.tantana.service.ArticleService;
 import mg.working.tantana.service.CommandeAchatService;
 import mg.working.tantana.service.FournisseurService;
 import mg.working.tantana.service.ReceptionService;
+import mg.working.tantana.service.ReferentielService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -52,6 +52,7 @@ public class CommandeAchatController {
     private final FournisseurService fournisseurService;
     private final ArticleService articleService;
     private final ReceptionService receptionService;
+    private final ReferentielService referentielService;
     private final SmartValidator validator;
 
     // ===================== Liste et detail =====================
@@ -195,7 +196,7 @@ public class CommandeAchatController {
         model.addAttribute("commande", existante);
         model.addAttribute("fournisseurs", fournisseurs);
         model.addAttribute("articles", articles);
-        model.addAttribute("devises", Devise.values());
+        model.addAttribute("devises", referentielService.devises(existante == null ? null : existante.getDevise()));
         return "commandes/commande-saisie";
     }
 }

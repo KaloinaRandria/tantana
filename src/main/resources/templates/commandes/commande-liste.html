@@ -84,7 +84,7 @@
                     </td>
                     <td class="text-end text-nowrap">
                         <span th:text="${#numbers.formatDecimal(c.montantTotal, 1, 'WHITESPACE', 2, 'COMMA')}">0,00</span>
-                        <small class="text-muted" th:text="${c.devise}">USD</small>
+                        <small class="text-muted" th:text="${c.devise.code}">USD</small>
                     </td>
                     <td><span class="badge" th:classappend="'text-bg-' + ${c.statut.couleur}"
                               th:text="${c.statut.libelle}">Statut</span></td>

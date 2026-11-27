@@ -3,8 +3,6 @@ package mg.working.tantana.entity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -51,8 +49,7 @@ public class Vente {
     @Column(name = "date_vente", nullable = false)
     private LocalDate dateVente = LocalDate.now();
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(name = "statut_id", nullable = false)
     private StatutVente statut = StatutVente.BROUILLON;
 
     /** Taux de TVA applique (copie du parametre au moment de la vente). */

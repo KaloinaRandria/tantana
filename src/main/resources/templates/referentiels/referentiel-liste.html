@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Référentiels</title>
+</head>
+<body>
+<h1 layout:fragment="titre-page" class="h5 mb-0">Référentiels</h1>
+
+<main layout:fragment="content">
+    <div th:replace="~{fragments/commun :: alertes}"></div>
+
+    <!-- ===== Onglets ===== -->
+    <ul class="nav nav-tabs mb-3 flex-nowrap overflow-auto text-nowrap">
+        <li class="nav-item" th:each="l : ${listes}">
+            <a class="nav-link" th:href="@{/admin/referentiels(onglet=${l.onglet})}"
+               th:classappend="${onglet == l.onglet} ? 'active'">
+                <i class="bi" th:classappend="${l.icone}"></i> <span th:text="${l.titre}">Unités</span></a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" th:href="@{/admin/referentiels(onglet='statuts')}"
+               th:classappend="${onglet == 'statuts'} ? 'active'">
+                <i class="bi bi-tags"></i> Statuts et types</a>
+        </li>
+    </ul>
+
+    <!-- =================================================================== -->
+    <!-- Listes metier : formulaire + liste                                   -->
+    <!-- =================================================================== -->
+    <div th:if="${onglet != 'statuts'}" class="row g-3 align-items-start"
+         th:with="enModification=${form.id != null}">
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm" style="position: sticky; top: 1rem;">
+                <div class="card-body p-4">
+                    <h2 class="h6 mb-3">
+                        <th:block th:unless="${enModification}">
+                            <i class="bi bi-plus-circle text-primary"></i> Nouveau : <span th:text="${liste.element}">Unité</span>
+                        </th:block>
+                        <th:block th:if="${enModification}">
+                            <i class="bi bi-pencil text-primary"></i> Modifier
+                            <span class="badge text-bg-light border font-monospace" th:text="${form.code}">CODE</span>
+                        </th:block>
+                    </h2>
+
+                    <form th:action="@{/admin/referentiels/{o}/enregistrer(o=${liste.onglet})}" th:object="${form}"
+                          method="post" novalidate>
+                        <input type="hidden" th:field="*{id}">
+
+                        <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                            <p th:each="e : ${#fields.globalErrors()}" th:text="${e}" class="mb-0">Erreur</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="code" class="form-label">Code <span class="text-danger" th:unless="${enModification}">*</span></label>
+                            <input type="text" th:field="*{code}" class="form-control font-monospace"
+                                   th:maxlength="${liste.name() == 'DEVISES'} ? 3 : 20"
+                                   style="text-transform: uppercase;"
+                                   th:placeholder="${liste.name() == 'DEVISES'} ? 'ex. GBP' : 'ex. BOUTEILLE'"
+                                   th:readonly="${enModification}" th:autofocus="${!enModification}"
+                                   th:classappend="${#fields.hasErrors('code')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:errors="*{code}">Erreur</div>
+                            <div class="form-text" th:unless="${enModification}">
+                                <th:block th:if="${liste.name() == 'DEVISES'}">Code ISO 4217 à 3 lettres.</th:block>
+                                <th:block th:unless="${liste.name() == 'DEVISES'}">Majuscules, chiffres et _ .</th:block>
+                                Le code ne pourra plus être modifié ensuite.</div>
+                            <div class="form-text" th:if="${enModification}">Le code est figé.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="libelle" class="form-label">Libellé <span class="text-danger">*</span></label>
+                            <input type="text" th:field="*{libelle}" class="form-control" maxlength="50"
+                                   th:autofocus="${enModification}"
+                                   th:classappend="${#fields.hasErrors('libelle')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:errors="*{libelle}">Erreur</div>
+                            <div class="form-text">Affiché partout dans l'application.</div>
+                        </div>
+
+                        <!-- Modes de paiement -->
+                        <th:block th:if="${liste.name() == 'MODES_PAIEMENT'}">
+                            <div class="mb-3">
+                                <label for="icone" class="form-label">Icône</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi" th:classappend="*{icone}"></i></span>
+                                    <input type="text" th:field="*{icone}" class="form-control font-monospace" maxlength="40"
+                                           placeholder="bi-wallet2"
+                                           th:classappend="${#fields.hasErrors('icone')} ? 'is-invalid'">
+                                    <div class="invalid-feedback" th:errors="*{icone}">Erreur</div>
+                                </div>
+                                <div class="form-text">Nom Bootstrap Icons : bi-cash, bi-phone, bi-bank, bi-credit-card…</div>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" th:field="*{referenceObligatoire}">
+                                <label class="form-check-label" for="referenceObligatoire1">Référence obligatoire à l'encaissement</label>
+                                <div class="form-text">N° de transaction, de chèque ou de virement (rapprochement).</div>
+                            </div>
+                        </th:block>
+
+                        <!-- Motifs d'ecart -->
+                        <div th:if="${liste.name() == 'MOTIFS_ECART'}" class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" th:field="*{commentaireObligatoire}">
+                            <label class="form-check-label" for="commentaireObligatoire1">Commentaire obligatoire</label>
+                            <div class="form-text">Le compteur doit préciser l'écart (ex. « Autre »).</div>
+                        </div>
+
+                        <!-- Devises -->
+                        <div th:if="${liste.name() == 'DEVISES' and form.monnaieLocale}" class="alert alert-info small py-2">
+                            <i class="bi bi-info-circle"></i> Monnaie locale : sert à valoriser le stock (taux toujours égal à 1).
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg"></i>
+                                <span th:if="${enModification}">Enregistrer</span>
+                                <span th:unless="${enModification}">Créer</span>
+                            </button>
+                            <a th:if="${enModification}" th:href="@{/admin/referentiels(onglet=${liste.onglet})}"
+                               class="btn btn-outline-secondary">Annuler</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <span class="fw-semibold" th:text="${liste.titre}">Unités</span>
+                    <span class="text-muted small"><span th:text="${#lists.size(valeurs)}">0</span> valeur(s)</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Code</th>
+                            <th>Libellé</th>
+                            <th th:if="${liste.name() == 'MODES_PAIEMENT'}">Référence</th>
+                            <th th:if="${liste.name() == 'MOTIFS_ECART'}">Commentaire</th>
+                            <th th:if="${liste.name() == 'DEVISES'}">Monnaie locale</th>
+                            <th class="text-end" th:text="${liste.utilisations}">Utilisations</th>
+                            <th>Statut</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(valeurs)}">
+                            <td colspan="7" class="text-center text-muted py-4">Aucune valeur.</td>
+                        </tr>
+                        <tr th:each="v : ${valeurs}"
+                            th:classappend="${(!v.actif ? 'text-muted ' : '') + (v.id == form.id ? 'table-primary' : '')}">
+                            <td><span class="font-monospace small" th:text="${v.code}">CODE</span></td>
+                            <td class="fw-semibold">
+                                <i th:if="${liste.name() == 'MODES_PAIEMENT'}" class="bi me-1" th:classappend="${v.icone}"></i>
+                                <span th:text="${v.libelle}">Libellé</span>
+                            </td>
+                            <td th:if="${liste.name() == 'MODES_PAIEMENT'}">
+                                <span th:if="${v.referenceObligatoire}" class="badge text-bg-light border">Obligatoire</span>
+                                <span th:unless="${v.referenceObligatoire}" class="text-muted small">Facultative</span>
+                            </td>
+                            <td th:if="${liste.name() == 'MOTIFS_ECART'}">
+                                <span th:if="${v.commentaireObligatoire}" class="badge text-bg-light border">Obligatoire</span>
+                                <span th:unless="${v.commentaireObligatoire}" class="text-muted small">Facultatif</span>
+                            </td>
+                            <td th:if="${liste.name() == 'DEVISES'}">
+                                <span th:if="${v.monnaieLocale}" class="badge text-bg-info">Oui</span>
+                            </td>
+                            <td class="text-end" th:with="n=${utilisations[v.id] ?: 0}">
+                                <span th:text="${n}" th:classappend="${n == 0} ? 'text-muted'">0</span>
+                            </td>
+                            <td><span th:replace="~{fragments/commun :: badgeStatut(${v.actif})}"></span></td>
+                            <td class="text-end text-nowrap">
+                                <a th:href="@{/admin/referentiels(onglet=${liste.onglet}, modifier=${v.id})}"
+                                   class="btn btn-sm btn-outline-primary" title="Modifier"><i class="bi bi-pencil"></i></a>
+                                <form th:replace="~{fragments/commun :: boutonStatut('/admin/referentiels/' + ${liste.onglet} + '/' + ${v.id} + '/statut', ${v.actif})}"></form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <p class="text-muted small mt-2 mb-0">
+                <i class="bi bi-info-circle"></i>
+                Une valeur désactivée n'est plus proposée dans les nouvelles saisies ; les documents qui l'utilisent la conservent.
+            </p>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- Statuts et types systeme : libelles et couleurs                     -->
+    <!-- =================================================================== -->
+    <div th:if="${onglet == 'statuts'}" class="row g-3 align-items-start">
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm" style="position: sticky; top: 1rem;">
+                <div class="card-body p-4">
+                    <th:block th:if="${valeurSysteme == null}">
+                        <h2 class="h6 mb-2"><i class="bi bi-info-circle text-primary"></i> Valeurs fixes</h2>
+                        <p class="small text-muted mb-2">
+                            Ces statuts et types pilotent les règles de l'application (par exemple : seule une commande
+                            en brouillon peut être passée). Ils sont stockés par leur numéro.</p>
+                        <p class="small text-muted mb-0">
+                            Vous pouvez modifier leur <strong>libellé</strong> et leur <strong>couleur</strong>
+                            (bouton <i class="bi bi-pencil"></i>). Leur numéro et leur code ne changent pas, et on ne peut pas en ajouter.</p>
+                    </th:block>
+
+                    <th:block th:if="${valeurSysteme != null}">
+                        <h2 class="h6 mb-1"><i class="bi bi-pencil text-primary"></i> Modifier</h2>
+                        <p class="small text-muted mb-3" th:text="${tableSysteme.titre}">Statuts</p>
+                        <form th:action="@{/admin/referentiels/statuts/enregistrer}" method="post">
+                            <input type="hidden" name="table" th:value="${valeurSysteme.table}">
+                            <input type="hidden" name="id" th:value="${valeurSysteme.id}">
+                            <div class="mb-3">
+                                <label class="form-label">Numéro / code</label>
+                                <input type="text" class="form-control font-monospace" readonly
+                                       th:value="${valeurSysteme.id} + ' — ' + ${valeurSysteme.code}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="libelleSysteme" class="form-label">Libellé <span class="text-danger">*</span></label>
+                                <input type="text" id="libelleSysteme" name="libelle" class="form-control" maxlength="60" required autofocus
+                                       th:value="${valeurSysteme.libelle}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="couleurSysteme" class="form-label">Couleur du badge</label>
+                                <select id="couleurSysteme" name="couleur" class="form-select">
+                                    <option th:each="c : ${couleurs}" th:value="${c}" th:text="${c}"
+                                            th:selected="${c == valeurSysteme.couleur}">primary</option>
+                                </select>
+                                <div class="mt-2 d-flex flex-wrap gap-1">
+                                    <span th:each="c : ${couleurs}" class="badge" th:classappend="'text-bg-' + ${c}" th:text="${c}">c</span>
+                                </div>
+                            </div>
+                            <div class="mb-3" th:if="${tableSysteme.avecDescription}">
+                                <label for="descriptionSysteme" class="form-label">Description</label>
+                                <textarea id="descriptionSysteme" name="description" class="form-control" rows="2" maxlength="200"
+                                          th:text="${valeurSysteme.description}"></textarea>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Enregistrer</button>
+                                <a th:href="@{/admin/referentiels(onglet='statuts')}" class="btn btn-outline-secondary">Annuler</a>
+                            </div>
+                        </form>
+                    </th:block>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-3" th:each="g : ${groupes}">
+                <div class="card-header bg-white fw-semibold py-2" th:text="${g.table.titre}">Statuts</div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th style="width:60px">N°</th>
+                            <th>Code</th>
+                            <th>Libellé affiché</th>
+                            <th th:if="${g.table.avecDescription}">Description</th>
+                            <th class="text-end" style="width:70px"></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="v : ${g.valeurs}"
+                            th:classappend="${valeurSysteme != null and valeurSysteme.table == v.table and valeurSysteme.id == v.id} ? 'table-primary'">
+                            <td class="font-monospace" th:text="${v.id}">1</td>
+                            <td class="font-monospace small text-muted" th:text="${v.code}">CODE</td>
+                            <td><span class="badge" th:classappend="'text-bg-' + ${v.couleur}" th:text="${v.libelle}">Libellé</span></td>
+                            <td th:if="${g.table.avecDescription}" class="small" th:text="${v.description}">desc</td>
+                            <td class="text-end">
+                                <a th:href="@{/admin/referentiels(onglet='statuts', table=${v.table}, modifier=${v.id})}"
+                                   class="btn btn-sm btn-outline-primary" title="Modifier"><i class="bi bi-pencil"></i></a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

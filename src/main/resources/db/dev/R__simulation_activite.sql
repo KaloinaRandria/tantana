@@ -22,6 +22,22 @@
 -- Mot de passe des nouveaux comptes : Tantana@2026 (comme R__donnees_test).
 -- =====================================================================
 
+-- Identifiant d'une valeur de referentiel a partir de son code (les tables stockent des SMALLINT)
+CREATE OR REPLACE FUNCTION pg_temp.ref(p_table TEXT, p_code TEXT) RETURNS SMALLINT AS $f$
+DECLARE
+    v_id SMALLINT;
+BEGIN
+    IF p_code IS NULL THEN
+        RETURN NULL;
+    END IF;
+    EXECUTE format('SELECT id FROM %I WHERE code = $1', p_table) INTO v_id USING p_code;
+    IF v_id IS NULL THEN
+        RAISE EXCEPTION 'Code % inconnu dans la table %', p_code, p_table;
+    END IF;
+    RETURN v_id;
+END
+$f$ LANGUAGE plpgsql;
+
 -- ===== Utilisateurs supplementaires =====
 INSERT INTO utilisateur (username, password, nom_complet, email, actif) VALUES
     ('vendeur2', '{bcrypt}$2a$10$eUIvnVTsBqndGCtZBOdSVuKgeKwVeNkHcCwIdgXV2OYGzSe2jqFx6', 'Vendeur Analakely',   'vendeur2@tantana.test', TRUE),
@@ -36,14 +52,14 @@ JOIN role r        ON r.code     = a.code
 ON CONFLICT DO NOTHING;
 
 -- ===== Fournisseurs et transitaires =====
-INSERT INTO fournisseur (nom, pays, devise, contact, telephone, email, actif) VALUES
-    ('Shenzhen Mobile Parts',   'Chine',          'CNY', 'Zhang Min',     '+86 755 0000 0000', 'export@szmobile.test',  TRUE),
-    ('Osaka Kitchenware',       'Japon',          'JPY', 'Kenji Mori',    '+81 6 0000 0000',   'sales@osakakw.test',    TRUE),
-    ('Mumbai Textile Exports',  'Inde',           'INR', 'Ravi Patel',    '+91 22 0000 0000',  'orders@mte.test',       TRUE),
-    ('Durban Agro Foods',       'Afrique du Sud', 'ZAR', 'Thabo Nkosi',   '+27 31 000 0000',   'trade@durbanagro.test', TRUE),
-    ('Bangkok Rice Mill',       'Thailande',      'USD', 'Somchai K.',    '+66 2 000 0000',    'export@bkkrice.test',   TRUE),
-    ('Global Tools Inc.',       'Etats-Unis',     'USD', 'Mike Johnson',  '+1 305 000 0000',   'intl@globaltools.test', TRUE),
-    ('Antsirabe Distribution',  'Madagascar',     'MGA', 'Rakoto Be',     '+261 34 05 000 00', 'vente@antsirabe-distri.test', TRUE)
+INSERT INTO fournisseur (nom, pays, devise_id, contact, telephone, email, actif) VALUES
+    ('Shenzhen Mobile Parts',   'Chine',          pg_temp.ref('devise', 'CNY'), 'Zhang Min',     '+86 755 0000 0000', 'export@szmobile.test',  TRUE),
+    ('Osaka Kitchenware',       'Japon',          pg_temp.ref('devise', 'JPY'), 'Kenji Mori',    '+81 6 0000 0000',   'sales@osakakw.test',    TRUE),
+    ('Mumbai Textile Exports',  'Inde',           pg_temp.ref('devise', 'INR'), 'Ravi Patel',    '+91 22 0000 0000',  'orders@mte.test',       TRUE),
+    ('Durban Agro Foods',       'Afrique du Sud', pg_temp.ref('devise', 'ZAR'), 'Thabo Nkosi',   '+27 31 000 0000',   'trade@durbanagro.test', TRUE),
+    ('Bangkok Rice Mill',       'Thailande',      pg_temp.ref('devise', 'USD'), 'Somchai K.',    '+66 2 000 0000',    'export@bkkrice.test',   TRUE),
+    ('Global Tools Inc.',       'Etats-Unis',     pg_temp.ref('devise', 'USD'), 'Mike Johnson',  '+1 305 000 0000',   'intl@globaltools.test', TRUE),
+    ('Antsirabe Distribution',  'Madagascar',     pg_temp.ref('devise', 'MGA'), 'Rakoto Be',     '+261 34 05 000 00', 'vente@antsirabe-distri.test', TRUE)
 ON CONFLICT (nom) DO NOTHING;
 
 INSERT INTO transitaire (nom, contact, telephone, email, adresse, actif) VALUES
@@ -98,13 +114,13 @@ INSERT INTO sim_catalogue VALUES
     ('ART-1029', 'Eau minerale 1,5 L (pack de 6)',       'LOT',    'Antsirabe Distribution', 7200,   1.30, 200),
     ('ART-1030', 'Pates alimentaires (carton de 20)',    'CARTON', 'Antsirabe Distribution', 38000,  1.25, 40);
 
-INSERT INTO article (reference, designation, unite, description, actif)
-SELECT reference, designation, unite, 'Article de simulation', TRUE FROM sim_catalogue
+INSERT INTO article (reference, designation, unite_id, description, actif)
+SELECT reference, designation, pg_temp.ref('unite', unite), 'Article de simulation', TRUE FROM sim_catalogue
 ON CONFLICT (reference) DO NOTHING;
 
 -- ===== Clients =====
-INSERT INTO client (nom, type, telephone, email, adresse, nif, stat, plafond_credit, actif)
-SELECT v.nom, v.type, v.tel, v.email, v.adresse, v.nif, v.stat, v.plafond, TRUE
+INSERT INTO client (nom, type_client_id, telephone, email, adresse, nif, stat, plafond_credit, actif)
+SELECT v.nom, pg_temp.ref('type_client', v.type), v.tel, v.email, v.adresse, v.nif, v.stat, v.plafond, TRUE
 FROM (VALUES
         ('Rakotomalala Fanja',          'PARTICULIER',   '+261 34 20 000 01', NULL, 'Ambohipo',          NULL,         NULL,                0),
         ('Randrianarisoa Tojo',         'PARTICULIER',   '+261 33 20 000 02', NULL, 'Ankadifotsy',       NULL,         NULL,                0),
@@ -172,9 +188,9 @@ BEGIN
     UPDATE stock SET quantite = quantite + p_qte, cmup = v_cmup, cmup_revient = v_rev,
                      date_maj = p_ts, version = version + 1
     WHERE id = s.id;
-    INSERT INTO mouvement_stock (article_id, type, quantite, cout_unitaire, cout_revient_unitaire, quantite_apres,
+    INSERT INTO mouvement_stock (article_id, type_mouvement_id, quantite, cout_unitaire, cout_revient_unitaire, quantite_apres,
                                  cmup_apres, cmup_revient_apres, reference, reception_id, avoir_id, utilisateur_id, date_mouvement)
-    VALUES (p_article, p_type, p_qte, round(p_achat, 4), round(p_revient, 4), s.quantite + p_qte,
+    VALUES (p_article, pg_temp.ref('type_mouvement', p_type), p_qte, round(p_achat, 4), round(p_revient, 4), s.quantite + p_qte,
             v_cmup, v_rev, p_ref, p_reception, p_avoir, p_user, p_ts);
 END
 $f$ LANGUAGE plpgsql;
@@ -188,9 +204,9 @@ DECLARE
 BEGIN
     SELECT * INTO s FROM stock WHERE article_id = p_article FOR UPDATE;
     UPDATE stock SET quantite = quantite - p_qte, date_maj = p_ts, version = version + 1 WHERE id = s.id;
-    INSERT INTO mouvement_stock (article_id, type, quantite, cout_unitaire, cout_revient_unitaire, quantite_apres,
+    INSERT INTO mouvement_stock (article_id, type_mouvement_id, quantite, cout_unitaire, cout_revient_unitaire, quantite_apres,
                                  cmup_apres, cmup_revient_apres, reference, vente_id, utilisateur_id, date_mouvement)
-    VALUES (p_article, 'SORTIE_VENTE', p_qte, s.cmup, s.cmup_revient, s.quantite - p_qte,
+    VALUES (p_article, pg_temp.ref('type_mouvement', 'SORTIE_VENTE'), p_qte, s.cmup, s.cmup_revient, s.quantite - p_qte,
             s.cmup, s.cmup_revient, p_ref, p_vente, p_user, p_ts);
     o_cmup := s.cmup;
     o_revient := s.cmup_revient;
@@ -232,6 +248,21 @@ DECLARE
     v_client BIGINT; v_type TEXT; v_vendeur BIGINT; v_qte NUMERIC; v_remise NUMERIC; v_pu NUMERIC;
     v_controle TEXT; v_ttc NUMERIC; v_net NUMERIC; v_reste NUMERIC; v_mode TEXT; v_genre TEXT;
     v_ht NUMERIC; v_tva_av NUMERIC; v_cout NUMERIC; v_motif TEXT;
+    -- identifiants des statuts (les tables stockent des SMALLINT)
+    c_cmd_brouillon  CONSTANT SMALLINT := pg_temp.ref('statut_commande', 'BROUILLON');
+    c_cmd_commandee  CONSTANT SMALLINT := pg_temp.ref('statut_commande', 'COMMANDEE');
+    c_cmd_partielle  CONSTANT SMALLINT := pg_temp.ref('statut_commande', 'PARTIELLEMENT_RECUE');
+    c_cmd_recue      CONSTANT SMALLINT := pg_temp.ref('statut_commande', 'RECUE');
+    c_cmd_cloturee   CONSTANT SMALLINT := pg_temp.ref('statut_commande', 'CLOTUREE');
+    c_cmd_annulee    CONSTANT SMALLINT := pg_temp.ref('statut_commande', 'ANNULEE');
+    c_rec_saisie     CONSTANT SMALLINT := pg_temp.ref('statut_reception', 'SAISIE');
+    c_rec_validee    CONSTANT SMALLINT := pg_temp.ref('statut_reception', 'VALIDEE');
+    c_rec_rejetee    CONSTANT SMALLINT := pg_temp.ref('statut_reception', 'REJETEE');
+    c_vte_brouillon  CONSTANT SMALLINT := pg_temp.ref('statut_vente', 'BROUILLON');
+    c_vte_a_valider  CONSTANT SMALLINT := pg_temp.ref('statut_vente', 'A_VALIDER');
+    c_vte_validee    CONSTANT SMALLINT := pg_temp.ref('statut_vente', 'VALIDEE');
+    c_cli_particulier CONSTANT SMALLINT := pg_temp.ref('type_client', 'PARTICULIER');
+    c_cli_pro        CONSTANT SMALLINT := pg_temp.ref('type_client', 'PROFESSIONNEL');
 BEGIN
     IF EXISTS (SELECT 1 FROM mouvement_stock m JOIN article ar ON ar.id = m.article_id WHERE ar.reference = 'ART-1001') THEN
         RAISE NOTICE 'Simulation deja chargee : rien a faire.';
@@ -253,19 +284,19 @@ BEGIN
 
         -- ---------- 1. Commandes d'achat (cycle par fournisseur) ----------
         FOR f IN
-            SELECT fo.id, fo.devise, row_number() OVER (ORDER BY fo.nom) AS rang,
-                   CASE fo.devise WHEN 'CNY' THEN 50 WHEN 'JPY' THEN 45 WHEN 'INR' THEN 40 WHEN 'USD' THEN 45
+            SELECT fo.id, fo.devise_id, dv.code AS devise, row_number() OVER (ORDER BY fo.nom) AS rang,
+                   CASE dv.code WHEN 'CNY' THEN 50 WHEN 'JPY' THEN 45 WHEN 'INR' THEN 40 WHEN 'USD' THEN 45
                                   WHEN 'ZAR' THEN 25 WHEN 'EUR' THEN 20 WHEN 'AED' THEN 21 ELSE 5 END AS delai,
-                   CASE fo.devise WHEN 'MGA' THEN 14 ELSE 35 END AS cycle
-            FROM fournisseur fo
+                   CASE dv.code WHEN 'MGA' THEN 14 ELSE 35 END AS cycle
+            FROM fournisseur fo JOIN devise dv ON dv.id = fo.devise_id
             WHERE fo.nom IN (SELECT DISTINCT fournisseur FROM sim_catalogue)
         LOOP
             CONTINUE WHEN (d - c_debut_achats) % f.cycle <> (f.rang * 4) % f.cycle;
             ts := ts + INTERVAL '7 minutes';
             v_taux := round(pg_temp.sim_taux(f.devise) * (0.98 + random()::numeric * 0.04), 2);
-            INSERT INTO commande_achat (numero, fournisseur_id, date_commande, date_arrivee_prevue, devise, taux_change,
-                                        montant_total, statut, observations, cree_par_id, date_creation, date_modification)
-            VALUES (pg_temp.sim_num('CA', d), f.id, d, d + f.delai, f.devise, v_taux, 0, 'COMMANDEE',
+            INSERT INTO commande_achat (numero, fournisseur_id, date_commande, date_arrivee_prevue, devise_id, taux_change,
+                                        montant_total, statut_id, observations, cree_par_id, date_creation, date_modification)
+            VALUES (pg_temp.sim_num('CA', d), f.id, d, d + f.delai, f.devise_id, v_taux, 0, c_cmd_commandee,
                     CASE WHEN f.delai >= 40 THEN 'Expedition maritime' WHEN f.devise = 'MGA' THEN 'Livraison par route'
                          ELSE 'Expedition aerienne' END,
                     CASE WHEN random()::numeric < 0.6 THEN u_acheteur ELSE u_maker END, ts, ts)
@@ -284,11 +315,11 @@ BEGIN
                 SELECT CASE WHEN d < c_debut_ventes + 60 THEN sc.rotation
                             ELSE greatest(sc.rotation * 0.5,
                                           coalesce((SELECT sum(lv.quantite) FROM ligne_vente lv JOIN vente v ON v.id = lv.vente_id
-                                                    WHERE lv.article_id = ar.id AND v.statut = 'VALIDEE' AND v.date_vente > d - 90), 0) / 3.0)
+                                                    WHERE lv.article_id = ar.id AND v.statut_id = c_vte_validee AND v.date_vente > d - 90), 0) / 3.0)
                        END AS rot,
                        coalesce((SELECT sum(lc.quantite_commandee - lc.quantite_recue)
                                  FROM ligne_commande_achat lc JOIN commande_achat ca ON ca.id = lc.commande_id
-                                 WHERE lc.article_id = ar.id AND ca.statut IN ('COMMANDEE', 'PARTIELLEMENT_RECUE')), 0) AS en_cours
+                                 WHERE lc.article_id = ar.id AND ca.statut_id IN (c_cmd_commandee, c_cmd_partielle)), 0) AS en_cours
             ) r
             CROSS JOIN LATERAL (
                 SELECT round(greatest(0, r.rot * (f.cycle + f.delai) / 30.0 * 1.3 * (0.9 + random()::numeric * 0.2)
@@ -319,8 +350,9 @@ BEGIN
 
         -- ---------- 2. Receptions du jour (saisie maker, validation checker) ----------
         FOR p IN SELECT * FROM sim_plan_reception WHERE jour = d ORDER BY commande_id, etape LOOP
-            SELECT * INTO c FROM commande_achat WHERE id = p.commande_id;
-            CONTINUE WHEN c.statut NOT IN ('COMMANDEE', 'PARTIELLEMENT_RECUE');
+            SELECT ca.*, dv.code AS devise INTO c
+            FROM commande_achat ca JOIN devise dv ON dv.id = ca.devise_id WHERE ca.id = p.commande_id;
+            CONTINUE WHEN c.statut_id NOT IN (c_cmd_commandee, c_cmd_partielle);
             ts := ts + INTERVAL '25 minutes';
             v_mer := c.devise IN ('CNY', 'JPY', 'INR', 'USD', 'ZAR');
             v_taux := round(c.taux_change * (0.985 + random()::numeric * 0.035), 2);
@@ -332,17 +364,17 @@ BEGIN
 
             -- de temps en temps, une premiere saisie rejetee par le validateur
             IF p.etape = 1 AND random()::numeric < 0.06 THEN
-                INSERT INTO reception (numero, commande_id, transitaire_id, date_reception, taux_change, statut, observations,
+                INSERT INTO reception (numero, commande_id, transitaire_id, date_reception, taux_change, statut_id, observations,
                                        motif_rejet, saisi_par_id, date_saisie, valide_par_id, date_validation)
-                VALUES (pg_temp.sim_num('BR', d), c.id, v_id, d, v_taux, 'REJETEE', NULL,
+                VALUES (pg_temp.sim_num('BR', d), c.id, v_id, d, v_taux, c_rec_rejetee, NULL,
                         'Quantites inversees entre deux articles : merci de ressaisir selon le bordereau.',
                         u_maker, ts, u_checker, ts + INTERVAL '1 hour');
                 ts := ts + INTERVAL '90 minutes';
             END IF;
 
-            INSERT INTO reception (numero, commande_id, transitaire_id, date_reception, taux_change, statut, observations,
+            INSERT INTO reception (numero, commande_id, transitaire_id, date_reception, taux_change, statut_id, observations,
                                    saisi_par_id, date_saisie, valide_par_id, date_validation)
-            VALUES (pg_temp.sim_num('BR', d), c.id, v_id, d, v_taux, 'VALIDEE',
+            VALUES (pg_temp.sim_num('BR', d), c.id, v_id, d, v_taux, c_rec_validee,
                     CASE WHEN p.fraction < 1 THEN 'Premier conteneur, le reste suit' END,
                     u_maker, ts, u_checker, ts + INTERVAL '3 hours')
             RETURNING id, numero INTO v_id, v_num;
@@ -364,17 +396,17 @@ BEGIN
             WHERE lr.reception_id = v_id;
 
             IF c.devise = 'MGA' THEN
-                INSERT INTO frais_reception (reception_id, type, montant, reference_facture) VALUES
-                    (v_id, 'TRANSIT',     round(v_valeur * 0.02, -3) + 50000, 'THT-' || lpad((floor(random()::numeric * 99999))::text, 5, '0'));
+                INSERT INTO frais_reception (reception_id, type_frais_id, montant, reference_facture) VALUES
+                    (v_id, pg_temp.ref('type_frais', 'TRANSIT'),     round(v_valeur * 0.02, -3) + 50000, 'THT-' || lpad((floor(random()::numeric * 99999))::text, 5, '0'));
             ELSE
-                INSERT INTO frais_reception (reception_id, type, montant, reference_facture) VALUES
-                    (v_id, 'FRET',        round(v_valeur * CASE WHEN v_mer THEN 0.07 ELSE 0.10 END, -3), 'FT-' || lpad((floor(random()::numeric * 99999))::text, 5, '0')),
-                    (v_id, 'DOUANE',      round(v_valeur * 0.17, -3), 'DQ-' || extract(year FROM d) || '-' || lpad((floor(random()::numeric * 9999))::text, 4, '0')),
-                    (v_id, 'TRANSIT',     round(v_valeur * 0.015, -3), 'FT-' || lpad((floor(random()::numeric * 99999))::text, 5, '0')),
-                    (v_id, 'MANUTENTION', 150000 + round(random()::numeric * 300000, -3), NULL);
+                INSERT INTO frais_reception (reception_id, type_frais_id, montant, reference_facture) VALUES
+                    (v_id, pg_temp.ref('type_frais', 'FRET'),        round(v_valeur * CASE WHEN v_mer THEN 0.07 ELSE 0.10 END, -3), 'FT-' || lpad((floor(random()::numeric * 99999))::text, 5, '0')),
+                    (v_id, pg_temp.ref('type_frais', 'DOUANE'),      round(v_valeur * 0.17, -3), 'DQ-' || extract(year FROM d) || '-' || lpad((floor(random()::numeric * 9999))::text, 4, '0')),
+                    (v_id, pg_temp.ref('type_frais', 'TRANSIT'),     round(v_valeur * 0.015, -3), 'FT-' || lpad((floor(random()::numeric * 99999))::text, 5, '0')),
+                    (v_id, pg_temp.ref('type_frais', 'MANUTENTION'), 150000 + round(random()::numeric * 300000, -3), NULL);
                 IF d > c.date_arrivee_prevue + 5 THEN
-                    INSERT INTO frais_reception (reception_id, type, montant, reference_facture, commentaire)
-                    VALUES (v_id, 'STOCKAGE', 50000 * (d - c.date_arrivee_prevue), NULL, 'Magasinage au port');
+                    INSERT INTO frais_reception (reception_id, type_frais_id, montant, reference_facture, commentaire)
+                    VALUES (v_id, pg_temp.ref('type_frais', 'STOCKAGE'), 50000 * (d - c.date_arrivee_prevue), NULL, 'Magasinage au port');
                 END IF;
             END IF;
             SELECT sum(montant) INTO v_frais FROM frais_reception WHERE reception_id = v_id;
@@ -393,13 +425,13 @@ BEGIN
             END LOOP;
 
             IF NOT EXISTS (SELECT 1 FROM ligne_commande_achat WHERE commande_id = c.id AND quantite_recue < quantite_commandee) THEN
-                UPDATE commande_achat SET statut = 'RECUE', date_modification = ts + INTERVAL '3 hours', version = version + 1 WHERE id = c.id;
+                UPDATE commande_achat SET statut_id = c_cmd_recue, date_modification = ts + INTERVAL '3 hours', version = version + 1 WHERE id = c.id;
             ELSIF EXISTS (SELECT 1 FROM sim_plan_reception WHERE commande_id = c.id AND jour > d) THEN
-                UPDATE commande_achat SET statut = 'PARTIELLEMENT_RECUE', date_modification = ts + INTERVAL '3 hours', version = version + 1 WHERE id = c.id;
+                UPDATE commande_achat SET statut_id = c_cmd_partielle, date_modification = ts + INTERVAL '3 hours', version = version + 1 WHERE id = c.id;
             ELSE
                 -- reliquat refuse jamais relivre : la commande est cloturee
                 UPDATE commande_achat
-                SET statut = 'CLOTUREE', date_modification = ts + INTERVAL '1 day', version = version + 2,
+                SET statut_id = c_cmd_cloturee, date_modification = ts + INTERVAL '1 day', version = version + 2,
                     observations = coalesce(observations || '. ', '') || 'Cloturee : reliquat refuse non relivre'
                 WHERE id = c.id;
             END IF;
@@ -508,15 +540,15 @@ BEGIN
                     SELECT id, 'COMPTOIR' INTO v_client, v_type FROM client WHERE comptoir;
                 ELSIF random()::numeric < 0.45 THEN
                     SELECT id, 'PARTICULIER' INTO v_client, v_type FROM client
-                    WHERE type = 'PARTICULIER' AND NOT comptoir AND actif ORDER BY random()::numeric LIMIT 1;
+                    WHERE type_client_id = c_cli_particulier AND NOT comptoir AND actif ORDER BY random()::numeric LIMIT 1;
                 ELSE
                     SELECT id, 'PROFESSIONNEL' INTO v_client, v_type FROM client
-                    WHERE type = 'PROFESSIONNEL' AND actif ORDER BY random()::numeric LIMIT 1;
+                    WHERE type_client_id = c_cli_pro AND actif ORDER BY random()::numeric LIMIT 1;
                 END IF;
                 v_vendeur := v_vendeurs[1 + floor(random()::numeric * array_length(v_vendeurs, 1))::int];
 
-                INSERT INTO vente (client_id, date_vente, statut, taux_tva, vendeur_id, date_creation)
-                VALUES (v_client, d, 'BROUILLON', v_tva, v_vendeur, ts)
+                INSERT INTO vente (client_id, date_vente, statut_id, taux_tva, vendeur_id, date_creation)
+                VALUES (v_client, d, c_vte_brouillon, v_tva, v_vendeur, ts)
                 RETURNING id INTO v_id;
 
                 v_controle := '';
@@ -564,7 +596,7 @@ BEGIN
                 -- fin de periode : quelques ventes restent en cours
                 IF d > c_fin - 3 AND random()::numeric < 0.25 THEN
                     IF v_controle <> '' THEN
-                        UPDATE vente SET statut = 'A_VALIDER', motif_controle = trim(v_controle) WHERE id = v_id;
+                        UPDATE vente SET statut_id = c_vte_a_valider, motif_controle = trim(v_controle) WHERE id = v_id;
                     END IF;
                     CONTINUE;
                 END IF;
@@ -594,7 +626,7 @@ BEGIN
                     UPDATE ligne_vente SET cout_achat_unitaire = o.o_cmup, cout_revient_unitaire = o.o_revient WHERE id = l.id;
                 END LOOP;
                 UPDATE vente ve
-                SET statut = 'VALIDEE', numero = v_num, date_validation = ts + INTERVAL '45 minutes', version = version + 1,
+                SET statut_id = c_vte_validee, numero = v_num, date_validation = ts + INTERVAL '45 minutes', version = version + 1,
                     cout_revient_total = t.cout, marge_totale = ve.total_ht - t.cout
                 FROM (SELECT round(sum(quantite * cout_revient_unitaire)) AS cout FROM ligne_vente WHERE vente_id = v_id) t
                 WHERE ve.id = v_id
@@ -604,13 +636,13 @@ BEGIN
                 IF v_type <> 'PROFESSIONNEL' OR random()::numeric < 0.4 THEN
                     v_mode := CASE WHEN v_type = 'PROFESSIONNEL' THEN (ARRAY['VIREMENT', 'CHEQUE', 'ESPECES'])[1 + floor(random()::numeric * 3)::int]
                                    ELSE (ARRAY['ESPECES', 'ESPECES', 'MVOLA', 'MVOLA', 'ORANGE_MONEY', 'AIRTEL_MONEY'])[1 + floor(random()::numeric * 6)::int] END;
-                    INSERT INTO paiement (vente_id, date_paiement, montant, mode, reference, saisi_par_id, date_saisie)
-                    VALUES (v_id, d, v_ttc, v_mode, pg_temp.sim_ref_paiement(v_mode), v_vendeur, ts + INTERVAL '50 minutes');
+                    INSERT INTO paiement (vente_id, date_paiement, montant, mode_paiement_id, reference, saisi_par_id, date_saisie)
+                    VALUES (v_id, d, v_ttc, pg_temp.ref('mode_paiement', v_mode), pg_temp.sim_ref_paiement(v_mode), v_vendeur, ts + INTERVAL '50 minutes');
                     UPDATE vente SET montant_paye = v_ttc WHERE id = v_id;
                     IF random()::numeric < 0.005 THEN
-                        INSERT INTO paiement (vente_id, date_paiement, montant, mode, reference, saisi_par_id, date_saisie,
+                        INSERT INTO paiement (vente_id, date_paiement, montant, mode_paiement_id, reference, saisi_par_id, date_saisie,
                                               annule, motif_annulation, annule_par_id, date_annulation)
-                        VALUES (v_id, d, v_ttc, v_mode, pg_temp.sim_ref_paiement(v_mode), v_vendeur, ts + INTERVAL '52 minutes',
+                        VALUES (v_id, d, v_ttc, pg_temp.ref('mode_paiement', v_mode), pg_temp.sim_ref_paiement(v_mode), v_vendeur, ts + INTERVAL '52 minutes',
                                 TRUE, 'Doublon de saisie', u_admin, ts + INTERVAL '2 hours');
                     END IF;
                 ELSE
@@ -643,16 +675,16 @@ BEGIN
             CONTINUE WHEN v_reste <= 0;
             v_ttc := CASE WHEN p.part >= 1 THEN v_reste ELSE least(v_reste, round(v_net * p.part, -3)) END;
             CONTINUE WHEN v_ttc <= 0;
-            INSERT INTO paiement (vente_id, date_paiement, montant, mode, reference, saisi_par_id, date_saisie)
-            VALUES (o.id, d, v_ttc, p.mode, pg_temp.sim_ref_paiement(p.mode), u_admin, d + TIME '16:00');
+            INSERT INTO paiement (vente_id, date_paiement, montant, mode_paiement_id, reference, saisi_par_id, date_saisie)
+            VALUES (o.id, d, v_ttc, pg_temp.ref('mode_paiement', p.mode), pg_temp.sim_ref_paiement(p.mode), u_admin, d + TIME '16:00');
             UPDATE vente SET montant_paye = montant_paye + v_ttc, version = version + 1 WHERE id = o.id;
         END LOOP;
 
         -- ---------- 7. Commande annulee (il y a 20 jours) ----------
         IF d = c_fin - 20 THEN
-            INSERT INTO commande_achat (numero, fournisseur_id, date_commande, date_arrivee_prevue, devise, taux_change,
-                                        montant_total, statut, observations, cree_par_id, date_creation, date_modification)
-            SELECT pg_temp.sim_num('CA', d), fo.id, d, d + 45, 'USD', 4480, 0, 'ANNULEE',
+            INSERT INTO commande_achat (numero, fournisseur_id, date_commande, date_arrivee_prevue, devise_id, taux_change,
+                                        montant_total, statut_id, observations, cree_par_id, date_creation, date_modification)
+            SELECT pg_temp.sim_num('CA', d), fo.id, d, d + 45, pg_temp.ref('devise', 'USD'), 4480, 0, c_cmd_annulee,
                    'Annulee : fournisseur en rupture sur les groupes electrogenes', u_acheteur, d + TIME '10:00', d + TIME '15:00'
             FROM fournisseur fo WHERE fo.nom = 'Global Tools Inc.'
             RETURNING id INTO v_id;
@@ -666,9 +698,9 @@ BEGIN
 
     -- ===== Fin de periode : documents en attente =====
     -- Commande en brouillon (pas encore envoyee au fournisseur)
-    INSERT INTO commande_achat (numero, fournisseur_id, date_commande, date_arrivee_prevue, devise, taux_change,
-                                montant_total, statut, observations, cree_par_id, date_creation)
-    SELECT pg_temp.sim_num('CA', c_fin), fo.id, c_fin, c_fin + 25, 'ZAR', 252, 0, 'BROUILLON',
+    INSERT INTO commande_achat (numero, fournisseur_id, date_commande, date_arrivee_prevue, devise_id, taux_change,
+                                montant_total, statut_id, observations, cree_par_id, date_creation)
+    SELECT pg_temp.sim_num('CA', c_fin), fo.id, c_fin, c_fin + 25, pg_temp.ref('devise', 'ZAR'), 252, 0, c_cmd_brouillon,
            'A valider avec la direction avant envoi', u_maker, c_fin + TIME '09:15'
     FROM fournisseur fo WHERE fo.nom = 'Durban Agro Foods'
     RETURNING id INTO v_id;
@@ -681,8 +713,8 @@ BEGIN
     WHERE ca.id = v_id;
 
     -- Vente avec remise hors plafond, en attente du controleur
-    INSERT INTO vente (client_id, date_vente, statut, taux_tva, vendeur_id, date_creation, observations)
-    SELECT cl.id, c_fin, 'BROUILLON', v_tva, v_vendeurs[1], c_fin + TIME '11:20', 'Commande pour l''ouverture d''un nouveau point de vente'
+    INSERT INTO vente (client_id, date_vente, statut_id, taux_tva, vendeur_id, date_creation, observations)
+    SELECT cl.id, c_fin, c_vte_brouillon, v_tva, v_vendeurs[1], c_fin + TIME '11:20', 'Commande pour l''ouverture d''un nouveau point de vente'
     FROM client cl WHERE cl.nom = 'Superette Ambohijatovo'
     RETURNING id INTO v_id;
     INSERT INTO ligne_vente (vente_id, article_id, quantite, prix_catalogue_ht, remise_pct, prix_unitaire_ht, montant_ht)
@@ -692,34 +724,35 @@ BEGIN
     UPDATE vente ve
     SET total_brut_ht = t.brut, total_ht = t.ht, total_remise = greatest(t.brut - t.ht, 0),
         total_tva = round(t.ht * ve.taux_tva / 100), total_ttc = t.ht + round(t.ht * ve.taux_tva / 100),
-        statut = 'A_VALIDER',
+        statut_id = c_vte_a_valider,
         motif_controle = 'Remise de 15 % sur toutes les lignes (plafond vendeur ' || trim_scale(v_remise_max) || ' %).'
     FROM (SELECT round(sum(prix_catalogue_ht * quantite)) AS brut, round(sum(montant_ht)) AS ht
           FROM ligne_vente WHERE vente_id = v_id) t
     WHERE ve.id = v_id;
 
     -- Reception saisie par "maker", en attente de validation par "checker"
-    SELECT ca.* INTO c FROM commande_achat ca
+    SELECT ca.*, dv.code AS devise INTO c FROM commande_achat ca
+    JOIN devise dv ON dv.id = ca.devise_id
     JOIN sim_plan_reception pr ON pr.commande_id = ca.id AND pr.etape = 1 AND pr.jour > c_fin
-    WHERE ca.statut = 'COMMANDEE' AND ca.date_arrivee_prevue <= c_fin + 3
+    WHERE ca.statut_id = c_cmd_commandee AND ca.date_arrivee_prevue <= c_fin + 3
     ORDER BY ca.date_arrivee_prevue LIMIT 1;
     IF FOUND THEN
-        INSERT INTO reception (numero, commande_id, transitaire_id, date_reception, taux_change, statut, observations, saisi_par_id, date_saisie)
-        SELECT pg_temp.sim_num('BR', c_fin), c.id, t.id, c_fin, round(c.taux_change * 1.01, 2), 'SAISIE',
+        INSERT INTO reception (numero, commande_id, transitaire_id, date_reception, taux_change, statut_id, observations, saisi_par_id, date_saisie)
+        SELECT pg_temp.sim_num('BR', c_fin), c.id, t.id, c_fin, round(c.taux_change * 1.01, 2), c_rec_saisie,
                'Arrivage complet, en attente de controle', u_maker, c_fin + TIME '10:30'
         FROM transitaire t WHERE t.nom = 'Transit Express Toamasina'
         RETURNING id INTO v_id;
         INSERT INTO ligne_reception (reception_id, ligne_commande_id, quantite_recue, quantite_refusee)
         SELECT v_id, lc.id, lc.quantite_commandee, 0 FROM ligne_commande_achat lc WHERE lc.commande_id = c.id;
-        INSERT INTO frais_reception (reception_id, type, montant, reference_facture)
-        SELECT v_id, x.type, round(c.montant_total * c.taux_change * x.pct, -3), x.ref
+        INSERT INTO frais_reception (reception_id, type_frais_id, montant, reference_facture)
+        SELECT v_id, pg_temp.ref('type_frais', x.type), round(c.montant_total * c.taux_change * x.pct, -3), x.ref
         FROM (VALUES ('FRET', 0.07, 'FT-90001'), ('DOUANE', 0.17, 'DQ-EN-COURS'), ('TRANSIT', 0.015, 'FT-90002')) AS x (type, pct, ref);
         DELETE FROM sim_plan_reception WHERE commande_id = c.id;
     END IF;
 
     RAISE NOTICE 'Simulation : % commandes, % receptions, % ventes validees, % paiements, % avoirs',
         (SELECT count(*) FROM commande_achat), (SELECT count(*) FROM reception),
-        (SELECT count(*) FROM vente WHERE statut = 'VALIDEE'), (SELECT count(*) FROM paiement),
+        (SELECT count(*) FROM vente WHERE statut_id = c_vte_validee), (SELECT count(*) FROM paiement),
         (SELECT count(*) FROM avoir);
 END
 $sim$;

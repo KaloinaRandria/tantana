@@ -2,7 +2,7 @@
  * Formulaire de commande d'achat :
  *  - ajout / suppression de lignes (renumerotation lignes[0], lignes[1]... pour Spring)
  *  - montants de ligne et totaux recalcules en direct
- *  - devise proposee depuis le fournisseur, taux force a 1 pour l'Ariary
+ *  - devise proposee depuis le fournisseur, taux force a 1 pour la monnaie locale (Ariary)
  */
 (function () {
     const form = document.getElementById('form-commande');
@@ -11,7 +11,7 @@
     const corps = form.querySelector('#table-lignes tbody');
     const modele = document.getElementById('modele-ligne');
     const champFournisseur = form.querySelector('#fournisseurId');
-    const champDevise = form.querySelector('#devise');
+    const champDevise = form.querySelector('#deviseId');
     const champTaux = form.querySelector('#tauxChange');
 
     const formatDevise = new Intl.NumberFormat('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -47,9 +47,10 @@
     }
 
     function majDevise() {
-        const devise = champDevise.value || '?';
+        const option = champDevise.selectedOptions[0];
+        const devise = (option && option.dataset.code) || '?';
         form.querySelectorAll('.libelle-devise').forEach((el) => (el.textContent = devise));
-        if (devise === 'MGA') {
+        if (option && option.dataset.locale === 'true') {
             champTaux.value = 1;
             champTaux.readOnly = true;
         } else {

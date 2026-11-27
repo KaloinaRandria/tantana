@@ -50,6 +50,7 @@ public class CommandeAchatService {
     private final UtilisateurRepository utilisateurRepository;
     private final NumerotationService numerotationService;
     private final ReceptionRepository receptionRepository;
+    private final ReferentielService referentielService;
 
     // ===================== Lecture =====================
 
@@ -73,7 +74,7 @@ public class CommandeAchatService {
         form.setFournisseurId(commande.getFournisseur().getId());
         form.setDateCommande(commande.getDateCommande());
         form.setDateArriveePrevue(commande.getDateArriveePrevue());
-        form.setDevise(commande.getDevise());
+        form.setDeviseId(commande.getDevise().getId());
         form.setTauxChange(Nombres.sansZeros(commande.getTauxChange()));
         form.setObservations(commande.getObservations());
         form.setLignes(commande.getLignes().stream()
@@ -178,9 +179,10 @@ public class CommandeAchatService {
         commande.setFournisseur(fournisseur);
         commande.setDateCommande(form.getDateCommande());
         commande.setDateArriveePrevue(form.getDateArriveePrevue());
-        commande.setDevise(form.getDevise());
-        // En Ariary, le taux est forcement 1
-        commande.setTauxChange(form.getDevise() == Devise.MGA ? BigDecimal.ONE : form.getTauxChange());
+        Devise devise = referentielService.choisirDevise(form.getDeviseId(), commande.getDevise(), "deviseId");
+        commande.setDevise(devise);
+        // Dans la monnaie locale (Ariary), le taux est forcement 1
+        commande.setTauxChange(devise.isMonnaieLocale() ? BigDecimal.ONE : form.getTauxChange());
         commande.setObservations(form.getObservations() == null || form.getObservations().isBlank()
                 ? null : form.getObservations().trim());
 

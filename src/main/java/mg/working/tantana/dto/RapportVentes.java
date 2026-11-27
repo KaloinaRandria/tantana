@@ -44,8 +44,14 @@ public final class RapportVentes {
         public BigDecimal getTauxMarque() { return taux(getMarge(), caHt); }
     }
 
-    public record Encaissement(ModePaiement mode, BigDecimal montant, long nombre) {
-        public ModePaiement getMode() { return mode; }
+    /** Mode de paiement tel qu'affiche (libelle et icone lus en base). */
+    public record ModeAffiche(String libelle, String icone) {
+        public String getLibelle() { return libelle; }
+        public String getIcone() { return icone; }
+    }
+
+    public record Encaissement(ModeAffiche mode, BigDecimal montant, long nombre) {
+        public ModeAffiche getMode() { return mode; }
         public BigDecimal getMontant() { return montant; }
         public long getNombre() { return nombre; }
     }

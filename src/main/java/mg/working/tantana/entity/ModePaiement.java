@@ -1,18 +1,25 @@
 package mg.working.tantana.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+/** Moyen d'encaissement d'une facture (especes, MVola, virement...). */
+@Entity
+@Table(name = "mode_paiement")
 @Getter
-@RequiredArgsConstructor
-public enum ModePaiement {
-    ESPECES("Espèces", "bi-cash"),
-    MVOLA("MVola", "bi-phone"),
-    ORANGE_MONEY("Orange Money", "bi-phone"),
-    AIRTEL_MONEY("Airtel Money", "bi-phone"),
-    VIREMENT("Virement bancaire", "bi-bank"),
-    CHEQUE("Chèque", "bi-journal-check");
+@Setter
+@NoArgsConstructor
+public class ModePaiement extends ReferentielModifiable {
 
-    private final String libelle;
-    private final String icone;
+    /** Icone Bootstrap Icons affichee devant le libelle (ex. bi-cash). */
+    @Column(nullable = false, length = 40)
+    private String icone = "bi-wallet2";
+
+    /** Numero de transaction / cheque / virement exige a l'encaissement (rapprochement). */
+    @Column(name = "reference_obligatoire", nullable = false)
+    private boolean referenceObligatoire = true;
 }

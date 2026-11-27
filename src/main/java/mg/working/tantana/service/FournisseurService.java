@@ -18,6 +18,7 @@ import java.util.List;
 public class FournisseurService {
 
     private final FournisseurRepository fournisseurRepository;
+    private final ReferentielService referentielService;
 
     /** @param actif null = tous, true = actifs, false = inactifs */
     public Page<Fournisseur> rechercher(String texte, Boolean actif, Pageable pageable) {
@@ -49,7 +50,8 @@ public class FournisseurService {
         Fournisseur fournisseur = saisie.getId() == null ? new Fournisseur() : trouver(saisie.getId());
         fournisseur.setNom(nom);
         fournisseur.setPays(saisie.getPays().trim());
-        fournisseur.setDevise(saisie.getDevise());
+        Short deviseId = saisie.getDevise() == null ? null : saisie.getDevise().getId();
+        fournisseur.setDevise(referentielService.choisirDevise(deviseId, fournisseur.getDevise(), "devise.id"));
         fournisseur.setContact(vide(saisie.getContact()));
         fournisseur.setTelephone(vide(saisie.getTelephone()));
         fournisseur.setEmail(vide(saisie.getEmail()));

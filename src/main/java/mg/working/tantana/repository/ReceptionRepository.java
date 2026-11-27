@@ -30,7 +30,7 @@ public interface ReceptionRepository extends JpaRepository<Reception, Long> {
             """)
     Optional<Reception> findAvecDetails(@Param("id") Long id);
 
-    @EntityGraph(attributePaths = {"commande", "commande.fournisseur", "transitaire", "saisiPar"})
+    @EntityGraph(type = EntityGraph.EntityGraphType.LOAD, attributePaths = {"commande", "commande.fournisseur", "transitaire", "saisiPar"})
     @Query("""
             select r from Reception r
             where lower(r.numero) like lower(concat('%', :texte, '%'))
@@ -38,7 +38,7 @@ public interface ReceptionRepository extends JpaRepository<Reception, Long> {
             """)
     Page<Reception> rechercher(@Param("texte") String texte, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"commande", "commande.fournisseur", "transitaire", "saisiPar"})
+    @EntityGraph(type = EntityGraph.EntityGraphType.LOAD, attributePaths = {"commande", "commande.fournisseur", "transitaire", "saisiPar"})
     @Query("""
             select r from Reception r
             where r.statut = :statut
@@ -47,7 +47,7 @@ public interface ReceptionRepository extends JpaRepository<Reception, Long> {
             """)
     Page<Reception> rechercher(@Param("texte") String texte, @Param("statut") StatutReception statut, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"transitaire", "saisiPar", "validePar"})
+    @EntityGraph(type = EntityGraph.EntityGraphType.LOAD, attributePaths = {"transitaire", "saisiPar", "validePar"})
     List<Reception> findByCommandeIdOrderByIdDesc(Long commandeId);
 
     boolean existsByCommandeId(Long commandeId);

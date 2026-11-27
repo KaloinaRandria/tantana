@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import mg.working.tantana.dto.ReceptionForm;
 import mg.working.tantana.entity.CommandeAchat;
 import mg.working.tantana.entity.LigneReception;
+import mg.working.tantana.service.ReferentielService;
 import mg.working.tantana.service.RepartitionFrais;
 import mg.working.tantana.entity.Reception;
 import mg.working.tantana.entity.StatutReception;
@@ -48,6 +49,7 @@ public class ReceptionController {
 
     private final ReceptionService receptionService;
     private final TransitaireService transitaireService;
+    private final ReferentielService referentielService;
     private final SmartValidator validator;
 
     // ===================== Liste et detail =====================
@@ -193,7 +195,8 @@ public class ReceptionController {
         model.addAttribute("form", form);
         model.addAttribute("reception", existante);
         model.addAttribute("transitaires", transitaires);
-        model.addAttribute("typesFrais", TypeFrais.values());
+        model.addAttribute("typesFrais", referentielService.typesFrais(
+                existante == null ? List.of() : existante.getFrais().stream().map(f -> f.getType()).toList()));
         return "receptions/reception-saisie";
     }
 }

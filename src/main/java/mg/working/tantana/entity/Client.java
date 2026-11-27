@@ -2,8 +2,6 @@ package mg.working.tantana.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -38,8 +36,7 @@ public class Client {
     private String nom;
 
     @NotNull(message = "Choisissez le type")
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(name = "type_client_id", nullable = false)
     private TypeClient type = TypeClient.PARTICULIER;
 
     @Size(max = 50, message = "50 caractères maximum")

@@ -1,17 +1,35 @@
 package mg.working.tantana.entity;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
-@Getter
-@RequiredArgsConstructor
-public enum StatutVente {
-    BROUILLON("Brouillon", "secondary"),
+public enum StatutVente implements ValeurSysteme {
+    BROUILLON(1),
     /** Remise au-dela du plafond ou prix sous le revient : un CHECKER doit approuver. */
-    A_VALIDER("À valider", "warning"),
+    A_VALIDER(2),
     /** Facture emise : stock sorti, numero attribue, plus modifiable. */
-    VALIDEE("Facturée", "success");
+    VALIDEE(3);
 
-    private final String libelle;
-    private final String couleur;
+    private final short id;
+
+    StatutVente(int id) {
+        this.id = (short) id;
+    }
+
+    @Override
+    public short getId() {
+        return id;
+    }
+
+    @Override
+    public String getTable() {
+        return "statut_vente";
+    }
+
+    /** Libelle affiche (table statut_vente). */
+    public String getLibelle() {
+        return LibellesSysteme.libelle(this);
+    }
+
+    /** Couleur Bootstrap du badge (text-bg-...). */
+    public String getCouleur() {
+        return LibellesSysteme.couleur(this);
+    }
 }

@@ -86,7 +86,7 @@
                         <dt class="col-5 fw-normal text-muted">Transitaire</dt>
                         <dd class="col-7 mb-1" th:text="${r.transitaire.nom}">Transitaire</dd>
                         <dt class="col-5 fw-normal text-muted">Taux du jour</dt>
-                        <dd class="col-7 mb-1">1 <span th:text="${r.commande.devise}">USD</span> =
+                        <dd class="col-7 mb-1">1 <span th:text="${r.commande.devise.code}">USD</span> =
                             <span th:text="${#numbers.formatDecimal(r.tauxChange, 1, 'WHITESPACE', 2, 'COMMA')}">4500</span> MGA</dd>
                         <dt class="col-5 fw-normal text-muted">Saisie par</dt>
                         <dd class="col-7 mb-1"><span th:text="${r.saisiPar.nomComplet}">X</span>,
@@ -128,7 +128,7 @@
                     <th>Article</th>
                     <th class="text-end">Reçue</th>
                     <th class="text-end">Refusée</th>
-                    <th class="text-end">Prix (<span th:text="${r.commande.devise}">USD</span>)</th>
+                    <th class="text-end">Prix (<span th:text="${r.commande.devise.code}">USD</span>)</th>
                     <th class="text-end">Achat unitaire (MGA)</th>
                     <th class="text-end">Frais / unité</th>
                     <th class="text-end">Revient unitaire</th>

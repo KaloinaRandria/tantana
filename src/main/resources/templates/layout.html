@@ -127,6 +127,11 @@
                         <i class="bi bi-currency-exchange"></i> Prix de vente</a>
                 </li>
                 <li>
+                    <a class="nav-link" th:href="@{/admin/referentiels}"
+                       th:classappend="${#strings.startsWith(urlCourante, '/admin/referentiels')} ? 'active'">
+                        <i class="bi bi-list-check"></i> Référentiels</a>
+                </li>
+                <li>
                     <a class="nav-link" th:href="@{/admin/parametres}"
                        th:classappend="${#strings.startsWith(urlCourante, '/admin/parametres')} ? 'active'">
                         <i class="bi bi-sliders"></i> Paramètres</a>

@@ -295,7 +295,8 @@
                             <div class="col-6">
                                 <label for="mode" class="form-label">Mode <span class="text-danger">*</span></label>
                                 <select id="mode" name="mode" class="form-select" required>
-                                    <option th:each="m : ${modes}" th:value="${m}" th:text="${m.libelle}">Mode</option>
+                                    <option th:each="m : ${modes}" th:value="${m.id}" th:text="${m.libelle}"
+                                            th:attr="data-reference-obligatoire=${m.referenceObligatoire}">Mode</option>
                                 </select>
                             </div>
                             <div class="col-6">

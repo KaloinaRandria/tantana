@@ -24,13 +24,13 @@
                         <div class="invalid-feedback" th:errors="*{nom}">Erreur</div>
                     </div>
                     <div class="col-md-4">
-                        <label for="devise" class="form-label">Devise d'achat <span class="text-danger">*</span></label>
-                        <select th:field="*{devise}" class="form-select"
-                                th:classappend="${#fields.hasErrors('devise')} ? 'is-invalid'">
+                        <label for="devise.id" class="form-label">Devise d'achat <span class="text-danger">*</span></label>
+                        <select th:field="*{devise.id}" class="form-select"
+                                th:classappend="${#fields.hasErrors('devise.id')} ? 'is-invalid'">
                             <option value="">— Choisir —</option>
-                            <option th:each="d : ${devises}" th:value="${d}" th:text="${d} + ' — ' + ${d.libelle}">USD</option>
+                            <option th:each="d : ${devises}" th:value="${d.id}" th:text="${d.code} + ' — ' + ${d.libelle} + (${d.actif} ? '' : ' (désactivée)')">USD</option>
                         </select>
-                        <div class="invalid-feedback" th:errors="*{devise}">Erreur</div>
+                        <div class="invalid-feedback" th:errors="*{devise.id}">Erreur</div>
                         <div class="form-text">Proposée par défaut sur ses commandes.</div>
                     </div>
                     <div class="col-md-6">

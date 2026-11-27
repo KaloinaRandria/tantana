@@ -2,8 +2,6 @@ package mg.working.tantana.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -41,8 +39,8 @@ public class Paiement {
     @Column(nullable = false, precision = 18, scale = 2, updatable = false)
     private BigDecimal montant;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "mode_paiement_id", nullable = false)
     private ModePaiement mode;
 
     /** N° de transaction mobile money, de cheque ou de virement. */

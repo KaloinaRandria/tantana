@@ -7,6 +7,22 @@
 -- (hash BCrypt ci-dessous, genere avec le PasswordEncoder de Spring)
 -- =====================================================================
 
+-- Identifiant d'une valeur de referentiel a partir de son code (les tables stockent des SMALLINT)
+CREATE OR REPLACE FUNCTION pg_temp.ref(p_table TEXT, p_code TEXT) RETURNS SMALLINT AS $f$
+DECLARE
+    v_id SMALLINT;
+BEGIN
+    IF p_code IS NULL THEN
+        RETURN NULL;
+    END IF;
+    EXECUTE format('SELECT id FROM %I WHERE code = $1', p_table) INTO v_id USING p_code;
+    IF v_id IS NULL THEN
+        RAISE EXCEPTION 'Code % inconnu dans la table %', p_code, p_table;
+    END IF;
+    RETURN v_id;
+END
+$f$ LANGUAGE plpgsql;
+
 INSERT INTO utilisateur (username, password, nom_complet, email, actif) VALUES
     ('admin',    '{bcrypt}$2a$10$eUIvnVTsBqndGCtZBOdSVuKgeKwVeNkHcCwIdgXV2OYGzSe2jqFx6', 'Administrateur Test',   'admin@tantana.test',    TRUE),
     ('stock',    '{bcrypt}$2a$10$eUIvnVTsBqndGCtZBOdSVuKgeKwVeNkHcCwIdgXV2OYGzSe2jqFx6', 'Gestionnaire Stock',    'stock@tantana.test',    TRUE),
@@ -44,11 +60,11 @@ ON CONFLICT DO NOTHING;
 
 -- ===== Referentiels Achats =====
 
-INSERT INTO fournisseur (nom, pays, devise, contact, telephone, email, actif) VALUES
-    ('Guangzhou Trading Co.', 'Chine',              'CNY', 'Li Wei',       '+86 20 0000 0000',  'sales@gz-trading.test', TRUE),
-    ('Dubai General Supply',  'Emirats arabes unis', 'AED', 'Omar Haddad',  '+971 4 000 0000',   'contact@dgs.test',      TRUE),
-    ('Euro Import SARL',      'France',             'EUR', 'Claire Martin', '+33 1 00 00 00 00', 'commandes@euroimp.test', TRUE),
-    ('Ancien Fournisseur',    'Inde',               'USD', NULL,            NULL,                NULL,                    FALSE)
+INSERT INTO fournisseur (nom, pays, devise_id, contact, telephone, email, actif) VALUES
+    ('Guangzhou Trading Co.', 'Chine',              pg_temp.ref('devise', 'CNY'), 'Li Wei',       '+86 20 0000 0000',  'sales@gz-trading.test', TRUE),
+    ('Dubai General Supply',  'Emirats arabes unis', pg_temp.ref('devise', 'AED'), 'Omar Haddad',  '+971 4 000 0000',   'contact@dgs.test',      TRUE),
+    ('Euro Import SARL',      'France',             pg_temp.ref('devise', 'EUR'), 'Claire Martin', '+33 1 00 00 00 00', 'commandes@euroimp.test', TRUE),
+    ('Ancien Fournisseur',    'Inde',               pg_temp.ref('devise', 'USD'), NULL,            NULL,                NULL,                    FALSE)
 ON CONFLICT (nom) DO NOTHING;
 
 INSERT INTO transitaire (nom, contact, telephone, email, adresse, actif) VALUES
@@ -56,13 +72,13 @@ INSERT INTO transitaire (nom, contact, telephone, email, adresse, actif) VALUES
     ('Ivato Fret Services',       'Rabe Hery',   '+261 33 00 000 00', 'fret@ivato.test',          'Aeroport Ivato',    TRUE)
 ON CONFLICT (nom) DO NOTHING;
 
-INSERT INTO article (reference, designation, unite, description, actif) VALUES
-    ('ART-0001', 'Telephone portable 6.5 pouces', 'PIECE',  'Smartphone 128 Go',              TRUE),
-    ('ART-0002', 'Chargeur USB-C 25W',            'PIECE',  NULL,                             TRUE),
-    ('ART-0003', 'Ecouteurs sans fil',            'PIECE',  'Boitier de charge inclus',       TRUE),
-    ('ART-0004', 'Cable HDMI 2 m',                'CARTON', 'Carton de 50 cables',            TRUE),
-    ('ART-0005', 'Riz parfume 25 kg',             'SAC',    NULL,                             TRUE),
-    ('ART-0006', 'Ancien modele de lampe',        'PIECE',  'Plus commande',                  FALSE)
+INSERT INTO article (reference, designation, unite_id, description, actif) VALUES
+    ('ART-0001', 'Telephone portable 6.5 pouces', pg_temp.ref('unite', 'PIECE'),  'Smartphone 128 Go',              TRUE),
+    ('ART-0002', 'Chargeur USB-C 25W',            pg_temp.ref('unite', 'PIECE'),  NULL,                             TRUE),
+    ('ART-0003', 'Ecouteurs sans fil',            pg_temp.ref('unite', 'PIECE'),  'Boitier de charge inclus',       TRUE),
+    ('ART-0004', 'Cable HDMI 2 m',                pg_temp.ref('unite', 'CARTON'), 'Carton de 50 cables',            TRUE),
+    ('ART-0005', 'Riz parfume 25 kg',             pg_temp.ref('unite', 'SAC'),    NULL,                             TRUE),
+    ('ART-0006', 'Ancien modele de lampe',        pg_temp.ref('unite', 'PIECE'),  'Plus commande',                  FALSE)
 ON CONFLICT (reference) DO NOTHING;
 
 -- ===== Commandes d'achat de test =====
@@ -70,17 +86,17 @@ ON CONFLICT (reference) DO NOTHING;
 -- CA-2025-9002 : brouillon
 -- Numeros en 2025-9xxx pour ne jamais entrer en conflit avec la numerotation reelle.
 
-INSERT INTO commande_achat (numero, fournisseur_id, date_commande, date_arrivee_prevue, devise, taux_change,
-                            montant_total, statut, observations, cree_par_id)
-SELECT 'CA-2025-9001', f.id, CURRENT_DATE - 45, CURRENT_DATE - 5, 'CNY', 640, 0, 'COMMANDEE',
+INSERT INTO commande_achat (numero, fournisseur_id, date_commande, date_arrivee_prevue, devise_id, taux_change,
+                            montant_total, statut_id, observations, cree_par_id)
+SELECT 'CA-2025-9001', f.id, CURRENT_DATE - 45, CURRENT_DATE - 5, pg_temp.ref('devise', 'CNY'), 640, 0, pg_temp.ref('statut_commande', 'COMMANDEE'),
        'Expedition maritime via Toamasina', u.id
 FROM fournisseur f, utilisateur u
 WHERE f.nom = 'Guangzhou Trading Co.' AND u.username = 'admin'
 ON CONFLICT (numero) DO NOTHING;
 
-INSERT INTO commande_achat (numero, fournisseur_id, date_commande, date_arrivee_prevue, devise, taux_change,
-                            montant_total, statut, observations, cree_par_id)
-SELECT 'CA-2025-9002', f.id, CURRENT_DATE - 2, CURRENT_DATE + 30, 'EUR', 5100, 0, 'BROUILLON', NULL, u.id
+INSERT INTO commande_achat (numero, fournisseur_id, date_commande, date_arrivee_prevue, devise_id, taux_change,
+                            montant_total, statut_id, observations, cree_par_id)
+SELECT 'CA-2025-9002', f.id, CURRENT_DATE - 2, CURRENT_DATE + 30, pg_temp.ref('devise', 'EUR'), 5100, 0, pg_temp.ref('statut_commande', 'BROUILLON'), NULL, u.id
 FROM fournisseur f, utilisateur u
 WHERE f.nom = 'Euro Import SARL' AND u.username = 'maker'
 ON CONFLICT (numero) DO NOTHING;
@@ -106,8 +122,8 @@ WHERE c.numero IN ('CA-2025-9001', 'CA-2025-9002');
 -- BR-2025-9001 : arrivage partiel de CA-2025-9001, saisi par "maker",
 -- en attente de validation par "checker" (ou admin).
 
-INSERT INTO reception (numero, commande_id, transitaire_id, date_reception, taux_change, statut, observations, saisi_par_id)
-SELECT 'BR-2025-9001', c.id, t.id, CURRENT_DATE - 1, 645, 'SAISIE', 'Conteneur 20 pieds, 2 telephones abimes', u.id
+INSERT INTO reception (numero, commande_id, transitaire_id, date_reception, taux_change, statut_id, observations, saisi_par_id)
+SELECT 'BR-2025-9001', c.id, t.id, CURRENT_DATE - 1, 645, pg_temp.ref('statut_reception', 'SAISIE'), 'Conteneur 20 pieds, 2 telephones abimes', u.id
 FROM commande_achat c, transitaire t, utilisateur u
 WHERE c.numero = 'CA-2025-9001' AND t.nom = 'Transit Express Toamasina' AND u.username = 'maker'
 ON CONFLICT (numero) DO NOTHING;
@@ -123,8 +139,8 @@ JOIN article a              ON a.reference = l.reference
 JOIN ligne_commande_achat lc ON lc.commande_id = r.commande_id AND lc.article_id = a.id
 ON CONFLICT (reception_id, ligne_commande_id) DO NOTHING;
 
-INSERT INTO frais_reception (reception_id, type, montant, reference_facture)
-SELECT r.id, f.type, f.montant, f.ref
+INSERT INTO frais_reception (reception_id, type_frais_id, montant, reference_facture)
+SELECT r.id, pg_temp.ref('type_frais', f.type), f.montant, f.ref
 FROM (VALUES
         ('FRET',    2500000, 'FT-7781'),
         ('DOUANE',  4800000, 'DQ-2025-118'),
@@ -142,8 +158,8 @@ FROM (VALUES ('ART-0001', 750000), ('ART-0002', 20000), ('ART-0004', 95000), ('A
 WHERE a.reference = p.reference AND a.prix_vente_ht IS NULL;
 
 -- ===== Clients de test =====
-INSERT INTO client (nom, type, telephone, email, adresse, nif, stat, plafond_credit, actif)
-SELECT v.nom, v.type, v.tel, v.email, v.adresse, v.nif, v.stat, v.plafond, v.actif
+INSERT INTO client (nom, type_client_id, telephone, email, adresse, nif, stat, plafond_credit, actif)
+SELECT v.nom, pg_temp.ref('type_client', v.type), v.tel, v.email, v.adresse, v.nif, v.stat, v.plafond, v.actif
 FROM (VALUES
         ('Rasoa Hanta',            'PARTICULIER',   '+261 34 11 111 11', NULL,                    'Analakely, Antananarivo', NULL,         NULL,                0,       TRUE),
         ('Boutique Fanilo',        'PROFESSIONNEL', '+261 33 22 222 22', 'fanilo@boutique.test',  'Behoririka, Antananarivo', '1000111222', '47111112024000001', 5000000, TRUE),

@@ -3,8 +3,6 @@ package mg.working.tantana.entity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -55,8 +53,7 @@ public class Reception {
     @Column(name = "taux_change", nullable = false, precision = 18, scale = 6)
     private BigDecimal tauxChange;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(name = "statut_id", nullable = false)
     private StatutReception statut = StatutReception.SAISIE;
 
     @Column(columnDefinition = "TEXT")

@@ -2,8 +2,6 @@ package mg.working.tantana.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -33,8 +31,8 @@ public class FraisReception {
     @JoinColumn(name = "reception_id")
     private Reception reception;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "type_frais_id", nullable = false)
     private TypeFrais type;
 
     @Column(nullable = false, precision = 18, scale = 2)

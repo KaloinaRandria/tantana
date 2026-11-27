@@ -19,7 +19,7 @@ public interface CommandeAchatRepository extends JpaRepository<CommandeAchat, Lo
 
     /** Liste paginee : le fournisseur est charge dans la meme requete. */
     @Override
-    @EntityGraph(attributePaths = "fournisseur")
+    @EntityGraph(type = EntityGraph.EntityGraphType.LOAD, attributePaths = "fournisseur")
     Page<CommandeAchat> findAll(Specification<CommandeAchat> spec, Pageable pageable);
 
     /** Detail complet : fournisseur, createur, lignes et articles. */

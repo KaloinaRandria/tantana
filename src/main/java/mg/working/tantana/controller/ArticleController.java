@@ -4,7 +4,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import mg.working.tantana.entity.Article;
 import mg.working.tantana.entity.Unite;
+import mg.working.tantana.exception.RegleMetierException;
 import mg.working.tantana.service.ArticleService;
+import mg.working.tantana.service.ReferentielService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
@@ -26,11 +28,7 @@ public class ArticleController {
     private static final int TAILLE_PAGE = 20;
 
     private final ArticleService articleService;
-
-    @ModelAttribute("unites")
-    public Unite[] unites() {
-        return Unite.values();
-    }
+    private final ReferentielService referentielService;
 
     @GetMapping
     public String liste(@RequestParam(defaultValue = "") String q,
@@ -46,26 +44,48 @@ public class ArticleController {
 
     @GetMapping("/nouveau")
     public String nouveau(Model model) {
-        model.addAttribute("article", new Article());
-        return "articles/article-saisie";
+        Article article = new Article();
+        article.setUnite(new Unite());
+        return formulaire(article, model);
     }
 
     @GetMapping("/{id}/modifier")
     public String modifier(@PathVariable Long id, Model model) {
-        model.addAttribute("article", articleService.trouver(id));
-        return "articles/article-saisie";
+        return formulaire(articleService.trouver(id), model);
     }
 
     @PostMapping("/enregistrer")
     public String enregistrer(@Valid @ModelAttribute("article") Article article,
                               BindingResult erreurs,
+                              Model model,
                               RedirectAttributes redirect) {
         if (erreurs.hasErrors()) {
-            return "articles/article-saisie";
+            return listesSaisie(article, model);
         }
-        Article enregistre = articleService.enregistrer(article);
-        redirect.addFlashAttribute("succes", "Article " + enregistre.getReference() + " enregistré.");
-        return "redirect:/articles";
+        try {
+            Article enregistre = articleService.enregistrer(article);
+            redirect.addFlashAttribute("succes", "Article " + enregistre.getReference() + " enregistré.");
+            return "redirect:/articles";
+        } catch (RegleMetierException e) {
+            if (e.getChamp() != null) {
+                erreurs.rejectValue(e.getChamp(), "regle", e.getMessage());
+            } else {
+                erreurs.reject("regle", e.getMessage());
+            }
+            return listesSaisie(article, model);
+        }
+    }
+
+    private String formulaire(Article article, Model model) {
+        model.addAttribute("article", article);
+        return listesSaisie(article, model);
+    }
+
+    /** Unites proposees : les actives, plus l'unite actuelle de l'article si elle a ete desactivee. */
+    private String listesSaisie(Article article, Model model) {
+        Unite actuelle = article.getId() == null ? null : articleService.trouver(article.getId()).getUnite();
+        model.addAttribute("unites", referentielService.unites(actuelle));
+        return "articles/article-saisie";
     }
 
     @PostMapping("/{id}/statut")

@@ -1,19 +1,21 @@
 package mg.working.tantana.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /** Cause d'un ecart d'inventaire : obligatoire pour toute ligne dont le compte differe du theorique. */
+@Entity
+@Table(name = "motif_ecart")
 @Getter
-@RequiredArgsConstructor
-public enum MotifEcart {
-    CASSE("Casse / détérioration"),
-    PEREMPTION("Produit périmé"),
-    VOL_PERTE("Vol ou perte inexpliquée"),
-    ERREUR_RECEPTION("Erreur de réception (quantité saisie)"),
-    ERREUR_VENTE("Erreur de vente / livraison"),
-    ECHANTILLON("Échantillon / usage interne"),
-    AUTRE("Autre (préciser en commentaire)");
+@Setter
+@NoArgsConstructor
+public class MotifEcart extends ReferentielModifiable {
 
-    private final String libelle;
+    /** Le compteur doit preciser l'ecart en commentaire (ex. « Autre »). */
+    @Column(name = "commentaire_obligatoire", nullable = false)
+    private boolean commentaireObligatoire;
 }

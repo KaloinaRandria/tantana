@@ -8,6 +8,7 @@ import mg.working.tantana.dto.LigneVenteForm;
 import mg.working.tantana.entity.Avoir;
 import mg.working.tantana.entity.ModePaiement;
 import mg.working.tantana.entity.Paiement;
+import mg.working.tantana.service.ReferentielService;
 import mg.working.tantana.service.AvoirService;
 import mg.working.tantana.service.Montants;
 import mg.working.tantana.service.PaiementService;
@@ -70,6 +71,7 @@ public class VenteController {
     private final FactureService factureService;
     private final PaiementService paiementService;
     private final AvoirService avoirService;
+    private final ReferentielService referentielService;
     private final SmartValidator validator;
 
     // ===================== Liste et detail =====================
@@ -106,7 +108,7 @@ public class VenteController {
         if (vente.getStatut() == StatutVente.VALIDEE) {
             model.addAttribute("paiements", paiementService.lister(id));
             model.addAttribute("avoirs", avoirService.lister(id));
-            model.addAttribute("modes", ModePaiement.values());
+            model.addAttribute("modes", referentielService.modesPaiement());
             model.addAttribute("aujourdhui", LocalDate.now());
             model.addAttribute("creditable", vente.getLignes().stream().anyMatch(l -> l.getQuantiteCreditable().signum() > 0));
         }
@@ -118,7 +120,7 @@ public class VenteController {
     @PostMapping("/{id}/paiements")
     public String encaisser(@PathVariable Long id,
                             @RequestParam(required = false) BigDecimal montant,
-                            @RequestParam(required = false) ModePaiement mode,
+                            @RequestParam(required = false) Short mode,
                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                             @RequestParam(defaultValue = "") String reference,
                             Principal principal, RedirectAttributes redirect) {

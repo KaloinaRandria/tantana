@@ -7,7 +7,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-import mg.working.tantana.entity.MotifEcart;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -43,7 +42,7 @@ public class ComptageForm {
         @Digits(integer = 12, fraction = 3, message = "3 décimales maximum")
         private BigDecimal quantiteComptee;
 
-        private MotifEcart motifEcart;
+        private Short motifEcartId;
 
         @Size(max = 255, message = "255 caractères maximum")
         private String commentaire;

@@ -50,6 +50,7 @@ public class ReceptionService {
     private final UtilisateurRepository utilisateurRepository;
     private final NumerotationService numerotationService;
     private final StockService stockService;
+    private final ReferentielService referentielService;
 
     // ===================== Lecture =====================
 
@@ -127,7 +128,7 @@ public class ReceptionService {
             form.getLignes().add(l);
         }
         reception.getFrais().forEach(f -> form.getFrais().add(new FraisReceptionForm(
-                f.getType(), Nombres.sansZeros(f.getMontant()), f.getReferenceFacture(), f.getCommentaire())));
+                f.getType().getId(), Nombres.sansZeros(f.getMontant()), f.getReferenceFacture(), f.getCommentaire())));
         completerAffichage(form, reception.getCommande());
         return form;
     }
@@ -367,9 +368,10 @@ public class ReceptionService {
 
     private void appliquerFrais(ReceptionForm form, Reception reception) {
         reception.getFrais().clear();
-        for (FraisReceptionForm f : form.getFrais()) {
+        for (int i = 0; i < form.getFrais().size(); i++) {
+            FraisReceptionForm f = form.getFrais().get(i);
             FraisReception frais = new FraisReception();
-            frais.setType(f.getType());
+            frais.setType(referentielService.choisirTypeFrais(f.getTypeId(), "frais[" + i + "].typeId"));
             frais.setMontant(f.getMontant());
             frais.setReferenceFacture(texte(f.getReferenceFacture()));
             frais.setCommentaire(texte(f.getCommentaire()));

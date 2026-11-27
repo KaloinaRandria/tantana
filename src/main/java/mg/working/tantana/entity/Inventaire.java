@@ -3,8 +3,6 @@ package mg.working.tantana.entity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -44,15 +42,13 @@ public class Inventaire {
     @Column(nullable = false, unique = true, length = 20, updatable = false)
     private String numero;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20, updatable = false)
+    @Column(name = "type_inventaire_id", nullable = false, updatable = false)
     private TypeInventaire type;
 
     @Column(name = "date_inventaire", nullable = false)
     private LocalDate dateInventaire;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(name = "statut_id", nullable = false)
     private StatutInventaire statut = StatutInventaire.EN_COMPTAGE;
 
     @Column(columnDefinition = "TEXT")

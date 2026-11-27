@@ -2,8 +2,6 @@ package mg.working.tantana.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -52,8 +50,8 @@ public class LigneInventaire {
     @Column(name = "quantite_comptee", precision = 15, scale = 3)
     private BigDecimal quantiteComptee;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "motif_ecart", length = 30)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "motif_ecart_id")
     private MotifEcart motifEcart;
 
     @Column(length = 255)
@@ -91,7 +89,7 @@ public class LigneInventaire {
         return quantiteTheorique.multiply(cmupRevient).setScale(0, RoundingMode.HALF_UP);
     }
 
-    /** Un ecart doit avoir un motif (et un commentaire si le motif est « Autre »). */
+    /** Un ecart doit avoir un motif (et un commentaire si le motif l'exige, ex. « Autre »). */
     public boolean isJustifiee() {
         if (!isAvecEcart()) {
             return true;
@@ -99,6 +97,6 @@ public class LigneInventaire {
         if (motifEcart == null) {
             return false;
         }
-        return motifEcart != MotifEcart.AUTRE || (commentaire != null && !commentaire.isBlank());
+        return !motifEcart.isCommentaireObligatoire() || (commentaire != null && !commentaire.isBlank());
     }
 }

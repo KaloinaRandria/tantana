@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import mg.working.tantana.entity.TypeFrais;
 
 import java.math.BigDecimal;
 
@@ -18,7 +17,7 @@ import java.math.BigDecimal;
 public class FraisReceptionForm {
 
     @NotNull(message = "Choisissez le type")
-    private TypeFrais type;
+    private Short typeId;
 
     @NotNull(message = "Montant obligatoire")
     @DecimalMin(value = "0", message = "Ne peut pas être négatif")
@@ -31,15 +30,15 @@ public class FraisReceptionForm {
     @Size(max = 255, message = "255 caractères maximum")
     private String commentaire;
 
-    public FraisReceptionForm(TypeFrais type, BigDecimal montant, String referenceFacture, String commentaire) {
-        this.type = type;
+    public FraisReceptionForm(Short typeId, BigDecimal montant, String referenceFacture, String commentaire) {
+        this.typeId = typeId;
         this.montant = montant;
         this.referenceFacture = referenceFacture;
         this.commentaire = commentaire;
     }
 
     public boolean estVide() {
-        return type == null && montant == null
+        return typeId == null && montant == null
                 && (referenceFacture == null || referenceFacture.isBlank())
                 && (commentaire == null || commentaire.isBlank());
     }

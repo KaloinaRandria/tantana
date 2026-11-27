@@ -1,16 +1,38 @@
 package mg.working.tantana.entity;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
-@Getter
-@RequiredArgsConstructor
-public enum TypeInventaire {
+public enum TypeInventaire implements ValeurSysteme {
     /** Tous les articles actifs (et les inactifs qui ont encore du stock) : inventaire annuel. */
-    COMPLET("Complet", "Tous les articles — inventaire annuel de clôture"),
+    COMPLET(1),
     /** Quelques articles a la fois, tout au long de l'annee (classe A chaque mois, etc.). */
-    TOURNANT("Tournant", "Une sélection d'articles — comptage régulier sans fermer le magasin");
+    TOURNANT(2);
 
-    private final String libelle;
-    private final String description;
+    private final short id;
+
+    TypeInventaire(int id) {
+        this.id = (short) id;
+    }
+
+    @Override
+    public short getId() {
+        return id;
+    }
+
+    @Override
+    public String getTable() {
+        return "type_inventaire";
+    }
+
+    /** Libelle affiche (table type_inventaire). */
+    public String getLibelle() {
+        return LibellesSysteme.libelle(this);
+    }
+
+    /** Couleur Bootstrap du badge (text-bg-...). */
+    public String getCouleur() {
+        return LibellesSysteme.couleur(this);
+    }
+
+    public String getDescription() {
+        return LibellesSysteme.description(this);
+    }
 }

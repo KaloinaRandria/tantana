@@ -18,6 +18,7 @@ public class ArticleService {
 
     private final ArticleRepository articleRepository;
     private final NumerotationService numerotationService;
+    private final ReferentielService referentielService;
 
     /** @param actif null = tous, true = actifs, false = inactifs */
     public Page<Article> rechercher(String texte, Boolean actif, Pageable pageable) {
@@ -51,7 +52,8 @@ public class ArticleService {
             article = trouver(saisie.getId());
         }
         article.setDesignation(saisie.getDesignation().trim());
-        article.setUnite(saisie.getUnite());
+        Short uniteId = saisie.getUnite() == null ? null : saisie.getUnite().getId();
+        article.setUnite(referentielService.choisirUnite(uniteId, article.getUnite()));
         article.setDescription(vide(saisie.getDescription()));
         return articleRepository.save(article);
     }

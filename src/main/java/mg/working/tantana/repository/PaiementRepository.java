@@ -8,6 +8,6 @@ import java.util.List;
 
 public interface PaiementRepository extends JpaRepository<Paiement, Long> {
 
-    @EntityGraph(attributePaths = {"saisiPar", "annulePar"})
+    @EntityGraph(type = EntityGraph.EntityGraphType.LOAD, attributePaths = {"saisiPar", "annulePar"})
     List<Paiement> findByVenteIdOrderByIdAsc(Long venteId);
 }

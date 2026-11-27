@@ -8,6 +8,6 @@ import java.util.List;
 
 public interface HistoriquePrixVenteRepository extends JpaRepository<HistoriquePrixVente, Long> {
 
-    @EntityGraph(attributePaths = "modifiePar")
+    @EntityGraph(type = EntityGraph.EntityGraphType.LOAD, attributePaths = "modifiePar")
     List<HistoriquePrixVente> findByArticleIdOrderByDateModificationDescIdDesc(Long articleId);
 }

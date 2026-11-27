@@ -78,7 +78,7 @@
         <div th:if="${inv.nombreNonJustifies > 0}" class="alert alert-warning">
             <i class="bi bi-exclamation-triangle"></i>
             <strong th:text="${inv.nombreNonJustifies}">0</strong> écart(s) sans motif : chaque écart doit être justifié
-            avant la validation (motif, et commentaire pour « Autre »).
+            avant la validation (motif, et commentaire si le motif l'exige).
         </div>
         <div th:if="${intervenant}" class="alert alert-light border small">
             <i class="bi bi-hourglass-split"></i>
@@ -321,10 +321,10 @@
                             th:text="${#numbers.formatDecimal(l.ecartValeur, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
                         <td>
                             <select th:if="${justification and l.avecEcart}" class="form-select form-select-sm"
-                                    th:name="'lignes[' + ${it.index} + '].motifEcart'">
+                                    th:name="'lignes[' + ${it.index} + '].motifEcartId'">
                                 <option value="">— Choisir le motif —</option>
-                                <option th:each="m : ${motifs}" th:value="${m}" th:text="${m.libelle}"
-                                        th:selected="${m == l.motifEcart}">Motif</option>
+                                <option th:each="m : ${motifs}" th:value="${m.id}" th:text="${m.libelle}"
+                                        th:selected="${l.motifEcart != null and m.id == l.motifEcart.id}">Motif</option>
                             </select>
                             <span th:unless="${justification and l.avecEcart}" class="small"
                                   th:text="${l.motifEcart?.libelle}">motif</span>

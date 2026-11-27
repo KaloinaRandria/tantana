@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import mg.working.tantana.dto.RapportVentes.Creance;
 import mg.working.tantana.dto.RapportVentes.Encaissement;
 import mg.working.tantana.dto.RapportVentes.LigneMarge;
+import mg.working.tantana.dto.RapportVentes.ModeAffiche;
 import mg.working.tantana.dto.RapportVentes.Synthese;
-import mg.working.tantana.entity.ModePaiement;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -27,7 +27,7 @@ public class RapportVentesRepository {
     public Synthese synthese(LocalDate du, LocalDate au) {
         Object[] ventes = jdbc.queryForObject("""
                 SELECT count(*), coalesce(sum(total_ht), 0), coalesce(sum(cout_revient_total), 0), coalesce(sum(total_ttc), 0)
-                FROM vente WHERE statut = 'VALIDEE' AND date_vente BETWEEN ? AND ?
+                FROM vente WHERE statut_id = 3 AND date_vente BETWEEN ? AND ?
                 """, (rs, i) -> new Object[]{rs.getLong(1), rs.getBigDecimal(2), rs.getBigDecimal(3), rs.getBigDecimal(4)},
                 Date.valueOf(du), Date.valueOf(au));
         Object[] avoirs = jdbc.queryForObject("""
@@ -45,7 +45,7 @@ public class RapportVentesRepository {
                 FROM (
                     SELECT lv.article_id, lv.quantite AS q, lv.montant_ht AS ca, lv.cout_revient_unitaire * lv.quantite AS cout
                     FROM ligne_vente lv JOIN vente v ON v.id = lv.vente_id
-                    WHERE v.statut = 'VALIDEE' AND v.date_vente BETWEEN ? AND ?
+                    WHERE v.statut_id = 3 AND v.date_vente BETWEEN ? AND ?
                     UNION ALL
                     SELECT lv.article_id, -la.quantite, -la.montant_ht, -lv.cout_revient_unitaire * la.quantite
                     FROM ligne_avoir la JOIN ligne_vente lv ON lv.id = la.ligne_vente_id JOIN avoir av ON av.id = la.avoir_id
@@ -63,7 +63,7 @@ public class RapportVentesRepository {
                 SELECT c.id, c.nom, count(DISTINCT x.vente_id) AS nb, sum(x.ca) AS ca, sum(x.cout) AS cout
                 FROM (
                     SELECT v.client_id, v.id AS vente_id, v.total_ht AS ca, v.cout_revient_total AS cout
-                    FROM vente v WHERE v.statut = 'VALIDEE' AND v.date_vente BETWEEN ? AND ?
+                    FROM vente v WHERE v.statut_id = 3 AND v.date_vente BETWEEN ? AND ?
                     UNION ALL
                     SELECT v.client_id, NULL, -av.total_ht, -av.cout_revient_total
                     FROM avoir av JOIN vente v ON v.id = av.vente_id
@@ -78,10 +78,11 @@ public class RapportVentesRepository {
 
     public List<Encaissement> encaissements(LocalDate du, LocalDate au) {
         return jdbc.query("""
-                SELECT mode, sum(montant) AS montant, count(*) AS nb FROM paiement
-                WHERE NOT annule AND date_paiement BETWEEN ? AND ?
-                GROUP BY mode ORDER BY sum(montant) DESC
-                """, (rs, i) -> new Encaissement(ModePaiement.valueOf(rs.getString("mode")),
+                SELECT m.libelle, m.icone, sum(p.montant) AS montant, count(*) AS nb
+                FROM paiement p JOIN mode_paiement m ON m.id = p.mode_paiement_id
+                WHERE NOT p.annule AND p.date_paiement BETWEEN ? AND ?
+                GROUP BY m.id, m.libelle, m.icone ORDER BY sum(p.montant) DESC
+                """, (rs, i) -> new Encaissement(new ModeAffiche(rs.getString("libelle"), rs.getString("icone")),
                         rs.getBigDecimal("montant"), rs.getLong("nb")),
                 Date.valueOf(du), Date.valueOf(au));
     }
@@ -93,7 +94,7 @@ public class RapportVentesRepository {
                 SELECT to_char(x.d, 'YYYY-MM') AS mois, sum(x.ca) AS ca, sum(x.cout) AS cout
                 FROM (
                     SELECT date_vente AS d, total_ht AS ca, cout_revient_total AS cout FROM vente
-                    WHERE statut = 'VALIDEE' AND date_vente >= ?
+                    WHERE statut_id = 3 AND date_vente >= ?
                     UNION ALL
                     SELECT date_avoir, -total_ht, -cout_revient_total FROM avoir WHERE date_avoir >= ?
                 ) x
@@ -112,7 +113,7 @@ public class RapportVentesRepository {
                        sum(v.total_ttc - v.montant_avoirs - v.montant_paye) AS reste,
                        count(*) AS nb, min(v.date_vente) AS plus_ancienne
                 FROM vente v JOIN client c ON c.id = v.client_id
-                WHERE v.statut = 'VALIDEE' AND v.total_ttc - v.montant_avoirs - v.montant_paye > 0
+                WHERE v.statut_id = 3 AND v.total_ttc - v.montant_avoirs - v.montant_paye > 0
                 GROUP BY c.id, c.nom, c.plafond_credit
                 ORDER BY reste DESC
                 """, (rs, i) -> new Creance(rs.getLong("id"), rs.getString("nom"), rs.getBigDecimal("reste"),

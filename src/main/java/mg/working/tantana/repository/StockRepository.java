@@ -25,7 +25,7 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
     @Query("select s from Stock s where s.article.id = :articleId")
     Optional<Stock> findPourMiseAJour(@Param("articleId") Long articleId);
 
-    @EntityGraph(attributePaths = "article")
+    @EntityGraph(type = EntityGraph.EntityGraphType.LOAD, attributePaths = "article")
     @Query("""
             select s from Stock s
             where lower(s.article.reference) like lower(concat('%', :texte, '%'))
@@ -33,7 +33,7 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
             """)
     Page<Stock> rechercher(@Param("texte") String texte, Pageable pageable);
 
-    @EntityGraph(attributePaths = "article")
+    @EntityGraph(type = EntityGraph.EntityGraphType.LOAD, attributePaths = "article")
     Optional<Stock> findByArticleId(Long articleId);
 
     List<Stock> findByArticleIdIn(Collection<Long> articleIds);
