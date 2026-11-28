@@ -1,7 +1,7 @@
 /*
  * Saisie d'une vente : prix catalogue et stock affiches selon l'article, montants et totaux
- * en direct (TVA sur le total HT, arrondie a l'Ariary comme sur la facture), alertes
- * remise > plafond et quantite > stock. Le serveur recalcule tout : ceci n'est qu'un apercu.
+ * en direct (TVA sur le total HT, arrondie a l'Ariary comme sur la facture), remise deduite
+ * du prix negocie (vide = prix officiel), alertes remise > plafond et quantite > stock. Le serveur recalcule tout : ceci n'est qu'un apercu.
  */
 (function () {
     const form = document.getElementById('form-vente');
@@ -34,18 +34,30 @@
             const prix = option && option.dataset.prix ? parseFloat(option.dataset.prix) : null;
             const stock = option && option.dataset.stock ? parseFloat(option.dataset.stock) : null;
             const qte = nombre(tr.querySelector('.champ-quantite'));
-            const remise = nombre(tr.querySelector('.champ-remise'));
+            const champNegocie = tr.querySelector('.champ-prix-negocie');
+            const saisi = champNegocie.value.trim() === '' ? null : parseFloat(champNegocie.value);
+            // prix negocie vide (ou invalide) : prix officiel ; au-dessus du prix officiel : refuse par le serveur
+            const negocie = saisi !== null && !isNaN(saisi) && saisi > 0 ? saisi : null;
+            const auDessus = prix !== null && negocie !== null && negocie > prix;
+            const net = prix === null ? 0 : (negocie !== null && negocie < prix ? Math.round(negocie * 100) / 100 : prix);
+            // meme calcul que le serveur : arrondi au centieme superieur
+            const remise = prix === null || prix <= 0 || net >= prix ? 0
+                : Math.min(100, Math.ceil((prix - net) * 10000 / prix - 1e-9) / 100);
 
             tr.querySelector('.prix').textContent = prix === null ? '—' : fmt.format(prix);
+            champNegocie.classList.toggle('is-invalid', auDessus);
+            champNegocie.title = auDessus ? 'Le prix négocié ne peut pas dépasser le prix officiel' : '';
+            const celRemise = tr.querySelector('.remise');
+            celRemise.textContent = remise > 0 ? fmtQte.format(remise) + ' %' : '—';
+            celRemise.classList.toggle('text-warning-emphasis', remise > remiseMax);
+            celRemise.classList.toggle('fw-semibold', remise > remiseMax);
             const celStock = tr.querySelector('.stock');
             celStock.textContent = stock === null ? '—' : fmtQte.format(stock) + ' ' + (option.dataset.unite || '');
             celStock.classList.toggle('text-danger', stock !== null && qte > stock);
             celStock.classList.toggle('fw-semibold', stock !== null && qte > stock);
 
-            const net = prix === null ? 0 : Math.round(prix * (100 - remise)) / 100;
             const montant = net * qte;
             tr.querySelector('.montant').textContent = fmt.format(montant);
-            tr.querySelector('.champ-remise').classList.toggle('border-warning', remise > remiseMax);
 
             totalHt += montant;
             controle = controle || remise > remiseMax;

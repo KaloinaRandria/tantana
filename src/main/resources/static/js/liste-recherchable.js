@@ -10,15 +10,45 @@
  * Une option peut porter data-detail="..." : affiche sous le libelle et inclus dans la recherche
  * (ex. « Stock 25 Pièce · 1 007 900 MGA HT »).
  *
+ * Les listes portant le meme data-unique="groupe" s'excluent : une valeur choisie dans l'une
+ * n'est plus proposee dans les autres (ex. un article deja present sur une ligne de vente).
+ *
  * Les lignes ajoutees dynamiquement sont activees automatiquement ; pour donner le focus a une
  * nouvelle ligne : ListeRecherchable.activer(select).focus().
  */
 (function () {
     if (typeof TomSelect === 'undefined') return;
 
+    /**
+     * Valeurs deja choisies dans les AUTRES listes du meme groupe data-unique
+     * (ex. un article deja present sur une autre ligne de la vente).
+     */
+    function valeursPrises(select) {
+        const groupe = select.dataset.unique;
+        if (!groupe) return new Set();
+        return new Set([...document.querySelectorAll('select[data-unique]')]
+            .filter((s) => s !== select && s.dataset.unique === groupe && s.value !== '')
+            .map((s) => s.value));
+    }
+
     function activer(select) {
         if (!select) return null;
         if (select.tomselect) return select.tomselect;
+        const liste = creer(select);
+        if (select.dataset.unique) {
+            // resultats de recherche sans les valeurs deja choisies sur les autres lignes
+            const rechercher = liste.search.bind(liste);
+            liste.search = (texte) => {
+                const resultat = rechercher(texte);
+                const prises = valeursPrises(select);
+                return prises.size === 0 ? resultat
+                    : Object.assign({}, resultat, {items: resultat.items.filter((i) => !prises.has(String(i.id)))});
+            };
+        }
+        return liste;
+    }
+
+    function creer(select) {
         return new TomSelect(select, {
             maxOptions: 200,
             // filtrage immediat (300 ms par defaut) : sinon « lemur » + Entree choisit

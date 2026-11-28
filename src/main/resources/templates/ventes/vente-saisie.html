@@ -56,7 +56,8 @@
                     <i class="bi bi-plus-lg"></i> Ajouter un article</button>
             </div>
             <p class="small text-muted mb-3">
-                <span th:text="|Prix catalogue${ht}.|">Prix catalogue HT.</span> Remise autorisée sans contrôle : jusqu'à
+                Laissez le prix négocié vide pour vendre au prix officiel ; sinon la remise est calculée
+                à partir du prix négocié. Remise autorisée sans contrôle : jusqu'à
                 <strong th:text="${@nombres.qte(parametre.remiseMaxVendeur)} + ' %'">10 %</strong>.
                 Au-delà, la vente sera contrôlée par un CHECKER avant facturation.
             </p>
@@ -69,9 +70,10 @@
                     <tr>
                         <th style="min-width:260px">Article</th>
                         <th class="text-end" style="width:110px">Stock</th>
-                        <th class="text-end" style="width:130px" th:text="|Prix${ht}|">Prix HT</th>
+                        <th class="text-end" style="width:130px" th:text="|Prix officiel${ht}|">Prix officiel HT</th>
+                        <th class="text-end" style="width:150px" th:text="|Prix négocié${ht}|">Prix négocié HT</th>
                         <th class="text-end" style="width:120px">Quantité</th>
-                        <th class="text-end" style="width:110px">Remise %</th>
+                        <th class="text-end" style="width:90px">Remise</th>
                         <th class="text-end" style="width:140px" th:text="|Montant${ht}|">Montant HT</th>
                         <th style="width:50px"></th>
                     </tr>
@@ -79,7 +81,7 @@
                     <tbody>
                     <tr th:each="l, it : *{lignes}" class="ligne">
                         <td>
-                            <select th:field="*{lignes[__${it.index}__].articleId}" class="form-select form-select-sm champ-article" data-recherche="Référence ou désignation"
+                            <select th:field="*{lignes[__${it.index}__].articleId}" class="form-select form-select-sm champ-article" data-unique="article" data-recherche="Référence ou désignation"
                                     th:classappend="${#fields.hasErrors('lignes[__${it.index}__].articleId')} ? 'is-invalid'">
                                 <option value="">— Choisir —</option>
                                 <option th:each="a : ${articles}" th:value="${a.id}"
@@ -93,17 +95,18 @@
                         <td class="text-end small stock">—</td>
                         <td class="text-end prix">—</td>
                         <td>
+                            <input type="number" step="0.01" min="0" th:field="*{lignes[__${it.index}__].prixNegocie}"
+                                   class="form-control form-control-sm text-end champ-prix-negocie" placeholder="Officiel"
+                                   th:classappend="${#fields.hasErrors('lignes[__${it.index}__].prixNegocie')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:errors="*{lignes[__${it.index}__].prixNegocie}">Erreur</div>
+                        </td>
+                        <td>
                             <input type="number" step="0.001" min="0" th:field="*{lignes[__${it.index}__].quantite}"
                                    class="form-control form-control-sm text-end champ-quantite"
                                    th:classappend="${#fields.hasErrors('lignes[__${it.index}__].quantite')} ? 'is-invalid'">
                             <div class="invalid-feedback" th:errors="*{lignes[__${it.index}__].quantite}">Erreur</div>
                         </td>
-                        <td>
-                            <input type="number" step="0.01" min="0" max="100" th:field="*{lignes[__${it.index}__].remisePct}"
-                                   class="form-control form-control-sm text-end champ-remise"
-                                   th:classappend="${#fields.hasErrors('lignes[__${it.index}__].remisePct')} ? 'is-invalid'">
-                            <div class="invalid-feedback" th:errors="*{lignes[__${it.index}__].remisePct}">Erreur</div>
-                        </td>
+                        <td class="text-end small text-nowrap remise">—</td>
                         <td class="text-end montant">0</td>
                         <td class="text-end">
                             <button type="button" class="btn btn-sm btn-outline-danger supprimer-ligne" title="Retirer">
@@ -113,11 +116,11 @@
                     </tbody>
                     <tfoot>
                     <!-- TVA 0 % : lignes HT et TVA masquees (gardees pour vente.js), seul le total reste -->
-                    <tr th:classappend="${tvaApplicable} ? '' : 'd-none'"><td colspan="5" class="text-end">Total HT</td>
+                    <tr th:classappend="${tvaApplicable} ? '' : 'd-none'"><td colspan="6" class="text-end">Total HT</td>
                         <td class="text-end text-nowrap"><span id="total-ht">0</span> MGA</td><td></td></tr>
-                    <tr class="text-muted" th:classappend="${tvaApplicable} ? '' : 'd-none'"><td colspan="5" class="text-end">TVA <span th:text="${@nombres.qte(parametre.tauxTva)}">20</span> %</td>
+                    <tr class="text-muted" th:classappend="${tvaApplicable} ? '' : 'd-none'"><td colspan="6" class="text-end">TVA <span th:text="${@nombres.qte(parametre.tauxTva)}">20</span> %</td>
                         <td class="text-end text-nowrap"><span id="total-tva">0</span> MGA</td><td></td></tr>
-                    <tr class="fw-semibold fs-6"><td colspan="5" class="text-end" th:text="|Total${ttc}|">Total TTC</td>
+                    <tr class="fw-semibold fs-6"><td colspan="6" class="text-end" th:text="|Total${ttc}|">Total TTC</td>
                         <td class="text-end text-nowrap"><span id="total-ttc">0</span> MGA</td><td></td></tr>
                     </tfoot>
                 </table>
@@ -144,7 +147,7 @@
 <template id="modele-ligne">
     <tr class="ligne">
         <td>
-            <select data-champ="articleId" class="form-select form-select-sm champ-article" data-recherche="Référence ou désignation">
+            <select data-champ="articleId" class="form-select form-select-sm champ-article" data-unique="article" data-recherche="Référence ou désignation">
                 <option value="">— Choisir —</option>
                 <option th:each="a : ${articles}" th:value="${a.id}"
                         th:attr="data-prix=${a.prixVenteHt}, data-stock=${stocks[a.id]}, data-unite=${a.unite.libelle}"
@@ -155,8 +158,9 @@
         </td>
         <td class="text-end small stock">—</td>
         <td class="text-end prix">—</td>
+        <td><input type="number" step="0.01" min="0" data-champ="prixNegocie" class="form-control form-control-sm text-end champ-prix-negocie" placeholder="Officiel"></td>
         <td><input type="number" step="0.001" min="0" data-champ="quantite" class="form-control form-control-sm text-end champ-quantite"></td>
-        <td><input type="number" step="0.01" min="0" max="100" value="0" data-champ="remisePct" class="form-control form-control-sm text-end champ-remise"></td>
+        <td class="text-end small text-nowrap remise">—</td>
         <td class="text-end montant">0</td>
         <td class="text-end">
             <button type="button" class="btn btn-sm btn-outline-danger supprimer-ligne" title="Retirer"><i class="bi bi-trash"></i></button>

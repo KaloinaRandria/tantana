@@ -64,13 +64,30 @@ public class LigneVente {
     @Column(name = "cout_revient_unitaire", precision = 18, scale = 4)
     private BigDecimal coutRevientUnitaire;
 
-    /** Applique le prix catalogue, la remise et la quantite, et calcule le prix net et le montant. */
-    public void appliquer(BigDecimal prixCatalogue, BigDecimal remise, BigDecimal qte) {
+    /**
+     * Applique le prix catalogue, le prix negocie et la quantite, et calcule la remise et le montant.
+     * Le prix net est exactement le prix negocie ; la remise en % en est deduite, arrondie au
+     * centieme SUPERIEUR pour que le controle du plafond ne laisse jamais passer un depassement.
+     *
+     * @param prixNegocie null = vendu au prix catalogue (aucune remise)
+     */
+    public void appliquer(BigDecimal prixCatalogue, BigDecimal prixNegocie, BigDecimal qte) {
         prixCatalogueHt = prixCatalogue;
-        remisePct = remise;
         quantite = qte;
-        prixUnitaireHt = prixCatalogue.multiply(CENT.subtract(remise)).divide(CENT, 2, RoundingMode.HALF_UP);
+        if (prixNegocie == null || prixNegocie.compareTo(prixCatalogue) >= 0) {
+            prixUnitaireHt = prixCatalogue.setScale(2, RoundingMode.HALF_UP);
+            remisePct = BigDecimal.ZERO;
+        } else {
+            prixUnitaireHt = prixNegocie.setScale(2, RoundingMode.HALF_UP);
+            remisePct = prixCatalogue.subtract(prixUnitaireHt).multiply(CENT)
+                    .divide(prixCatalogue, 2, RoundingMode.UP).min(CENT);
+        }
         montantHt = prixUnitaireHt.multiply(qte).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /** Vendu sous le prix catalogue (prix negocie avec le client) ? */
+    public boolean isPrixNegocie() {
+        return prixUnitaireHt.compareTo(prixCatalogueHt) < 0;
     }
 
     /** Quantite pouvant encore faire l'objet d'un avoir. */

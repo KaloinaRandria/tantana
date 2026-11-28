@@ -1,6 +1,5 @@
 package mg.working.tantana.dto;
 
-import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
@@ -11,8 +10,10 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 /**
- * Ligne saisie par le vendeur. Le prix ne vient JAMAIS du formulaire :
- * il est relu dans le catalogue ; le vendeur ne choisit que la quantite et la remise.
+ * Ligne saisie par le vendeur. Le prix officiel ne vient JAMAIS du formulaire :
+ * il est relu dans le catalogue. Le vendeur choisit la quantite et, s'il a negocie
+ * avec le client, un prix negocie ; la remise en est deduite. Sans prix negocie,
+ * la ligne est vendue au prix officiel.
  */
 @Getter
 @Setter
@@ -27,19 +28,18 @@ public class LigneVenteForm {
     @Digits(integer = 12, fraction = 3, message = "3 décimales maximum")
     private BigDecimal quantite;
 
-    @NotNull(message = "Remise obligatoire (0 si aucune)")
-    @DecimalMin(value = "0", message = "Entre 0 et 100")
-    @DecimalMax(value = "100", message = "Entre 0 et 100")
-    @Digits(integer = 3, fraction = 2, message = "2 décimales maximum")
-    private BigDecimal remisePct = BigDecimal.ZERO;
+    /** Prix unitaire negocie avec le client ; vide = prix officiel du catalogue. */
+    @DecimalMin(value = "0.01", message = "Doit être supérieur à 0")
+    @Digits(integer = 16, fraction = 2, message = "2 décimales maximum")
+    private BigDecimal prixNegocie;
 
-    public LigneVenteForm(Long articleId, BigDecimal quantite, BigDecimal remisePct) {
+    public LigneVenteForm(Long articleId, BigDecimal quantite, BigDecimal prixNegocie) {
         this.articleId = articleId;
         this.quantite = quantite;
-        this.remisePct = remisePct;
+        this.prixNegocie = prixNegocie;
     }
 
     public boolean estVide() {
-        return articleId == null && quantite == null;
+        return articleId == null && quantite == null && prixNegocie == null;
     }
 }

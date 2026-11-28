@@ -88,7 +88,8 @@ public class VenteService {
         form.setObservations(vente.getObservations());
         vente.getLignes().forEach(l -> form.getLignes().add(
                 new LigneVenteForm(l.getArticle().getId(),
-                        Nombres.sansZeros(l.getQuantite()), Nombres.sansZeros(l.getRemisePct()))));
+                        Nombres.sansZeros(l.getQuantite()),
+                        l.isPrixNegocie() ? Nombres.sansZeros(l.getPrixUnitaireHt()) : null)));
         return form;
     }
 
@@ -305,8 +306,14 @@ public class VenteService {
                 ligne.setArticle(article);
                 vente.ajouterLigne(ligne);
             }
-            // prix toujours relu dans le catalogue, jamais pris du navigateur
-            ligne.appliquer(article.getPrixVenteHt(), saisie.getRemisePct(), saisie.getQuantite());
+            if (saisie.getPrixNegocie() != null && saisie.getPrixNegocie().compareTo(article.getPrixVenteHt()) > 0) {
+                throw new RegleMetierException("lignes[" + i + "].prixNegocie",
+                        "Le prix négocié ne peut pas dépasser le prix officiel ("
+                                + Montants.ariary(article.getPrixVenteHt()) + ")");
+            }
+            // prix officiel toujours relu dans le catalogue, jamais pris du navigateur ;
+            // la remise est deduite du prix negocie (vide = prix officiel)
+            ligne.appliquer(article.getPrixVenteHt(), saisie.getPrixNegocie(), saisie.getQuantite());
         }
         vente.getLignes().removeIf(l -> !vus.contains(l.getArticle().getId()));
     }

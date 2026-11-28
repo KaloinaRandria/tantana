@@ -104,7 +104,7 @@
                     <tbody>
                     <tr th:each="l, it : *{lignes}" class="ligne">
                         <td>
-                            <select th:field="*{lignes[__${it.index}__].articleId}" class="form-select form-select-sm champ-article" data-recherche="Référence ou désignation"
+                            <select th:field="*{lignes[__${it.index}__].articleId}" class="form-select form-select-sm champ-article" data-unique="article" data-recherche="Référence ou désignation"
                                     th:classappend="${#fields.hasErrors('lignes[__${it.index}__].articleId')} ? 'is-invalid'">
                                 <option value="">— Choisir —</option>
                                 <option th:each="a : ${articles}" th:value="${a.id}"
@@ -160,7 +160,7 @@
 <template id="modele-ligne">
     <tr class="ligne">
         <td>
-            <select data-champ="articleId" class="form-select form-select-sm champ-article" data-recherche="Référence ou désignation">
+            <select data-champ="articleId" class="form-select form-select-sm champ-article" data-unique="article" data-recherche="Référence ou désignation">
                 <option value="">— Choisir —</option>
                 <option th:each="a : ${articles}" th:if="${a.actif}" th:value="${a.id}"
                         th:text="${a.reference} + ' — ' + ${a.designation} + ' (' + ${a.unite.libelle} + ')'">Article</option>
