@@ -110,6 +110,12 @@ public class FactureService {
         if (c.getType() == TypeClient.PROFESSIONNEL) {
             ajouterSi(client, joindre(prefixe("NIF ", c.getNif()), prefixe("STAT ", c.getStat())));
         }
+        if (v.getLieuLivraison() != null) {
+            Paragraph livraison = new Paragraph("Livré à", police(8, Font.NORMAL, GRIS));
+            livraison.setSpacingBefore(4);
+            client.addElement(livraison);
+            ajouterSi(client, v.getLieuLivraison());
+        }
         cadre.addCell(client);
         doc.add(cadre);
     }
@@ -151,6 +157,10 @@ public class FactureService {
         if (v.getTotalRemise().signum() > 0) {
             ligneTotal(t, tva ? "Total brut HT" : "Total brut", v.getTotalBrutHt(), false);
             ligneTotal(t, "Remises", v.getTotalRemise().negate(), false);
+        }
+        if (v.isAvecFraisLivraison()) {
+            ligneTotal(t, tva ? "Articles HT" : "Articles", v.getTotalArticlesHt(), false);
+            ligneTotal(t, tva ? "Frais de livraison HT" : "Frais de livraison", v.getFraisLivraison(), false);
         }
         if (tva) {
             ligneTotal(t, "Total HT", v.getTotalHt(), false);

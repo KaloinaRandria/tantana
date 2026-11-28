@@ -43,6 +43,23 @@
                     <input type="text" th:field="*{observations}" class="form-control"
                            placeholder="Bon de commande client, conditions de livraison…">
                 </div>
+                <div class="col-md-8">
+                    <label for="lieuLivraison" class="form-label"><i class="bi bi-geo-alt"></i> Lieu de livraison</label>
+                    <input type="text" th:field="*{lieuLivraison}" class="form-control" maxlength="255"
+                           placeholder="Adresse, quartier, ville… (vide : retrait sur place)"
+                           th:classappend="${#fields.hasErrors('lieuLivraison')} ? 'is-invalid'">
+                    <div class="invalid-feedback" th:errors="*{lieuLivraison}">Erreur</div>
+                </div>
+                <div class="col-md-4">
+                    <label for="fraisLivraison" class="form-label"><i class="bi bi-truck"></i>
+                        <span th:text="|Frais de livraison${ht}|">Frais de livraison HT</span></label>
+                    <div class="input-group">
+                        <input type="number" step="0.01" min="0" th:field="*{fraisLivraison}" class="form-control text-end"
+                               placeholder="Aucun" th:classappend="${#fields.hasErrors('fraisLivraison')} ? 'is-invalid'">
+                        <span class="input-group-text">MGA</span>
+                        <div class="invalid-feedback" th:errors="*{fraisLivraison}">Erreur</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -115,6 +132,9 @@
                     </tr>
                     </tbody>
                     <tfoot>
+                    <!-- frais de livraison : ligne visible seulement s'il y en a (gere par vente.js) -->
+                    <tr class="d-none" id="ligne-frais-livraison"><td colspan="6" class="text-end">Frais de livraison</td>
+                        <td class="text-end text-nowrap"><span id="total-frais-livraison">0</span> MGA</td><td></td></tr>
                     <!-- TVA 0 % : lignes HT et TVA masquees (gardees pour vente.js), seul le total reste -->
                     <tr th:classappend="${tvaApplicable} ? '' : 'd-none'"><td colspan="6" class="text-end">Total HT</td>
                         <td class="text-end text-nowrap"><span id="total-ht">0</span> MGA</td><td></td></tr>

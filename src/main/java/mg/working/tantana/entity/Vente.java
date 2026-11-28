@@ -56,6 +56,14 @@ public class Vente {
     @Column(name = "taux_tva", nullable = false, precision = 5, scale = 2)
     private BigDecimal tauxTva;
 
+    /** Lieu ou la vente doit etre livree (null = retrait sur place / non precise). */
+    @Column(name = "lieu_livraison", length = 255)
+    private String lieuLivraison;
+
+    /** Frais de livraison factures au client, inclus dans le total HT (0 = aucun). */
+    @Column(name = "frais_livraison", nullable = false, precision = 18, scale = 2)
+    private BigDecimal fraisLivraison = BigDecimal.ZERO;
+
     @Column(name = "total_brut_ht", nullable = false, precision = 18, scale = 2)
     private BigDecimal totalBrutHt = BigDecimal.ZERO;
 
@@ -126,13 +134,17 @@ public class Vente {
     /**
      * Totaux de la facture. La TVA est calculee une seule fois sur le total HT,
      * puis arrondie a l'Ariary (pas d'ecarts d'arrondi ligne par ligne).
+     * Les frais de livraison s'ajoutent aux articles dans le total HT ; les totaux brut
+     * et remises ne concernent que les articles.
      */
     public void recalculerTotaux() {
         totalBrutHt = lignes.stream().map(LigneVente::getMontantBrutHt)
                 .reduce(BigDecimal.ZERO, BigDecimal::add).setScale(0, RoundingMode.HALF_UP);
-        totalHt = lignes.stream().map(LigneVente::getMontantHt)
+        BigDecimal articlesHt = lignes.stream().map(LigneVente::getMontantHt)
                 .reduce(BigDecimal.ZERO, BigDecimal::add).setScale(0, RoundingMode.HALF_UP);
-        totalRemise = totalBrutHt.subtract(totalHt).max(BigDecimal.ZERO);
+        totalRemise = totalBrutHt.subtract(articlesHt).max(BigDecimal.ZERO);
+        BigDecimal frais = fraisLivraison == null ? BigDecimal.ZERO : fraisLivraison;
+        totalHt = articlesHt.add(frais).setScale(0, RoundingMode.HALF_UP);
         totalTva = totalHt.multiply(tauxTva).divide(CENT, 0, RoundingMode.HALF_UP);
         totalTtc = totalHt.add(totalTva);
     }
@@ -175,6 +187,15 @@ public class Vente {
             return StatutPaiement.PAYEE;
         }
         return montantPaye.signum() > 0 ? StatutPaiement.PARTIELLE : StatutPaiement.NON_PAYEE;
+    }
+
+    public boolean isAvecFraisLivraison() {
+        return fraisLivraison != null && fraisLivraison.signum() > 0;
+    }
+
+    /** Total HT des articles seuls (frais de livraison exclus). */
+    public BigDecimal getTotalArticlesHt() {
+        return totalHt.subtract(fraisLivraison == null ? BigDecimal.ZERO : fraisLivraison);
     }
 
     /** Taux de TVA de CETTE vente (fige a sa creation) superieur a 0. */

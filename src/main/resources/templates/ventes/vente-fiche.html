@@ -30,6 +30,9 @@
                 · vendeur <span th:text="${v.vendeur.nomComplet}">Nom</span>
                 · <span th:text="${#temporals.format(v.dateVente, 'dd/MM/yyyy')}">date</span>
             </div>
+            <div class="small mt-1" th:if="${v.lieuLivraison != null}">
+                <i class="bi bi-geo-alt text-muted"></i> Livraison : <strong th:text="${v.lieuLivraison}">Lieu</strong>
+            </div>
         </div>
         <div class="d-flex flex-wrap gap-2">
             <!-- Brouillon : le vendeur modifie, supprime ou valide -->
@@ -150,6 +153,12 @@
                             <dd class="col-5 text-end mb-1" th:text="${#numbers.formatDecimal(v.totalBrutHt, 1, 'WHITESPACE', 2, 'COMMA')}">0</dd>
                             <dt class="col-7 fw-normal text-muted">Remises</dt>
                             <dd class="col-5 text-end mb-1" th:text="'− ' + ${#numbers.formatDecimal(v.totalRemise, 1, 'WHITESPACE', 2, 'COMMA')}">0</dd>
+                        </th:block>
+                        <th:block th:if="${v.avecFraisLivraison}">
+                            <dt class="col-7 fw-normal text-muted" th:text="|Articles${ht}|">Articles HT</dt>
+                            <dd class="col-5 text-end mb-1" th:text="${#numbers.formatDecimal(v.totalArticlesHt, 1, 'WHITESPACE', 2, 'COMMA')}">0</dd>
+                            <dt class="col-7 fw-normal text-muted"><i class="bi bi-truck"></i> Frais de livraison</dt>
+                            <dd class="col-5 text-end mb-1" th:text="${#numbers.formatDecimal(v.fraisLivraison, 1, 'WHITESPACE', 2, 'COMMA')}">0</dd>
                         </th:block>
                         <th:block th:if="${v.tvaApplicable}">
                             <dt class="col-7 fw-normal">Total HT</dt>

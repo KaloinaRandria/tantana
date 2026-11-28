@@ -86,6 +86,8 @@ public class VenteService {
         form.setVersion(vente.getVersion());
         form.setClientId(vente.getClient().getId());
         form.setObservations(vente.getObservations());
+        form.setLieuLivraison(vente.getLieuLivraison());
+        form.setFraisLivraison(vente.isAvecFraisLivraison() ? Nombres.sansZeros(vente.getFraisLivraison()) : null);
         vente.getLignes().forEach(l -> form.getLignes().add(
                 new LigneVenteForm(l.getArticle().getId(),
                         Nombres.sansZeros(l.getQuantite()),
@@ -130,6 +132,9 @@ public class VenteService {
 
         vente.setClient(client);
         vente.setObservations(texte(form.getObservations()));
+        vente.setLieuLivraison(texte(form.getLieuLivraison()));
+        vente.setFraisLivraison(form.getFraisLivraison() == null ? BigDecimal.ZERO
+                : form.getFraisLivraison().setScale(2, java.math.RoundingMode.HALF_UP));
         vente.setTauxTva(parametreService.obtenir().getTauxTva());
         vente.setDateVente(LocalDate.now());
         synchroniserLignes(form.getLignes(), vente);

@@ -63,7 +63,12 @@
             controle = controle || remise > remiseMax;
             manque = manque || (stock !== null && qte > stock);
         });
-        const ht = Math.round(totalHt);
+        // frais de livraison : ajoutes au total HT (donc soumis a la TVA de la vente)
+        const champFrais = document.getElementById('fraisLivraison');
+        const frais = Math.max(0, nombre(champFrais));
+        document.getElementById('ligne-frais-livraison').classList.toggle('d-none', frais <= 0);
+        document.getElementById('total-frais-livraison').textContent = fmt.format(frais);
+        const ht = Math.round(totalHt + frais);
         const montantTva = Math.round(ht * tva / 100);
         document.getElementById('total-ht').textContent = fmt.format(ht);
         document.getElementById('total-tva').textContent = fmt.format(montantTva);
@@ -92,6 +97,7 @@
 
     corps.addEventListener('input', recalculer);
     corps.addEventListener('change', recalculer);
+    document.getElementById('fraisLivraison').addEventListener('input', recalculer);
     renumeroter();
     recalculer();
 })();
