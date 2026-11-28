@@ -64,7 +64,81 @@
     --bs-link-hover-color: var(--tt-primaire-fonce);
     --bs-emphasis-color: var(--tt-texte);
     --bs-heading-color: var(--tt-texte);
+
+    /* --- Divers dependants du theme --- */
+    --tt-barre-haut: rgba(255, 255, 255, .85);
+    --tt-placeholder: #a9b2c1;
+    --tt-ligne-danger: #fdf3f3;
+    /* --- Graphiques (palette validee : series 1 / 2) --- */
+    --tt-serie-1: #2a78d6;
+    --tt-serie-2: #eb6834;
 }
+
+/* =====================================================================
+   Mode sombre : <html data-bs-theme="dark"> (theme.js). Bootstrap 5.3 bascule
+   ses propres composants ; on redefinit ici nos variables, rien d'autre a changer.
+   Les « doux » deviennent des voiles translucides de la couleur d'etat.
+   ===================================================================== */
+[data-bs-theme="dark"] {
+    color-scheme: dark;
+
+    --tt-primaire: #3987e5;
+    --tt-primaire-fonce: #6da7ec;   /* survol et texte sur fond doux : plus clair en sombre */
+    --tt-primaire-doux: rgba(57, 135, 229, .16);
+    --tt-primaire-rgb: 57, 135, 229;
+
+    --tt-fond: #0b111c;
+    --tt-surface: #141c2b;
+    --tt-surface-2: #1a2334;
+    --tt-bordure: #253045;
+    --tt-bordure-forte: #344158;
+
+    --tt-texte: #e6ebf3;
+    --tt-texte-2: #aab5c7;
+    --tt-texte-3: #7f8ba1;
+
+    --tt-sidebar: #070b13;
+    --tt-sidebar-2: #0d1420;
+
+    --tt-succes: #45c27a;
+    --tt-succes-doux: rgba(69, 194, 122, .14);
+    --tt-alerte: #e9a83f;
+    --tt-alerte-doux: rgba(233, 168, 63, .14);
+    --tt-danger: #f06b67;
+    --tt-danger-doux: rgba(240, 107, 103, .14);
+    --tt-info: #6da7ec;
+    --tt-info-doux: rgba(57, 135, 229, .16);
+    --tt-neutre-doux: #222c3e;
+
+    --tt-ombre: 0 1px 2px rgba(0, 0, 0, .3), 0 1px 3px rgba(0, 0, 0, .25);
+    --tt-ombre-haute: 0 12px 32px -10px rgba(0, 0, 0, .7);
+
+    --bs-body-color: var(--tt-texte);
+    --bs-body-bg: var(--tt-fond);
+    --bs-secondary-color: var(--tt-texte-2);
+    --bs-secondary-bg: var(--tt-surface-2);
+    --bs-tertiary-bg: var(--tt-surface-2);
+    --bs-border-color: var(--tt-bordure);
+    --bs-primary: var(--tt-primaire);
+    --bs-primary-rgb: var(--tt-primaire-rgb);
+    --bs-link-color: var(--tt-primaire-fonce);
+    --bs-link-color-rgb: 109, 167, 236;
+    --bs-link-hover-color: #9cc3f2;
+    --bs-emphasis-color: var(--tt-texte);
+    --bs-heading-color: var(--tt-texte);
+
+    --tt-barre-haut: rgba(20, 28, 43, .85);
+    --tt-placeholder: #5f6b80;
+    --tt-ligne-danger: rgba(240, 107, 103, .08);
+    /* pas sombre de la palette, valide contre la surface #141c2b */
+    --tt-serie-1: #3987e5;
+    --tt-serie-2: #d95926;
+}
+
+/* Bascule de theme : icone selon le mode affiche */
+.bascule-theme .bi-sun { display: none; }
+[data-bs-theme="dark"] .bascule-theme .bi-sun { display: inline-block; }
+[data-bs-theme="dark"] .bascule-theme .bi-moon-stars { display: none; }
 
 /* =========================== Base =========================== */
 
@@ -200,7 +274,7 @@ a { text-underline-offset: 3px; }
 
 .barre-haut {
     position: sticky; top: 0; z-index: 1020;
-    background: rgba(255, 255, 255, .85);
+    background: var(--tt-barre-haut);
     backdrop-filter: saturate(180%) blur(10px);
     border-bottom: 1px solid var(--tt-bordure);
     min-height: 64px;
@@ -358,7 +432,7 @@ main.contenu-principal { width: 100%; min-width: 0; }
     box-shadow: 0 0 0 3px rgba(var(--tt-primaire-rgb), .15);
 }
 
-.form-control::placeholder { color: #a9b2c1; }
+.form-control::placeholder { color: var(--tt-placeholder); }
 
 .input-group-text { background: var(--tt-surface-2); border-color: var(--tt-bordure-forte); color: var(--tt-texte-3); font-size: .85rem; }
 .form-check-input:checked { background-color: var(--tt-primaire); border-color: var(--tt-primaire); }
@@ -515,7 +589,7 @@ details.donnees-graphique table { margin-top: .5rem; }
 .text-success { color: var(--tt-succes) !important; }
 .text-danger { color: var(--tt-danger) !important; }
 .text-warning-emphasis { color: var(--tt-alerte) !important; }
-.table-danger { --bs-table-bg: #fdf3f3; }
+.table-danger { --bs-table-bg: var(--tt-ligne-danger); --bs-table-color: var(--tt-texte); }
 .progress { background: var(--tt-neutre-doux); border-radius: 99px; }
 .progress-bar { background-color: var(--tt-primaire) !important; border-radius: 99px; }
 .dropdown-menu { border-color: var(--tt-bordure); border-radius: var(--tt-rayon); box-shadow: var(--tt-ombre-haute); font-size: .875rem; padding: .4rem; }
@@ -535,3 +609,21 @@ details.donnees-graphique table { margin-top: .5rem; }
 .ts-dropdown { font-size: .875rem; z-index: 1060; }
 .ts-dropdown .option .small { font-size: .75rem; }
 .ts-dropdown .active { background-color: var(--tt-primaire-doux, #e8f1fc); color: inherit; }
+
+/* ===== Mode sombre : elements a couleurs fixes en mode clair ===== */
+[data-bs-theme="dark"] .alert-success { border-color: rgba(69, 194, 122, .35); color: #8ee0ae; }
+[data-bs-theme="dark"] .alert-danger { border-color: rgba(240, 107, 103, .35); color: #f8a9a6; }
+[data-bs-theme="dark"] .alert-warning { border-color: rgba(233, 168, 63, .35); color: #f2c97f; }
+[data-bs-theme="dark"] .alert-info { border-color: rgba(57, 135, 229, .35); color: #9cc3f2; }
+[data-bs-theme="dark"] .text-bg-dark { background-color: #2a3448 !important; color: #e6ebf3 !important; }
+[data-bs-theme="dark"] .btn-success { --bs-btn-color: #06140b; --bs-btn-hover-color: #06140b; --bs-btn-hover-bg: #5fd28f; --bs-btn-hover-border-color: #5fd28f; }
+[data-bs-theme="dark"] .btn-danger { --bs-btn-hover-bg: #f38a87; --bs-btn-hover-border-color: #f38a87; }
+[data-bs-theme="dark"] .btn-primary { box-shadow: none; }
+[data-bs-theme="dark"] .modal-content { background: var(--tt-surface); }
+[data-bs-theme="dark"] .ts-dropdown,
+[data-bs-theme="dark"] .ts-control { background: var(--tt-surface); color: var(--tt-texte); border-color: var(--tt-bordure-forte); }
+[data-bs-theme="dark"] .ts-control input { color: var(--tt-texte); }
+[data-bs-theme="dark"] .ts-dropdown .option .small { color: var(--tt-texte-3) !important; }
+[data-bs-theme="dark"] .bg-white { background-color: var(--tt-surface) !important; }
+[data-bs-theme="dark"] .bg-light { background-color: var(--tt-surface-2) !important; }
+[data-bs-theme="dark"] .table-light { --bs-table-bg: var(--tt-surface-2); --bs-table-color: var(--tt-texte); --bs-table-border-color: var(--tt-bordure); }

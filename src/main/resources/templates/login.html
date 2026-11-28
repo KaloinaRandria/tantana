@@ -8,6 +8,15 @@
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css}">
     <link rel="stylesheet" th:href="@{/css/app.css}">
+    <!-- theme memorise (ou celui du systeme) applique avant l'affichage, comme dans le layout -->
+    <script>
+        (function (r) {
+            var t = null;
+            try { t = localStorage.getItem('tt-theme'); } catch (e) {}
+            if (t !== 'clair' && t !== 'sombre') t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'sombre' : 'clair';
+            r.setAttribute('data-bs-theme', t === 'sombre' ? 'dark' : 'light');
+        })(document.documentElement);
+    </script>
 </head>
 <body>
 <div id="barre-chargement" aria-hidden="true"></div>
@@ -36,7 +45,11 @@
     </section>
 
     <!-- ===== Formulaire ===== -->
-    <section class="panneau-formulaire">
+    <section class="panneau-formulaire position-relative">
+        <button class="btn btn-outline-secondary btn-sm bascule-theme position-absolute top-0 end-0 m-3" type="button"
+                data-sans-loader title="Passer en mode sombre" aria-label="Passer en mode sombre" aria-pressed="false">
+            <i class="bi bi-moon-stars"></i><i class="bi bi-sun"></i>
+        </button>
         <div class="formulaire">
             <div class="d-lg-none d-flex align-items-center gap-2 mb-4">
                 <span class="avatar" style="border-radius:9px"><i class="bi bi-box-seam"></i></span>
@@ -88,5 +101,6 @@
     });
 </script>
 <script th:src="@{/js/loader.js}"></script>
+<script th:src="@{/js/theme.js}"></script>
 </body>
 </html>

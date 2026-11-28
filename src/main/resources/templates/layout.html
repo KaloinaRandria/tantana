@@ -12,9 +12,15 @@
     <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css}">
     <link rel="stylesheet" th:href="@{/webjars/tom-select/2.3.1/dist/css/tom-select.bootstrap5.min.css}">
     <link rel="stylesheet" th:href="@{/css/app.css}">
-    <!-- Applique l'etat reduit de la sidebar avant l'affichage (evite un clignotement) -->
+    <!-- Applique le theme et l'etat reduit de la sidebar avant l'affichage (evite un clignotement) -->
     <script>
-        try { if (localStorage.getItem('tt-sidebar-reduite') === '1') document.documentElement.classList.add('sidebar-reduite'); } catch (e) {}
+        (function (r) {
+            var t = null;
+            try { t = localStorage.getItem('tt-theme'); } catch (e) {}
+            if (t !== 'clair' && t !== 'sombre') t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'sombre' : 'clair';
+            r.setAttribute('data-bs-theme', t === 'sombre' ? 'dark' : 'light');
+            try { if (localStorage.getItem('tt-sidebar-reduite') === '1') r.classList.add('sidebar-reduite'); } catch (e) {}
+        })(document.documentElement);
     </script>
 </head>
 <body>
@@ -164,6 +170,10 @@
         <h1 class="h5 mb-0 text-truncate" layout:fragment="titre-page">Tantana</h1>
         <div class="ms-auto d-flex align-items-center gap-3">
             <span class="date-du-jour d-none d-md-inline" th:text="${dateDuJour}">Lundi 1 janvier 2026</span>
+            <button class="btn btn-outline-secondary btn-sm bascule-theme" type="button" data-sans-loader
+                    title="Passer en mode sombre" aria-label="Passer en mode sombre" aria-pressed="false">
+                <i class="bi bi-moon-stars"></i><i class="bi bi-sun"></i>
+            </button>
             <div class="dropdown">
                 <button class="btn p-0 border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-sans-loader
                         title="Mon compte">
@@ -228,5 +238,6 @@
 <script th:src="@{/webjars/tom-select/2.3.1/dist/js/tom-select.complete.min.js}"></script>
 <script th:src="@{/js/liste-recherchable.js}"></script>
 <script th:src="@{/js/sidebar.js}"></script>
+<script th:src="@{/js/theme.js}"></script>
 </body>
 </html>

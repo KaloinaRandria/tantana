@@ -2,19 +2,41 @@
  * Graphiques de l'accueil (Chart.js).
  * Regles appliquees : une seule echelle par graphique, barres fines a bouts arrondis (4px),
  * grille discrete, legende + infobulle au survol, couleurs de la palette validee
- * (serie 1 bleu #2a78d6, serie 2 orange #eb6834), texte jamais dans la couleur des series.
+ * (series 1 bleu / 2 orange, un pas par theme : voir --tt-serie-* dans app.css),
+ * texte jamais dans la couleur des series. Couleurs lues dans le theme (clair / sombre) ;
+ * les graphiques sont redessines quand le theme change (evenement « tt:theme » de theme.js).
  */
+const graphiquesAccueil = [];
+let modeCourbe = 'periode'; // conserve au changement de theme
+
 (function () {
     const d = window.donneesAccueil;
     if (!d || typeof Chart === 'undefined') return;
     // Attendre la police Inter : sinon Chart.js mesure les libelles avec la police de secours
     // et les coupe une fois Inter affichee (plus large).
     (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => dessiner(d));
+    document.addEventListener('tt:theme', () => {
+        graphiquesAccueil.splice(0).forEach((g) => g.destroy());
+        dessiner(d);
+    });
 })();
+
+/** Couleurs du theme affiche, lues dans les variables CSS. */
+function couleursTheme() {
+    const s = getComputedStyle(document.documentElement);
+    const v = (nom) => s.getPropertyValue(nom).trim();
+    const sombre = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+    return {
+        serie1: v('--tt-serie-1'), serie2: v('--tt-serie-2'),
+        grille: v('--tt-bordure'), axe: v('--tt-bordure-forte'),
+        texte: v('--tt-texte-2'), muet: v('--tt-texte-3'), surface: v('--tt-surface'),
+        infobulle: sombre ? '#e6ebf3' : '#0f172a', infobulleTexte: sombre ? '#0f172a' : '#ffffff'
+    };
+}
 
 function dessiner(d) {
 
-    const COULEURS = {serie1: '#2a78d6', serie2: '#eb6834', grille: '#e8ebf0', axe: '#d3d8e0', texte: '#475569', muet: '#8590a2'};
+    const COULEURS = couleursTheme();
     const fmt = new Intl.NumberFormat('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     const fmtAxe = new Intl.NumberFormat('fr-FR', {maximumFractionDigits: 0}); // graduations des axes
     const compact = (v) => {
@@ -30,7 +52,9 @@ function dessiner(d) {
     Chart.defaults.font.size = 12;
     Chart.defaults.color = COULEURS.muet;
     Chart.defaults.plugins.legend.display = false; // legende HTML au-dessus du graphique
-    Chart.defaults.plugins.tooltip.backgroundColor = '#0f172a';
+    Chart.defaults.plugins.tooltip.backgroundColor = COULEURS.infobulle;
+    Chart.defaults.plugins.tooltip.titleColor = COULEURS.infobulleTexte;
+    Chart.defaults.plugins.tooltip.bodyColor = COULEURS.infobulleTexte;
     Chart.defaults.plugins.tooltip.padding = 10;
     Chart.defaults.plugins.tooltip.cornerRadius = 8;
     Chart.defaults.plugins.tooltip.titleFont = {weight: '600'};
@@ -66,10 +90,10 @@ function dessiner(d) {
             data: {
                 labels: c.libelles,
                 datasets: [
-                    {label: c.periode, data: series.periode[0], borderColor: COULEURS.serie1, backgroundColor: COULEURS.serie1,
+                    {label: c.periode, data: series[modeCourbe][0], borderColor: COULEURS.serie1, backgroundColor: COULEURS.serie1,
                         borderWidth: 2, cubicInterpolationMode: 'monotone', pointRadius: peu ? 3 : 0, pointHoverRadius: 5,
-                        pointBorderColor: '#fff', pointBorderWidth: 2, fill: false},
-                    {label: 'Période précédente (' + c.periodePrecedente + ')', data: series.periode[1],
+                        pointBorderColor: COULEURS.surface, pointBorderWidth: 2, fill: false},
+                    {label: 'Période précédente (' + c.periodePrecedente + ')', data: series[modeCourbe][1],
                         borderColor: COULEURS.muet, backgroundColor: COULEURS.muet, borderDash: [5, 4],
                         borderWidth: 2, cubicInterpolationMode: 'monotone', pointRadius: 0, pointHoverRadius: 4, fill: false}
                 ]
@@ -87,11 +111,15 @@ function dessiner(d) {
             }
         });
 
-        // bascule « par jour / par mois » <-> « cumule »
+        graphiquesAccueil.push(graphique);
+
+        // bascule « par jour / par mois » <-> « cumule » (onclick : remplace le gestionnaire
+        // du graphique precedent quand on redessine apres un changement de theme)
         const boutons = document.querySelectorAll('[data-mode-courbe]');
         boutons.forEach((bouton) => {
-            bouton.addEventListener('click', () => {
+            bouton.onclick = () => {
                 const mode = bouton.dataset.modeCourbe;
+                modeCourbe = mode;
                 boutons.forEach((b) => {
                     b.classList.toggle('active', b === bouton);
                     b.setAttribute('aria-pressed', String(b === bouton));
@@ -99,14 +127,14 @@ function dessiner(d) {
                 graphique.data.datasets[0].data = series[mode][0];
                 graphique.data.datasets[1].data = series[mode][1];
                 graphique.update();
-            });
+            };
         });
     }
 
     // ----- CA et marge par mois -----
     const mensuel = document.getElementById('graphique-mensuel');
     if (mensuel) {
-        new Chart(mensuel, {
+        graphiquesAccueil.push(new Chart(mensuel, {
             type: 'bar',
             data: {
                 labels: d.mois,
@@ -122,12 +150,12 @@ function dessiner(d) {
                 plugins: {tooltip: {callbacks: {label: infobulleMga}}},
                 scales: {x: axeCategories, y: axeValeurs}
             }
-        });
+        }));
     }
 
     // ----- Barres horizontales classees (une teinte) -----
     function barresHorizontales(canvas, libelles, valeurs, libelleSerie) {
-        new Chart(canvas, {
+        graphiquesAccueil.push(new Chart(canvas, {
             type: 'bar',
             data: {labels: libelles, datasets: [{label: libelleSerie, data: valeurs, backgroundColor: COULEURS.serie1, ...barre}]},
             options: {
@@ -139,7 +167,7 @@ function dessiner(d) {
                         callback: function (v) { const l = this.getLabelForValue(v); return l.length > 34 ? l.slice(0, 33) + '…' : l; }}}
                 }
             }
-        });
+        }));
     }
 
     // series deja classees par le serveur (montant / marge decroissants)

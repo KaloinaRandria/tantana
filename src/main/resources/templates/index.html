@@ -144,8 +144,8 @@
                         </div>
                     </div>
                     <div class="legende mt-2">
-                        <span><span class="pastille" style="background:#2a78d6"></span><span th:text="${c.periodeLibelle}">1er–28 nov. 2026</span></span>
-                        <span><span class="pastille pastille-tiret" style="background:#8590a2"></span>Période précédente
+                        <span><span class="pastille" style="background:var(--tt-serie-1)"></span><span th:text="${c.periodeLibelle}">1er–28 nov. 2026</span></span>
+                        <span><span class="pastille pastille-tiret" style="background:var(--tt-texte-3)"></span>Période précédente
                             (<span th:text="${c.periodePrecedenteLibelle}">1er–28 oct. 2026</span>)</span>
                     </div>
                     <div class="zone-graphique"><canvas id="graphique-courbe-ca" aria-label="Évolution du chiffre d'affaires sur la période" role="img"></canvas></div>
@@ -204,8 +204,8 @@
                         <span class="note" th:text="${tvaApplicable} ? '12 derniers mois · HT, avoirs déduits' : '12 derniers mois · avoirs déduits'">12 derniers mois · HT, avoirs déduits</span>
                     </div>
                     <div class="legende mt-2">
-                        <span><span class="pastille" style="background:#2a78d6"></span><span th:text="|Chiffre d'affaires${ht}|">Chiffre d'affaires HT</span></span>
-                        <span><span class="pastille" style="background:#eb6834"></span>Marge nette</span>
+                        <span><span class="pastille" style="background:var(--tt-serie-1)"></span><span th:text="|Chiffre d'affaires${ht}|">Chiffre d'affaires HT</span></span>
+                        <span><span class="pastille" style="background:var(--tt-serie-2)"></span>Marge nette</span>
                     </div>
                     <div class="zone-graphique"><canvas id="graphique-mensuel" aria-label="Chiffre d'affaires et marge par mois" role="img"></canvas></div>
                     <details class="donnees-graphique">
