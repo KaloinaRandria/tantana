@@ -36,11 +36,6 @@
                 <a class="nav-link" th:href="@{/}" th:classappend="${urlCourante == '/'} ? 'active'">
                     <i class="bi bi-grid-1x2"></i> Accueil</a>
             </li>
-            <li sec:authorize="hasAnyRole('ADMIN','CHECKER')">
-                <a class="nav-link" th:href="@{/ventes/tableau-de-bord}"
-                   th:classappend="${urlCourante == '/ventes/tableau-de-bord'} ? 'active'">
-                    <i class="bi bi-graph-up-arrow"></i> Tableau de bord</a>
-            </li>
         </ul>
 
         <th:block sec:authorize="hasAnyRole('ADMIN','VENDEUR','GESTIONNAIRE_STOCK','ACHETEUR','CHECKER')">
@@ -48,7 +43,7 @@
             <ul class="nav flex-column">
                 <li sec:authorize="hasAnyRole('ADMIN','VENDEUR')">
                     <a class="nav-link" th:href="@{/ventes}"
-                       th:classappend="${#strings.startsWith(urlCourante, '/ventes') and urlCourante != '/ventes/tableau-de-bord'} ? 'active'">
+                       th:classappend="${#strings.startsWith(urlCourante, '/ventes')} ? 'active'">
                         <i class="bi bi-receipt"></i> Ventes
                         <span th:if="${ventesAValider > 0}" class="badge rounded-pill text-bg-warning ms-auto"
                               th:text="${ventesAValider}" title="Ventes à contrôler">1</span></a>

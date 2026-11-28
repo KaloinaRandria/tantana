@@ -432,6 +432,8 @@ a.tuile-lien:hover { border-color: rgba(var(--tt-primaire-rgb), .45) !important;
 
 .legende { display: flex; flex-wrap: wrap; gap: .9rem; font-size: .78rem; color: var(--tt-texte-2); padding: 0 1.2rem; }
 .legende .pastille { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: .35rem; vertical-align: -1px; }
+/* serie de comparaison (trait pointille) : pastille en tiret */
+.legende .pastille.pastille-tiret { width: 14px; height: 2px; border-radius: 1px; vertical-align: 3px; }
 
 details.donnees-graphique { padding: 0 1.2rem 1rem; font-size: .8rem; }
 details.donnees-graphique summary { color: var(--tt-texte-3); cursor: pointer; }

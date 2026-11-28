@@ -26,6 +26,8 @@ public class SecurityConfig {
                 .requestMatchers("/stock/inventaires/**").hasAnyRole("ADMIN", "GESTIONNAIRE_STOCK", "CHECKER", "ACHETEUR")
                 // Consultation du stock : l'acheteur voit l'effet de ses receptions
                 .requestMatchers("/stock/**").hasAnyRole("ADMIN", "GESTIONNAIRE_STOCK", "ACHETEUR")
+                // ancienne adresse du tableau de bord : simple redirection vers l'accueil
+                .requestMatchers("/ventes/tableau-de-bord").authenticated()
                 .requestMatchers("/ventes/**").hasAnyRole("ADMIN", "VENDEUR")
                 .requestMatchers("/clients/**").hasAnyRole("ADMIN", "VENDEUR")
                 .requestMatchers("/achats/**").hasAnyRole("ADMIN", "ACHETEUR")

@@ -106,6 +106,24 @@ public class RapportVentesRepository {
         return resultat;
     }
 
+    /** CA HT net par jour (avoirs deduits) entre deux dates incluses ; les jours sans vente sont absents. */
+    public java.util.Map<LocalDate, BigDecimal> caParJour(LocalDate du, LocalDate au) {
+        java.util.Map<LocalDate, BigDecimal> resultat = new java.util.HashMap<>();
+        jdbc.query("""
+                SELECT x.d, sum(x.ca) AS ca
+                FROM (
+                    SELECT date_vente AS d, total_ht AS ca FROM vente
+                    WHERE statut_id = 3 AND date_vente BETWEEN ? AND ?
+                    UNION ALL
+                    SELECT date_avoir, -total_ht FROM avoir WHERE date_avoir BETWEEN ? AND ?
+                ) x
+                GROUP BY x.d
+                """, rs -> {
+            resultat.put(rs.getDate("d").toLocalDate(), arrondi(rs.getBigDecimal("ca")));
+        }, Date.valueOf(du), Date.valueOf(au), Date.valueOf(du), Date.valueOf(au));
+        return resultat;
+    }
+
     /** Creances a ce jour (independant de la periode). */
     public List<Creance> creances() {
         return jdbc.query("""

@@ -126,7 +126,7 @@
                 <div class="card-body small">
                     <h3 class="h6 text-uppercase text-muted">Marge (figée à la facturation)</h3>
                     <p th:if="${v.montantAvoirs.signum() > 0}" class="text-muted mb-2">
-                        <i class="bi bi-info-circle"></i> Avant avoirs : la marge nette (avoirs déduits) figure au tableau de bord.</p>
+                        <i class="bi bi-info-circle"></i> Avant avoirs : la marge nette (avoirs déduits) figure sur la page d’accueil.</p>
                     <dl class="row mb-0">
                         <dt class="col-7 fw-normal text-muted" th:text="|Chiffre d'affaires${ht}|">Chiffre d'affaires HT</dt>
                         <dd class="col-5 text-end mb-1" th:text="${#numbers.formatDecimal(v.totalHt, 1, 'WHITESPACE', 2, 'COMMA')}">0</dd>

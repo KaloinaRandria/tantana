@@ -48,6 +48,61 @@ function dessiner(d) {
     const barre = {borderRadius: 4, borderSkipped: 'start', maxBarThickness: 22};
     const infobulleMga = (ctx) => ` ${ctx.dataset.label} : ${fmt.format(ctx.parsed.y ?? ctx.parsed.x)} MGA`;
 
+    // ----- Courbe d'evolution du CA (periode choisie vs periode precedente) -----
+    const courbe = document.getElementById('graphique-courbe-ca');
+    if (courbe && d.courbe) {
+        const c = d.courbe;
+        const brut = c.ca.map(nombre);
+        // null = rang sans equivalent dans la periode precedente (plus courte) : pas de trait
+        const brutPrec = c.caPrecedent.map((v) => (v === null ? null : nombre(v)));
+        const cumul = (serie) => {
+            let total = 0;
+            return serie.map((v) => (v === null ? null : (total += v)));
+        };
+        const series = {periode: [brut, brutPrec], cumul: [cumul(brut), cumul(brutPrec)]};
+        const peu = brut.length <= 31; // points visibles seulement quand ils restent lisibles
+        const graphique = new Chart(courbe, {
+            type: 'line',
+            data: {
+                labels: c.libelles,
+                datasets: [
+                    {label: c.periode, data: series.periode[0], borderColor: COULEURS.serie1, backgroundColor: COULEURS.serie1,
+                        borderWidth: 2, cubicInterpolationMode: 'monotone', pointRadius: peu ? 3 : 0, pointHoverRadius: 5,
+                        pointBorderColor: '#fff', pointBorderWidth: 2, fill: false},
+                    {label: 'Période précédente (' + c.periodePrecedente + ')', data: series.periode[1],
+                        borderColor: COULEURS.muet, backgroundColor: COULEURS.muet, borderDash: [5, 4],
+                        borderWidth: 2, cubicInterpolationMode: 'monotone', pointRadius: 0, pointHoverRadius: 4, fill: false}
+                ]
+            },
+            options: {
+                interaction: {mode: 'index', intersect: false},
+                plugins: {tooltip: {
+                    filter: (item) => item.parsed.y !== null,
+                    callbacks: {label: (ctx) => ` ${ctx.dataset.label} : ${fmt.format(ctx.parsed.y)} MGA`}
+                }},
+                scales: {
+                    x: {...axeCategories, ticks: {...axeCategories.ticks, autoSkip: true, maxRotation: 0, autoSkipPadding: 12}},
+                    y: axeValeurs
+                }
+            }
+        });
+
+        // bascule « par jour / par mois » <-> « cumule »
+        const boutons = document.querySelectorAll('[data-mode-courbe]');
+        boutons.forEach((bouton) => {
+            bouton.addEventListener('click', () => {
+                const mode = bouton.dataset.modeCourbe;
+                boutons.forEach((b) => {
+                    b.classList.toggle('active', b === bouton);
+                    b.setAttribute('aria-pressed', String(b === bouton));
+                });
+                graphique.data.datasets[0].data = series[mode][0];
+                graphique.data.datasets[1].data = series[mode][1];
+                graphique.update();
+            });
+        });
+    }
+
     // ----- CA et marge par mois -----
     const mensuel = document.getElementById('graphique-mensuel');
     if (mensuel) {
@@ -56,7 +111,7 @@ function dessiner(d) {
             data: {
                 labels: d.mois,
                 datasets: [
-                    {label: "Chiffre d'affaires HT", data: d.ca.map(nombre), backgroundColor: COULEURS.serie1, ...barre},
+                    {label: d.libelleCa || "Chiffre d'affaires", data: d.ca.map(nombre), backgroundColor: COULEURS.serie1, ...barre},
                     {label: 'Marge nette', data: d.marge.map(nombre), backgroundColor: COULEURS.serie2, ...barre}
                 ]
             },
@@ -91,10 +146,5 @@ function dessiner(d) {
     const enc = document.getElementById('graphique-encaissements');
     if (enc) {
         barresHorizontales(enc, d.encaissementsLibelles, d.encaissementsMontants.map(nombre), 'Encaissé');
-    }
-
-    const art = document.getElementById('graphique-articles');
-    if (art) {
-        barresHorizontales(art, d.articlesLibelles, d.articlesMarges.map(nombre), 'Marge nette');
     }
 }
